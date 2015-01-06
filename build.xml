@@ -1,4 +1,4 @@
-<project name="Battlecode 2015" basedir="." default="run">
+<project name="BattleCode-2015" basedir="." default="run">
 
   <description>
     Build file for Battlecode 2015 players.
@@ -11,21 +11,21 @@
   <property name="path.maps" location="${path.base}/maps"/>
   <property name="path.bin" location="${path.base}/bin"/>
   <property name="path.matches" location="${path.base}/matches"/>
-  
+
   <fileset id="files.build" dir="${path.lib}">
     <include name="*.jar"/>
   </fileset>
 
   <fileset id="scala.files" dir="${path.lib}" includes="scala-*.jar"/>
   <pathconvert property="scala" refid="scala.files" setonempty="false"/>
-  
+
   <path id="classpath.run">
     <dirset dir="${path.bin}"/>
     <dirset dir="${path.lib}"/>
     <dirset dir="${path.teams}"/>
     <fileset refid="files.build"/>
   </path>
-  
+
   <target name="-init">
     <mkdir dir="${path.bin}"/>
   </target>
@@ -44,7 +44,7 @@
             </fileset>
         </classpath>
     </taskdef>
-        
+
     <scalac
         srcdir="${path.teams}"
         destdir="${path.bin}"
@@ -56,9 +56,9 @@
   </target>
 
   <target name="build" depends="-init,build-scala">
-    <javac 
-     classpathref="classpath.run" 
-     destdir="${path.bin}" 
+    <javac
+     classpathref="classpath.run"
+     destdir="${path.bin}"
      srcdir="${path.teams}"
      target="1.7"
      source="1.7"
@@ -69,31 +69,31 @@
   </target>
 
   <target name="run" depends="build">
-    <java 
+    <java
      classpathref="classpath.run"
      fork="yes"
      classname="battlecode.client.Main">
       <jvmarg value="-Dapple.awt.graphics.UseQuartz=true"/>
       <jvmarg value="-Dbc.server.map-path=${path.maps}"/>
-      <jvmarg value="-Xmx256m"/> 
+      <jvmarg value="-Xmx256m"/>
       <jvmarg value="-Djava.library.path=${path.lib}" />
       <arg line="-c bc.conf"/>
     </java>
-  </target> 
+  </target>
 
   <target name="runmatch" depends="build">
-    <java 
+    <java
      classpathref="classpath.run"
      fork="yes"
      classname="battlecode.client.Main">
       <jvmarg value="-Dapple.awt.graphics.UseQuartz=true"/>
       <jvmarg value="-Dbc.server.map-path=${path.maps}"/>
       <jvmarg value="-Dbc.client.match=${match}"/>
-      <jvmarg value="-Xmx256m"/> 
+      <jvmarg value="-Xmx256m"/>
       <jvmarg value="-Djava.library.path=${path.lib}" />
       <arg line="-c bc.conf"/>
     </java>
-  </target> 
+  </target>
 
   <target name="serve" depends="build">
     <java
