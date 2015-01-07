@@ -193,6 +193,13 @@ public class RobotPlayer {
 	}
 
 	private static void moveAround() throws GameActionException {
+		if (rand.nextDouble() < 0.05) {
+			if (rand.nextDouble() < 0.5) {
+				facing = facing.rotateLeft(); // 45 degree turn
+			} else {
+				facing = facing.rotateRight();
+			}
+		}
 		if (rc.isCoreReady() && rc.canMove(facing)) {
 			MapLocation tileInFrontLocation = rc.getLocation().add(facing);
 			TerrainTile tileInFrontTerrain = rc
