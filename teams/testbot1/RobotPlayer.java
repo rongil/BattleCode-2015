@@ -115,7 +115,9 @@ public class RobotPlayer {
 
 					if (Clock.getRoundNum() < 700) {
 						buildUnit(RobotType.MINERFACTORY);
-				/*  P(TRAININGFIELD) = 0.025
+					}
+					
+					/*  P(TRAININGFIELD) = 0.025
 				    P(TECHNOLOGYINSTITUTE) = 0.025
 				    P(HANDWASHSTATION) = 0.05
 				    P(MINERFACTORY) = 0.1
@@ -125,10 +127,8 @@ public class RobotPlayer {
 				 	P(AEROSPACELAB) = 0.15
 				 	P(BARRACKS) = 0.2
 				 	*/
-					}else{
-						buildUnit(RobotType.TANKFACTORY);
-					}
-					/*} else if (fate < 0.025) {
+					
+					else if (fate < 0.025) {
 						buildUnit(RobotType.TRAININGFIELD);
 					} else if (0.025 <= fate && fate < 0.05){
 						buildUnit(RobotType.TECHNOLOGYINSTITUTE);
@@ -147,7 +147,7 @@ public class RobotPlayer {
 					} else{
 						buildUnit(RobotType.BARRACKS);
 					}
-*/
+					
 					mineAndMove();
 
 				} else if (rc.getType() == RobotType.MINERFACTORY) {
