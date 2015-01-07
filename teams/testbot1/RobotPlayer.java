@@ -90,9 +90,11 @@ public class RobotPlayer {
 				double fate = rand.nextDouble();
 
 				if (rc.getType() == RobotType.HQ) {
-					// Broadcasts how many of each robot type there currently
-					// are on the field.
-					updateUnitCounts();
+					/*
+					 * MESSAGING SYSTEM NEEDS TO BE MADE SMALLER, TOO MUCH
+					 * BYTECODE!
+					 */
+					// updateUnitCounts();
 					attackEnemyZero(); /*
 										 * we can this method first before
 										 * spawning beavers because we probably
