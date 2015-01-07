@@ -184,9 +184,19 @@ public class RobotPlayer {
 
 	private static void spawnUnit(RobotType roboType)
 			throws GameActionException {
-		Direction randomDir = getRandomDirection();
-		if (rc.isCoreReady() && rc.canSpawn(randomDir, roboType)) {
-			rc.spawn(randomDir, roboType);
+		Direction testDir = getRandomDirection();
+		
+		for(int turnCount = 0; turnCount < 8; turnCount++){	
+			if (rc.isCoreReady() && rc.canSpawn(testDir, roboType)) {
+				MapLocation spawnLoc = rc.getLocation().add(testDir);
+				
+				if(isSafe(spawnLoc)){
+					rc.spawn(testDir, roboType);
+					break;
+				}
+			}else{
+				testDir = testDir.rotateLeft();
+			}
 		}
 	}
 
@@ -204,12 +214,11 @@ public class RobotPlayer {
 		}
 		if (rc.isCoreReady() && rc.canMove(facing)) {
 			MapLocation tileInFrontLocation = rc.getLocation().add(facing);
-			TerrainTile tileInFrontTerrain = rc
+			boolean tileInFrontSafe = isSafe(tileInFrontLocation);
+
+/*			TerrainTile tileInFrontTerrain = rc
 					.senseTerrainTile(tileInFrontLocation);
 			RobotType roboType = rc.getType();
-
-			boolean tileInFrontSafe = true;
-
 			while (tileInFrontSafe) {
 				if (tileInFrontTerrain != TerrainTile.NORMAL) {
 					if (!(tileInFrontTerrain == TerrainTile.VOID && (roboType == RobotType.DRONE || roboType == RobotType.MISSILE))) {
@@ -229,7 +238,7 @@ public class RobotPlayer {
 				}
 
 				break;
-			}
+			} */
 
 			double probCutoff = tileInFrontSafe ? 0.75 : 0.0;
 
@@ -246,6 +255,31 @@ public class RobotPlayer {
 		}
 	}
 
+	private static boolean isSafe(MapLocation loc){
+		TerrainTile locTerrain = rc.senseTerrainTile(loc);
+		RobotType roboType = rc.getType();
+		boolean safeSquare = true;
+		
+		if (locTerrain != TerrainTile.NORMAL) {
+            if (!(locTerrain == TerrainTile.VOID && (roboType == RobotType.DRONE || roboType == RobotType.MISSILE))) {
+            	safeSquare = false;
+             }
+         }
+
+         if(!safeSquare){
+        	 RobotInfo[] enemyRobots = rc.senseNearbyRobots(
+        			 roboType.sensorRadiusSquared, Enemy);
+             for (RobotInfo r : enemyRobots) {
+                 if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared) {
+                     safeSquare = false;
+                     break;
+                 }
+             }
+         }
+         
+         return safeSquare;
+	}
+	
 	private static void mineAndMove() throws GameActionException {
 		if (rc.senseOre(rc.getLocation()) > 1) { // if there is ore, try to mine
 			if (rc.isCoreReady() && rc.canMine()) {
