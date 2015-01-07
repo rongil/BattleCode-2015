@@ -193,7 +193,12 @@ public class RobotPlayer {
 					mineAndMove();
 					break;
 				case MINERFACTORY:
-					spawnUnit(RobotType.MINER);
+					int minerCount = rc.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
+					
+					if(rand.nextDouble() <= Math.pow(Math.E, -minerCount * 0.05)){
+						spawnUnit(RobotType.MINER);
+					}
+					
 					break;
 				case MISSILE:
 					rc.explode();
