@@ -594,6 +594,9 @@ public class RobotPlayer {
 		 * Enemy Robots
 		 */
 		for (RobotInfo r : enemyRobots) {
+			if (Clock.getBytecodesLeft() < 800) {
+				return; // Prevent bytecode overflows
+			}
 			switch (r.type) {
 			case AEROSPACELAB:
 				++numEnemyAerospaceLab;
