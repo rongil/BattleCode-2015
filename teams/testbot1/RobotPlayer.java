@@ -108,34 +108,59 @@ public class RobotPlayer {
 						spawnUnit(RobotType.BEAVER);
 					}
 
+				} else if (rc.getType() == RobotType.TOWER) {
+					attackEnemyZero(); // basic attacking method
 				} else if (rc.getType() == RobotType.BEAVER) {
 					attackEnemyZero();
 
 					if (Clock.getRoundNum() < 700) {
 						buildUnit(RobotType.MINERFACTORY);
-					} else if (fate < 0.01) {
-						buildUnit(RobotType.SUPPLYDEPOT);
-					} else if (fate > 0.01 && fate < 0.51) {
-						buildUnit(RobotType.BARRACKS);
-					} else {
+				/*  P(TRAININGFIELD) = 0.025
+				    P(TECHNOLOGYINSTITUTE) = 0.025
+				    P(HANDWASHSTATION) = 0.05
+				    P(MINERFACTORY) = 0.1
+				 	P(SUPPLYDEPOT) = 0.15
+				 	P(TANKFACTORY) = 0.15
+				 	P(HELIPAD) = 0.15
+				 	P(AEROSPACELAB) = 0.15
+				 	P(BARRACKS) = 0.2
+				 	*/
+					}else{
 						buildUnit(RobotType.TANKFACTORY);
 					}
-
+					/*} else if (fate < 0.025) {
+						buildUnit(RobotType.TRAININGFIELD);
+					} else if (0.025 <= fate && fate < 0.05){
+						buildUnit(RobotType.TECHNOLOGYINSTITUTE);
+					} else if (0.05 <= fate && fate < 0.1) {
+						buildUnit(RobotType.HANDWASHSTATION);					
+					} else if (0.1 <= fate && fate < 0.2) {
+						buildUnit(RobotType.MINERFACTORY);
+					} else if (0.2 <= fate && fate < 0.35) {
+						buildUnit(RobotType.SUPPLYDEPOT);
+					} else if (0.35 <= fate && fate < 0.5) {
+						buildUnit(RobotType.TANKFACTORY);
+					} else if (0.5 <= fate && fate < 0.65) {
+						buildUnit(RobotType.HELIPAD);
+					} else if (0.65 <= fate && fate < 0.8) {
+						buildUnit(RobotType.AEROSPACELAB);
+					} else{
+						buildUnit(RobotType.BARRACKS);
+					}
+*/
 					mineAndMove();
 
+				} else if (rc.getType() == RobotType.MINERFACTORY) {
+					spawnUnit(RobotType.MINER);
 				} else if (rc.getType() == RobotType.MINER) {
 					attackEnemyZero();
 					mineAndMove();
-				} else if (rc.getType() == RobotType.MINERFACTORY) {
-					spawnUnit(RobotType.MINER);
 				} else if (rc.getType() == RobotType.BARRACKS) {
 					if (fate < .7) {
 						spawnUnit(RobotType.SOLDIER);
 					} else {
 						spawnUnit(RobotType.BASHER);
 					}
-				} else if (rc.getType() == RobotType.TOWER) {
-					attackEnemyZero(); // basic attacking method
 				} else if (rc.getType() == RobotType.SOLDIER) {
 					attackEnemyZero(); // soldiers attack, not mine
 					moveAround(); /*
@@ -152,6 +177,19 @@ public class RobotPlayer {
 				} else if (rc.getType() == RobotType.TANK) {
 					attackEnemyZero();
 					moveAround();
+				} else if (rc.getType() == RobotType.TANKFACTORY) {
+					spawnUnit(RobotType.TANK);
+				} else if (rc.getType() == RobotType.HELIPAD) {
+					spawnUnit(RobotType.DRONE);
+				} else if (rc.getType() == RobotType.DRONE){
+					attackEnemyZero();
+					moveAround();
+				} else if (rc.getType() == RobotType.AEROSPACELAB) {
+					spawnUnit(RobotType.LAUNCHER);
+				} else if (rc.getType() == RobotType.LAUNCHER) {
+					rc.launchMissile(getRandomDirection()); // can fix later
+				} else if (rc.getType() == RobotType.MISSILE) {
+					rc.explode();
 				}
 
 				/*
@@ -215,31 +253,6 @@ public class RobotPlayer {
 		if (rc.isCoreReady() && rc.canMove(facing)) {
 			MapLocation tileInFrontLocation = rc.getLocation().add(facing);
 			boolean tileInFrontSafe = isSafe(tileInFrontLocation);
-
-/*			TerrainTile tileInFrontTerrain = rc
-					.senseTerrainTile(tileInFrontLocation);
-			RobotType roboType = rc.getType();
-			while (tileInFrontSafe) {
-				if (tileInFrontTerrain != TerrainTile.NORMAL) {
-					if (!(tileInFrontTerrain == TerrainTile.VOID && (roboType == RobotType.DRONE || roboType == RobotType.MISSILE))) {
-						tileInFrontSafe = false;
-						break;
-					}
-				}
-
-				RobotInfo[] enemyRobots = rc.senseNearbyRobots(
-						roboType.sensorRadiusSquared, Enemy);
-
-				for (RobotInfo r : enemyRobots) {
-					if (r.location.distanceSquaredTo(tileInFrontLocation) <= r.type.attackRadiusSquared) {
-						tileInFrontSafe = false;
-						break;
-					}
-				}
-
-				break;
-			} */
-
 			double probCutoff = tileInFrontSafe ? 0.75 : 0.0;
 
 			if (rand.nextDouble() >= probCutoff) {
