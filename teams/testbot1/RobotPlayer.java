@@ -1,16 +1,7 @@
 package testbot1;
 
+import battlecode.common.*;
 import java.util.Random;
-
-import battlecode.common.Clock;
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.GameConstants;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
-import battlecode.common.TerrainTile;
 
 public class RobotPlayer {
 
@@ -22,10 +13,12 @@ public class RobotPlayer {
 						 * this will help to distinguish each robot otherwise,
 						 * each robot will behave exactly the same
 						 */
+	static Team Enemy;
 	static RobotController rc;
 
 	public static void run(RobotController myRC) {
 		rc = myRC;
+		Enemy = rc.getTeam().opponent();
 		rand = new Random(rc.getID());
 		facing = getRandomDirection(); // randomize starting direction
 
@@ -34,11 +27,8 @@ public class RobotPlayer {
 			try {
 				// Random number from 0 to 1 for probabilistic decisions
 				double fate = rand.nextDouble();
-				if (rc.hasBuildRequirements(RobotType.TANKFACTORY)) {
-					buildUnit(RobotType.TANKFACTORY);
-				}
-
-				else if (rc.getType() == RobotType.HQ) {
+				
+				if (rc.getType() == RobotType.HQ) {
 					/*
 					 * each action requires several conditions that need to be
 					 * satisfied; otherwise, exceptions will be thrown, each of
@@ -60,10 +50,12 @@ public class RobotPlayer {
 
 					if (Clock.getRoundNum() < 700) {
 						buildUnit(RobotType.MINERFACTORY);
-					} else if (fate < .01) {
+					} else if (fate < 0.01) {
 						buildUnit(RobotType.SUPPLYDEPOT);
-					} else {
+					} else if (fate > 0.01 && fate < 0.51){
 						buildUnit(RobotType.BARRACKS);
+					} else{
+						buildUnit(RobotType.TANKFACTORY);
 					}
 
 					mineAndMove();
@@ -75,7 +67,7 @@ public class RobotPlayer {
 					spawnUnit(RobotType.MINER);
 				} else if (rc.getType() == RobotType.BARRACKS) {
 					if (fate < .7) {
-						spawnUnit(RobotType.SOLDIER); // can also spawn bashers
+						spawnUnit(RobotType.SOLDIER);
 					} else {
 						spawnUnit(RobotType.BASHER);
 					}
@@ -139,50 +131,43 @@ public class RobotPlayer {
 		return Direction.values()[(int) rand.nextDouble() * 8];
 	}
 
-	/*
-	 * need to put "throws GameActionException" because the method is called in
-	 * run(), which catches this kind of exception, so we need this method to be
-	 * able to throw that kind of exception so that it can able handled in run()
-	 */
-
 	private static void moveAround() throws GameActionException {
-		if (rand.nextDouble() < 0.05) {
-			if (rand.nextDouble() < 0.5) {
-				facing = facing.rotateLeft(); // 45 degree turn
-			} else {
-				facing = facing.rotateRight();
+		if(rc.isCoreReady() && rc.canMove(facing)){
+			MapLocation tileInFrontLocation = rc.getLocation().add(facing);
+			TerrainTile tileInFrontTerrain = rc.senseTerrainTile(tileInFrontLocation);
+			RobotType roboType = rc.getType();
+			
+			boolean tileInFrontSafe = true;
+			
+			while(tileInFrontSafe){
+				if(tileInFrontTerrain != TerrainTile.NORMAL){
+					if(!(tileInFrontTerrain == TerrainTile.VOID && (roboType == RobotType.DRONE || roboType == RobotType.MISSILE))){
+						tileInFrontSafe = false;
+						break;
+					}
+				}
+				
+				RobotInfo[] enemyRobots = rc.senseNearbyRobots(roboType.sensorRadiusSquared, Enemy);
+				
+				for(RobotInfo r : enemyRobots){
+					if(r.location.distanceSquaredTo(tileInFrontLocation) <= r.type.attackRadiusSquared){
+						tileInFrontSafe = false;
+						break;
+					}
+				}
+				
+				break;
 			}
-		}
-
-		MapLocation tileInFront = rc.getLocation().add(facing);
-
-		/*
-		 * check that the direction in front is not a tile that can be attacked
-		 * by the enemy towers (does not include HQ)
-		 */
-		MapLocation[] enemyTowers = rc.senseEnemyTowerLocations();
-		boolean tileInFrontSafe = true;
-
-		for (MapLocation m : enemyTowers) {
-			if (m.distanceSquaredTo(tileInFront) <= RobotType.TOWER.attackRadiusSquared) {
-				tileInFrontSafe = false;
-				break; // one tower is enough to make it unsafe
-			}
-		}
-
-		// check that are we are not facing off the edge of the map
-		// this conditional makes sense for ground units but not drone units,
-		// which
-		// can fly and are hence not hindered as much
-		//
-		// we also check that the tile in front is not within range of a tower
-
-		if (rc.senseTerrainTile(tileInFront) != TerrainTile.NORMAL
-				|| !tileInFrontSafe) {
-			facing = facing.rotateLeft();
-		} else { // try to move in the facing direction since the tile in front
-					// is safe
-			if (rc.isCoreReady() && rc.canMove(facing)) {
+			
+			double probCutoff = tileInFrontSafe ? 0.0 : 0.75;
+			
+			if (rand.nextDouble() >= probCutoff) {
+				if (rand.nextDouble() < 0.5) {
+					facing = facing.rotateLeft(); // 45 degree turn
+				} else {
+					facing = facing.rotateRight();
+				}
+			}else{ // try to move in the facing direction since the tile in front is safe
 				rc.move(facing);
 			}
 		}
@@ -233,8 +218,7 @@ public class RobotPlayer {
 		}
 	}
 
-	private static void buildUnit(RobotType roboType)
-			throws GameActionException {
+	private static void buildUnit(RobotType roboType) throws GameActionException {
 		if (rc.getTeamOre() > roboType.oreCost) {
 			Direction buildDir = getRandomDirection();
 
