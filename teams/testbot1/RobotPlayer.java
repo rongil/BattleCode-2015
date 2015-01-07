@@ -113,7 +113,7 @@ public class RobotPlayer {
 					spawnUnit(RobotType.LAUNCHER);
 					break;
 				case BARRACKS:
-					if (fate < .7) {
+					if (fate < .6) {
 						spawnUnit(RobotType.SOLDIER);
 					} else {
 						spawnUnit(RobotType.BASHER);
@@ -127,7 +127,7 @@ public class RobotPlayer {
 				case BEAVER:
 					attackEnemyZero();
 
-					if (Clock.getRoundNum() < 700) {
+					if (Clock.getRoundNum() < 500) {
 						buildUnit(RobotType.MINERFACTORY);
 					}
 
