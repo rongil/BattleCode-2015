@@ -113,7 +113,7 @@ public class RobotPlayer {
 					spawnUnit(RobotType.LAUNCHER);
 					break;
 				case BARRACKS:
-					if (fate < .7) {
+					if (fate < .6) {
 						spawnUnit(RobotType.SOLDIER);
 					} else {
 						spawnUnit(RobotType.BASHER);
@@ -129,42 +129,6 @@ public class RobotPlayer {
 
 					if (Clock.getRoundNum() < 500) {
 						buildUnit(RobotType.MINERFACTORY);
-<<<<<<< HEAD
-                    } else if (fate < 0.01) {
-                        buildUnit(RobotType.TRAININGFIELD);
-                    } else if (0.01 <= fate && fate < 0.05){
-                        buildUnit(RobotType.TECHNOLOGYINSTITUTE);
-                    } else if (0.05 <= fate && fate < 0.1) {
-                        buildUnit(RobotType.HANDWASHSTATION);                   
-                    } else if (0.1 <= fate && fate < 0.2) {
-                        buildUnit(RobotType.SUPPLYDEPOT);
-                    } else if (0.2 <= fate && fate < 0.35) {
-                        buildUnit(RobotType.MINERFACTORY);
-                    } else if (0.35 <= fate && fate < 0.5) {
-                        buildUnit(RobotType.TANKFACTORY);
-                    } else if (0.5 <= fate && fate < 0.65) {
-                        buildUnit(RobotType.HELIPAD);
-                    } else if (0.65 <= fate && fate < 0.8) {
-                        buildUnit(RobotType.AEROSPACELAB);
-                    } else {
-                        buildUnit(RobotType.BARRACKS);
-                    }
-                    
-					
-				/*  P(TRAININGFIELD) = 0.01
-                    P(TECHNOLOGYINSTITUTE) = 0.01
-                    P(HANDWASHSTATION) = 0.03
-                    P(SUPPLYDEPOT) = 0.05
-                    P(MINERFACTORY) = 0.1
-                    P(TANKFACTORY) = 0.15
-                    P(HELIPAD) = 0.15
-                    P(AEROSPACELAB) = 0.15
-                    P(BARRACKS) = 0.2
-                */
-					
-=======
-					}
-
 					/*
 					 * P(TRAININGFIELD) = 0.025 
 					 * P(TECHNOLOGYINSTITUTE) = 0.025
@@ -177,7 +141,7 @@ public class RobotPlayer {
 					 * P(BARRACKS) = 0.2
 					 */
 
-					else if (fate < 0.025) {
+					} else if (fate < 0.025) {
 						buildUnit(RobotType.TRAININGFIELD);
 					} else if (0.025 <= fate && fate < 0.05) {
 						buildUnit(RobotType.TECHNOLOGYINSTITUTE);
@@ -197,10 +161,9 @@ public class RobotPlayer {
 						buildUnit(RobotType.BARRACKS);
 					}
 
->>>>>>> origin/master
 					mineAndMove();
-
 					break;
+					
 				case COMMANDER:
 					break;
 				case COMPUTER:
@@ -220,24 +183,16 @@ public class RobotPlayer {
 				case MINER:
 					attackEnemyZero();
 					mineAndMove();
-<<<<<<< HEAD
-				} else if (rc.getType() == RobotType.BARRACKS) {
-					if (fate < .6) {
-						spawnUnit(RobotType.SOLDIER);
-					} else {
-						spawnUnit(RobotType.BASHER);
-					}
-				} else if (rc.getType() == RobotType.SOLDIER) {
-=======
-					break;
+					break;					
 				case MINERFACTORY:
 					spawnUnit(RobotType.MINER);
 					break;
+					
 				case MISSILE:
 					rc.explode();
 					break;
+					
 				case SOLDIER:
->>>>>>> origin/master
 					attackEnemyZero(); // soldiers attack, not mine
 					moveAround(); /*
 								 * POSSIBLE OPTIMIZATION: chase enemies In
