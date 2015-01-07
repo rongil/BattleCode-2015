@@ -144,15 +144,21 @@ public class RobotPlayer {
 					 */
 
 					else if (fate < 0.025) {
-						buildUnit(RobotType.TRAININGFIELD);
+						if(rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1){
+							buildUnit(RobotType.TRAININGFIELD);
+						}
 					} else if (0.025 <= fate && fate < 0.05) {
-						buildUnit(RobotType.TECHNOLOGYINSTITUTE);
-					} else if (0.05 <= fate && fate < 0.1) {
+						if(rc.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1){
+							buildUnit(RobotType.TECHNOLOGYINSTITUTE);
+						}
+					} else if (0.05 <= fate && fate < 0.06) {
 						buildUnit(RobotType.HANDWASHSTATION);
 					} else if (0.1 <= fate && fate < 0.2) {
-						buildUnit(RobotType.MINERFACTORY);
+						if(rc.readBroadcast(NUM_FRIENDLY_SUPPLY_DEPOT_CHANNEL) < 10){
+							buildUnit(RobotType.SUPPLYDEPOT);
+						}
 					} else if (0.2 <= fate && fate < 0.35) {
-						buildUnit(RobotType.SUPPLYDEPOT);
+						buildUnit(RobotType.MINERFACTORY);
 					} else if (0.35 <= fate && fate < 0.5) {
 						buildUnit(RobotType.TANKFACTORY);
 					} else if (0.5 <= fate && fate < 0.65) {
@@ -260,6 +266,17 @@ public class RobotPlayer {
 
 				if (isSafe(spawnLoc)) {
 					rc.spawn(testDir, roboType);
+					
+					if(roboType == RobotType.SUPPLYDEPOT){
+						rc.broadcast(NUM_FRIENDLY_SUPPLY_DEPOT_CHANNEL, rc.readBroadcast(NUM_FRIENDLY_SUPPLY_DEPOT_CHANNEL) + 1);
+					}else if(roboType == RobotType.BEAVER){
+						rc.broadcast(NUM_FRIENDLY_BEAVERS_CHANNEL, rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) + 1);
+					}else if(roboType == RobotType.TECHNOLOGYINSTITUTE){
+						rc.broadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL, rc.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) + 1);
+					}else if(roboType == RobotType.TRAININGFIELD){
+						rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) + 1);
+					}
+					
 					break;
 				}
 			} else {
