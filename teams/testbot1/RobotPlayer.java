@@ -222,9 +222,9 @@ public class RobotPlayer {
 				break;
 			}
 
-			double probCutoff = tileInFrontSafe ? 0.0 : 0.25;
+			double probCutoff = tileInFrontSafe ? 0.75 : 0.0;
 
-			if (rand.nextDouble() <= probCutoff) {
+			if (rand.nextDouble() >= probCutoff) {
 				if (rand.nextDouble() < 0.5) {
 					facing = facing.rotateLeft(); // 45 degree turn
 				} else {
