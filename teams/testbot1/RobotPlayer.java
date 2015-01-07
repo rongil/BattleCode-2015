@@ -285,7 +285,7 @@ public class RobotPlayer {
 				suppliesToThisLocation = ri.location;
 			}
 		}
-
+		
 		if (suppliesToThisLocation != null) {
 			rc.transferSupplies((int) transferAmount, suppliesToThisLocation);
 		}
