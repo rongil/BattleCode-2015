@@ -89,12 +89,14 @@ public class RobotPlayer {
 				// Random number from 0 to 1 for probabilistic decisions
 				double fate = rand.nextDouble();
 
-				if (rc.getType() == RobotType.HQ) {
-					/*
-					 * MESSAGING SYSTEM NEEDS TO BE MADE SMALLER, TOO MUCH
-					 * BYTECODE!
-					 */
-					// updateUnitCounts();
+				switch (rc.getType()) {
+				case HQ:
+					/**********************************************************
+					 * Update unit counts every so often!
+					 *********************************************************/
+					if (Clock.getRoundNum() % 20 == 0) {
+						updateUnitCounts();
+					}
 					attackEnemyZero(); /*
 										 * we can this method first before
 										 * spawning beavers because we probably
@@ -107,33 +109,46 @@ public class RobotPlayer {
 					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 10) {
 						spawnUnit(RobotType.BEAVER);
 					}
-
-				} else if (rc.getType() == RobotType.TOWER) {
-					attackEnemyZero(); // basic attacking method
-				} else if (rc.getType() == RobotType.BEAVER) {
+				case AEROSPACELAB:
+					spawnUnit(RobotType.LAUNCHER);
+					break;
+				case BARRACKS:
+					if (fate < .7) {
+						spawnUnit(RobotType.SOLDIER);
+					} else {
+						spawnUnit(RobotType.BASHER);
+					}
+					break;
+				case BASHER:
+					// BASHERs attack automatically, so let's just move around
+					// mostly randomly
+					moveAround();
+					break;
+				case BEAVER:
 					attackEnemyZero();
 
 					if (Clock.getRoundNum() < 700) {
 						buildUnit(RobotType.MINERFACTORY);
 					}
-					
-					/*  P(TRAININGFIELD) = 0.025
-				    P(TECHNOLOGYINSTITUTE) = 0.025
-				    P(HANDWASHSTATION) = 0.05
-				    P(MINERFACTORY) = 0.1
-				 	P(SUPPLYDEPOT) = 0.15
-				 	P(TANKFACTORY) = 0.15
-				 	P(HELIPAD) = 0.15
-				 	P(AEROSPACELAB) = 0.15
-				 	P(BARRACKS) = 0.2
-				 	*/
-					
+
+					/*
+					 * P(TRAININGFIELD) = 0.025 
+					 * P(TECHNOLOGYINSTITUTE) = 0.025
+					 * P(HANDWASHSTATION) = 0.05
+					 * P(MINERFACTORY) = 0.1
+					 * P(SUPPLYDEPOT) = 0.15
+					 * P(TANKFACTORY) = 0.15
+					 * P(HELIPAD) = 0.15
+					 * P(AEROSPACELAB) = 0.15
+					 * P(BARRACKS) = 0.2
+					 */
+
 					else if (fate < 0.025) {
 						buildUnit(RobotType.TRAININGFIELD);
-					} else if (0.025 <= fate && fate < 0.05){
+					} else if (0.025 <= fate && fate < 0.05) {
 						buildUnit(RobotType.TECHNOLOGYINSTITUTE);
 					} else if (0.05 <= fate && fate < 0.1) {
-						buildUnit(RobotType.HANDWASHSTATION);					
+						buildUnit(RobotType.HANDWASHSTATION);
 					} else if (0.1 <= fate && fate < 0.2) {
 						buildUnit(RobotType.MINERFACTORY);
 					} else if (0.2 <= fate && fate < 0.35) {
@@ -144,24 +159,40 @@ public class RobotPlayer {
 						buildUnit(RobotType.HELIPAD);
 					} else if (0.65 <= fate && fate < 0.8) {
 						buildUnit(RobotType.AEROSPACELAB);
-					} else{
+					} else {
 						buildUnit(RobotType.BARRACKS);
 					}
-					
+
 					mineAndMove();
 
-				} else if (rc.getType() == RobotType.MINERFACTORY) {
-					spawnUnit(RobotType.MINER);
-				} else if (rc.getType() == RobotType.MINER) {
+					break;
+				case COMMANDER:
+					break;
+				case COMPUTER:
+					break;
+				case DRONE:
+					attackEnemyZero();
+					moveAround();
+					break;
+				case HANDWASHSTATION:
+					break;
+				case HELIPAD:
+					spawnUnit(RobotType.DRONE);
+					break;
+				case LAUNCHER:
+					rc.launchMissile(getRandomDirection()); // TODO: Fix later
+					break;
+				case MINER:
 					attackEnemyZero();
 					mineAndMove();
-				} else if (rc.getType() == RobotType.BARRACKS) {
-					if (fate < .7) {
-						spawnUnit(RobotType.SOLDIER);
-					} else {
-						spawnUnit(RobotType.BASHER);
-					}
-				} else if (rc.getType() == RobotType.SOLDIER) {
+					break;
+				case MINERFACTORY:
+					spawnUnit(RobotType.MINER);
+					break;
+				case MISSILE:
+					rc.explode();
+					break;
+				case SOLDIER:
 					attackEnemyZero(); // soldiers attack, not mine
 					moveAround(); /*
 								 * POSSIBLE OPTIMIZATION: chase enemies In
@@ -170,26 +201,25 @@ public class RobotPlayer {
 								 * attacking range of the towers, which is not
 								 * possible under moveAround()
 								 */
-				} else if (rc.getType() == RobotType.BASHER) {
-					// BASHERs attack automatically, so let's just move around
-					// mostly randomly
-					moveAround();
-				} else if (rc.getType() == RobotType.TANK) {
+					break;
+				case SUPPLYDEPOT:
+					break;
+				case TANK:
 					attackEnemyZero();
 					moveAround();
-				} else if (rc.getType() == RobotType.TANKFACTORY) {
+					break;
+				case TANKFACTORY:
 					spawnUnit(RobotType.TANK);
-				} else if (rc.getType() == RobotType.HELIPAD) {
-					spawnUnit(RobotType.DRONE);
-				} else if (rc.getType() == RobotType.DRONE){
-					attackEnemyZero();
-					moveAround();
-				} else if (rc.getType() == RobotType.AEROSPACELAB) {
-					spawnUnit(RobotType.LAUNCHER);
-				} else if (rc.getType() == RobotType.LAUNCHER) {
-					rc.launchMissile(getRandomDirection()); // can fix later
-				} else if (rc.getType() == RobotType.MISSILE) {
-					rc.explode();
+					break;
+				case TECHNOLOGYINSTITUTE:
+					break;
+				case TOWER:
+					attackEnemyZero(); // basic attacking method
+					break;
+				case TRAININGFIELD:
+					break;
+				default:
+					break;
 				}
 
 				/*
@@ -223,16 +253,16 @@ public class RobotPlayer {
 	private static void spawnUnit(RobotType roboType)
 			throws GameActionException {
 		Direction testDir = getRandomDirection();
-		
-		for(int turnCount = 0; turnCount < 8; turnCount++){	
+
+		for (int turnCount = 0; turnCount < 8; turnCount++) {
 			if (rc.isCoreReady() && rc.canSpawn(testDir, roboType)) {
 				MapLocation spawnLoc = rc.getLocation().add(testDir);
-				
-				if(isSafe(spawnLoc)){
+
+				if (isSafe(spawnLoc)) {
 					rc.spawn(testDir, roboType);
 					break;
 				}
-			}else{
+			} else {
 				testDir = testDir.rotateLeft();
 			}
 		}
@@ -268,31 +298,31 @@ public class RobotPlayer {
 		}
 	}
 
-	private static boolean isSafe(MapLocation loc){
+	private static boolean isSafe(MapLocation loc) {
 		TerrainTile locTerrain = rc.senseTerrainTile(loc);
 		RobotType roboType = rc.getType();
 		boolean safeSquare = true;
-		
-		if (locTerrain != TerrainTile.NORMAL) {
-            if (!(locTerrain == TerrainTile.VOID && (roboType == RobotType.DRONE || roboType == RobotType.MISSILE))) {
-            	safeSquare = false;
-             }
-         }
 
-         if(!safeSquare){
-        	 RobotInfo[] enemyRobots = rc.senseNearbyRobots(
-        			 roboType.sensorRadiusSquared, Enemy);
-             for (RobotInfo r : enemyRobots) {
-                 if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared) {
-                     safeSquare = false;
-                     break;
-                 }
-             }
-         }
-         
-         return safeSquare;
+		if (locTerrain != TerrainTile.NORMAL) {
+			if (!(locTerrain == TerrainTile.VOID && (roboType == RobotType.DRONE || roboType == RobotType.MISSILE))) {
+				safeSquare = false;
+			}
+		}
+
+		if (!safeSquare) {
+			RobotInfo[] enemyRobots = rc.senseNearbyRobots(
+					roboType.sensorRadiusSquared, Enemy);
+			for (RobotInfo r : enemyRobots) {
+				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared) {
+					safeSquare = false;
+					break;
+				}
+			}
+		}
+
+		return safeSquare;
 	}
-	
+
 	private static void mineAndMove() throws GameActionException {
 		if (rc.senseOre(rc.getLocation()) > 1) { // if there is ore, try to mine
 			if (rc.isCoreReady() && rc.canMine()) {
@@ -332,7 +362,7 @@ public class RobotPlayer {
 				suppliesToThisLocation = ri.location;
 			}
 		}
-		
+
 		if (suppliesToThisLocation != null) {
 			rc.transferSupplies((int) transferAmount, suppliesToThisLocation);
 		}
@@ -444,45 +474,72 @@ public class RobotPlayer {
 		 * Our Robots
 		 */
 		for (RobotInfo r : myRobots) {
-			RobotType type = r.type;
-			if (type == RobotType.SUPPLYDEPOT) {
-				++numFriendlySupplyDepot;
-			} else if (type == RobotType.MINERFACTORY) {
-				++numFriendlyMinerFactory;
-			} else if (type == RobotType.TECHNOLOGYINSTITUTE) {
-				++numFriendlyTechInstitute;
-			} else if (type == RobotType.BARRACKS) {
-				++numFriendlyBarracks;
-			} else if (type == RobotType.HELIPAD) {
-				++numFriendlyHelipad;
-			} else if (type == RobotType.TRAININGFIELD) {
-				++numFriendlyTrainingField;
-			} else if (type == RobotType.TANKFACTORY) {
-				++numFriendlyTankFactory;
-			} else if (type == RobotType.AEROSPACELAB) {
+			switch(r.type) {
+			case AEROSPACELAB:
 				++numFriendlyAerospaceLab;
-			} else if (type == RobotType.HANDWASHSTATION) {
-				++numFriendlyHandwashStation;
-			} else if (type == RobotType.BEAVER) {
-				++numFriendlyBeavers;
-			} else if (type == RobotType.MINER) {
-				++numFriendlyMiners;
-			} else if (type == RobotType.COMPUTER) {
-				++numFriendlyComputers;
-			} else if (type == RobotType.SOLDIER) {
-				++numFriendlySoldiers;
-			} else if (type == RobotType.BASHER) {
+				break;
+			case BARRACKS:
+				++numFriendlyBarracks;
+				break;
+			case BASHER:
 				++numFriendlyBashers;
-			} else if (type == RobotType.DRONE) {
-				++numFriendlyDrones;
-			} else if (type == RobotType.TANK) {
-				++numFriendlyTanks;
-			} else if (type == RobotType.COMMANDER) {
+				break;
+			case BEAVER:
+				++numFriendlyBeavers;
+				break;
+			case COMMANDER:
 				++numFriendlyCommanders;
-			} else if (type == RobotType.LAUNCHER) {
+				break;
+			case COMPUTER:
+				++numFriendlyComputers;
+				break;
+			case DRONE:
+				++numFriendlyDrones;
+				break;
+			case HANDWASHSTATION:
+				++numFriendlyHandwashStation;
+				break;
+			case HELIPAD:
+				++numFriendlyHelipad;
+				break;
+			case HQ:
+				// No need to count HQ!
+				break;
+			case LAUNCHER:
 				++numFriendlyLaunchers;
-			} else if (type == RobotType.MISSILE) {
+				break;
+			case MINER:
+				++numFriendlyMiners;
+				break;
+			case MINERFACTORY:
+				++numFriendlyMinerFactory;
+				break;
+			case MISSILE:
 				++numFriendlyMissiles;
+				break;
+			case SOLDIER:
+				++numFriendlySoldiers;
+				break;
+			case SUPPLYDEPOT:
+				++numFriendlySupplyDepot;
+				break;
+			case TANK:
+				++numFriendlyTanks;
+				break;
+			case TANKFACTORY:
+				++numFriendlyTankFactory;
+				break;
+			case TECHNOLOGYINSTITUTE:
+				++numFriendlyTechInstitute;
+				break;
+			case TOWER:
+				break;
+			case TRAININGFIELD:
+				++numFriendlyTrainingField;
+				break;
+			default:
+				break;
+			
 			}
 		}
 		// Friendly Buildings Broadcasts
@@ -515,45 +572,72 @@ public class RobotPlayer {
 		 * Enemy Robots
 		 */
 		for (RobotInfo r : enemyRobots) {
-			RobotType type = r.type;
-			if (type == RobotType.SUPPLYDEPOT) {
-				++numEnemySupplyDepot;
-			} else if (type == RobotType.MINERFACTORY) {
-				++numEnemyMinerFactory;
-			} else if (type == RobotType.TECHNOLOGYINSTITUTE) {
-				++numEnemyTechInstitute;
-			} else if (type == RobotType.BARRACKS) {
-				++numEnemyBarracks;
-			} else if (type == RobotType.HELIPAD) {
-				++numEnemyHelipad;
-			} else if (type == RobotType.TRAININGFIELD) {
-				++numEnemyTrainingField;
-			} else if (type == RobotType.TANKFACTORY) {
-				++numEnemyTankFactory;
-			} else if (type == RobotType.AEROSPACELAB) {
+			switch (r.type) {
+			case AEROSPACELAB:
 				++numEnemyAerospaceLab;
-			} else if (type == RobotType.HANDWASHSTATION) {
-				++numEnemyHandwashStation;
-			} else if (type == RobotType.BEAVER) {
-				++numEnemyBeavers;
-			} else if (type == RobotType.MINER) {
-				++numEnemyMiners;
-			} else if (type == RobotType.COMPUTER) {
-				++numEnemyComputers;
-			} else if (type == RobotType.SOLDIER) {
-				++numEnemySoldiers;
-			} else if (type == RobotType.BASHER) {
+				break;
+			case BARRACKS:
+				++numEnemyBarracks;
+				break;
+			case BASHER:
 				++numEnemyBashers;
-			} else if (type == RobotType.DRONE) {
-				++numEnemyDrones;
-			} else if (type == RobotType.TANK) {
-				++numEnemyTanks;
-			} else if (type == RobotType.COMMANDER) {
+				break;
+			case BEAVER:
+				++numEnemyBeavers;
+				break;
+			case COMMANDER:
 				++numEnemyCommanders;
-			} else if (type == RobotType.LAUNCHER) {
+				break;
+			case COMPUTER:
+				++numEnemyComputers;
+				break;
+			case DRONE:
+				++numEnemyDrones;
+				break;
+			case HANDWASHSTATION:
+				++numEnemyHandwashStation;
+				break;
+			case HELIPAD:
+				++numEnemyHelipad;
+				break;
+			case HQ:
+				// No need to count HQ!
+				break;
+			case LAUNCHER:
 				++numEnemyLaunchers;
-			} else if (type == RobotType.MISSILE) {
+				break;
+			case MINER:
+				++numEnemyMiners;
+				break;
+			case MINERFACTORY:
+				++numEnemyMinerFactory;
+				break;
+			case MISSILE:
 				++numEnemyMissiles;
+				break;
+			case SOLDIER:
+				++numEnemySoldiers;
+				break;
+			case SUPPLYDEPOT:
+				++numEnemySupplyDepot;
+				break;
+			case TANK:
+				++numEnemyTanks;
+				break;
+			case TANKFACTORY:
+				++numEnemyTankFactory;
+				break;
+			case TECHNOLOGYINSTITUTE:
+				++numEnemyTechInstitute;
+				break;
+			case TOWER:
+				break;
+			case TRAININGFIELD:
+				++numEnemyTrainingField;
+				break;
+			default:
+				break;
+			
 			}
 		}
 
