@@ -1,3 +1,5 @@
+// Template robot from the YouTube channel
+
 package examplePlayer3;
 
 import battlecode.common.*;
