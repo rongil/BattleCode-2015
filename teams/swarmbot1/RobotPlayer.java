@@ -218,7 +218,7 @@ public class RobotPlayer {
 							|| swarm == 1) {
 						rc.broadcast(100, 0);
 						MapLocation[] towers = rc.senseEnemyTowerLocations();
-						if (towers.length > 1) {
+						if (towers.length > 1 ) {
 							tryMove(rc.getLocation().directionTo(towers[0]));
 						} else {
 							tryMove(rc.getLocation().directionTo(enemyHQ));
@@ -372,7 +372,7 @@ public class RobotPlayer {
 				- currentRadiusSquared) > 2.5) {
 			Direction rightDirection = myHQ.directionTo(currentLocation);
 			MapLocation targetLocation = myHQ.add(rightDirection, 1);
-			bugNav(targetLocation);
+			bugNav(rc.senseEnemyTowerLocations()[0]);
 		}
 	}
 
@@ -599,6 +599,9 @@ public class RobotPlayer {
 	// This method will attempt to move in Direction d (or as close to it as
 	// possible)
 	private static void tryMove(Direction d) throws GameActionException {
+		if (!rc.isCoreReady()) {
+			return;
+		}
 		int offsetIndex = 0;
 		int[] offsets = { 0, 1, -1, 2, -2 };
 		int dirint = directionToInt(d);
