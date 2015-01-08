@@ -88,11 +88,16 @@ public class RobotPlayer {
 	private static RobotInfo[] friendlyRobots;
 	private static RobotInfo[] enemyRobots;
 
+	private static MapLocation myHQ;
+	private static MapLocation enemyHQ;
+	
 	public static void run(RobotController myRC) {
 
 		rc = myRC;
 		Enemy = rc.getTeam().opponent();
-
+		myHQ = rc.senseHQLocation();
+		enemyHQ = rc.senseEnemyHQLocation();
+		
 		rand = new Random(rc.getID());
 		facing = getRandomDirection(); // randomize starting direction
 
@@ -242,7 +247,8 @@ public class RobotPlayer {
 					break;
 				case SOLDIER:
 					attackEnemyZero(); // soldiers attack, not mine
-					moveAround(); /*
+					defendHQ();
+					/* moveAround();
 								 * POSSIBLE OPTIMIZATION: chase enemies In
 								 * addition, soldiers need to attack towers
 								 * eventually, so they will have to move within
@@ -307,6 +313,23 @@ public class RobotPlayer {
 		}
 	}
 
+	private static void defendHQ() throws GameActionException {
+		int currentRadiusSquared = rc.readBroadcast(HQ_RADIUS_CHANNEL);
+		MapLocation currentLocation = rc.getLocation();
+		
+		if(Math.abs(currentLocation.distanceSquaredTo(myHQ) - currentRadiusSquared) > 2.5){
+			Direction rightDirection = myHQ.directionTo(currentLocation);
+			MapLocation targetLocation = myHQ.add(rightDirection, 1);
+			bugNav(targetLocation);
+		}
+	}
+
+	private static void broadcastRadiusSquared() throws GameActionException {
+	    double soldierCount = (double) rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL);
+	    int radiusSquared = (int) Math.pow(soldierCount / (2.0 * Math.PI), 2);
+	    rc.broadcast(HQ_RADIUS_CHANNEL, radiusSquared);
+	}
+	
 	private static void spawnUnit(RobotType roboType)
 			throws GameActionException {
 		Direction testDir = getRandomDirection();
