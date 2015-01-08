@@ -345,9 +345,11 @@ public class RobotPlayer {
 				
 				double totalOreCount = rc.senseOre(squareOne) + rc.senseOre(squareTwo) + rc.senseOre(squareThree) + rc.senseOre(squareFour);
 				
-				if(totalOreCount > bestOreCount){
+				if(totalOreCount > bestOreCount || bestDestination == null){
 					bestOreCount = totalOreCount;
 					bestDestination = squareFour;
+				}else if(totalOreCount == bestOreCount){
+					bestDestination = (rand.nextDouble() > 0.5) ? bestDestination : squareFour;
 				}
 			}
 			
