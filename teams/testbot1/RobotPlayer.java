@@ -22,6 +22,8 @@ public class RobotPlayer {
 	 * 20-29: Enemy Buildings
 	 * ------------------------------------------------------------------------
 	 * 30-39: Enemy Units
+	 * ------------------------------------------------------------------------
+	 * 100-999: Coordinate Planning + Rallying Points
 	 *************************************************************************/
 	// Friendly Buildings Channels
 	private static final int NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL = 1;
@@ -65,6 +67,9 @@ public class RobotPlayer {
 	private static final int NUM_ENEMY_COMMANDERS_CHANNEL = 37;
 	private static final int NUM_ENEMY_LAUNCHERS_CHANNEL = 38;
 	private static final int NUM_ENEMY_MISSILES_CHANNEL = 39;
+
+	// Soldier Radius
+	private static final int HQ_RADIUS_CHANNEL = 100;
 
 	private static Direction facing;
 	private static Direction[] directions = { Direction.NORTH,
