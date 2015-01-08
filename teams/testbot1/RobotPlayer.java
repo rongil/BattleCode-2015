@@ -90,14 +90,14 @@ public class RobotPlayer {
 
 	private static MapLocation myHQ;
 	private static MapLocation enemyHQ;
-	
+
 	public static void run(RobotController myRC) {
 
 		rc = myRC;
 		Enemy = rc.getTeam().opponent();
 		myHQ = rc.senseHQLocation();
 		enemyHQ = rc.senseEnemyHQLocation();
-		
+
 		rand = new Random(rc.getID());
 		facing = getRandomDirection(); // randomize starting direction
 
@@ -222,8 +222,9 @@ public class RobotPlayer {
 					// Wash hands.
 					break;
 				case HELIPAD:
-					// int droneCount = rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
-					spawnUnit(RobotType.DRONE);					
+					// int droneCount =
+					// rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
+					spawnUnit(RobotType.DRONE);
 					break;
 				case LAUNCHER:
 					// TODO: Fix missile launching
@@ -249,13 +250,12 @@ public class RobotPlayer {
 				case SOLDIER:
 					attackEnemyZero(); // soldiers attack, not mine
 					defendHQ();
-					/* moveAround();
-								 * POSSIBLE OPTIMIZATION: chase enemies In
-								 * addition, soldiers need to attack towers
-								 * eventually, so they will have to move within
-								 * attacking range of the towers, which is not
-								 * possible under moveAround()
-								 */
+					/*
+					 * moveAround(); POSSIBLE OPTIMIZATION: chase enemies In
+					 * addition, soldiers need to attack towers eventually, so
+					 * they will have to move within attacking range of the
+					 * towers, which is not possible under moveAround()
+					 */
 					break;
 				case SUPPLYDEPOT:
 					break;
@@ -317,8 +317,9 @@ public class RobotPlayer {
 	private static void defendHQ() throws GameActionException {
 		int currentRadiusSquared = rc.readBroadcast(HQ_RADIUS_CHANNEL);
 		MapLocation currentLocation = rc.getLocation();
-		
-		if(Math.abs(currentLocation.distanceSquaredTo(myHQ) - currentRadiusSquared) > 2.5){
+
+		if (Math.abs(currentLocation.distanceSquaredTo(myHQ)
+				- currentRadiusSquared) > 2.5) {
 			Direction rightDirection = myHQ.directionTo(currentLocation);
 			MapLocation targetLocation = myHQ.add(rightDirection, 1);
 			bugNav(targetLocation);
@@ -326,11 +327,12 @@ public class RobotPlayer {
 	}
 
 	private static void broadcastRadiusSquared() throws GameActionException {
-	    double soldierCount = (double) rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL);
-	    int radiusSquared = (int) Math.pow(soldierCount / (2.0 * Math.PI), 2);
-	    rc.broadcast(HQ_RADIUS_CHANNEL, radiusSquared);
+		double soldierCount = (double) rc
+				.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL);
+		int radiusSquared = (int) Math.pow(soldierCount / (2.0 * Math.PI), 2);
+		rc.broadcast(HQ_RADIUS_CHANNEL, radiusSquared);
 	}
-	
+
 	private static void spawnUnit(RobotType roboType)
 			throws GameActionException {
 		Direction testDir = getRandomDirection();
@@ -547,6 +549,9 @@ public class RobotPlayer {
 	// This method will attempt to move in Direction d (or as close to it as
 	// possible)
 	private static void tryMove(Direction d) throws GameActionException {
+		if (!rc.isCoreReady()) {
+			return;
+		}
 		int offsetIndex = 0;
 		int[] offsets = { 0, 1, -1, 2, -2 };
 		int dirint = directionToInt(d);
