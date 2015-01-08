@@ -294,6 +294,75 @@ public class RobotPlayer {
 		return Direction.values()[(int) rand.nextDouble() * 8];
 	}
 
+	private static Direction bugNav(MapLocation target) throws GameActionException {
+		// TODO: make it possible for robots to enter non-safe squares when they have
+		// strength in numbers
+		
+	    Direction straight = rc.getLocation().directionTo(target);
+	    MapLocation currentLoc = rc.getLocation();
+	    
+	    Direction[] possDirs = new Direction[8];
+	    possDirs[0] = straight;
+	    possDirs[7] = straight.opposite();
+	    
+	    double orderOne = rand.nextDouble();
+	    double orderTwo = rand.nextDouble();
+	    double orderThree = rand.nextDouble();
+	    
+	    possDirs[1] = (orderOne > 0.5) ? straight.rotateLeft() : straight.rotateRight();
+	    possDirs[2] = (orderOne > 0.5) ? straight.rotateRight() : straight.rotateLeft();
+	    
+	    possDirs[3] = (orderTwo > 0.5) ? straight.rotateLeft().rotateLeft() : straight.rotateRight().rotateRight();
+	    possDirs[4] = possDirs[3].opposite();
+	    
+	    possDirs[5] = (orderThree > 0.5) ? possDirs[7].rotateLeft() : possDirs[7].rotateRight();
+	    possDirs[6] = (orderThree > 0.5) ? possDirs[7].rotateRight() : possDirs[7].rotateLeft();
+	    
+	    for(Direction bestDirection : possDirs){
+	    	MapLocation possSquare = currentLoc.add(bestDirection);
+	    	if(isSafe(possSquare) && rc.canMove(bestDirection)){
+	            return bestDirection;
+	        }
+	    }
+	    
+	    return Direction.NONE;
+	}
+
+	private static void locateBestOre() throws GameActionException {
+		if (rc.isCoreReady()){
+			MapLocation currentLocation = rc.getLocation();
+			
+			int radius = (int) Math.pow(rc.getType().sensorRadiusSquared, 0.5);
+			
+			double bestOreCount = 0.0;
+			MapLocation bestDestination = null;
+			
+			for(Direction possDirection : Direction.values()){
+				MapLocation squareOne = currentLocation.add(possDirection, (int) 0.25 * radius);
+				MapLocation squareTwo = currentLocation.add(possDirection, (int) 0.5 * radius);
+				MapLocation squareThree = currentLocation.add(possDirection, (int) 0.75 * radius);
+				MapLocation squareFour = currentLocation.add(possDirection, radius);
+				
+				double totalOreCount = rc.senseOre(squareOne) + rc.senseOre(squareTwo) + rc.senseOre(squareThree) + rc.senseOre(squareFour);
+				
+				if(totalOreCount > bestOreCount){
+					bestOreCount = totalOreCount;
+					bestDestination = squareFour;
+				}
+			}
+			
+			if(bestDestination != null){
+				Direction bestDirection = bugNav(bestDestination);
+				
+				if(bestDirection != Direction.NONE){
+					rc.move(bestDirection);
+				}
+			}else{
+				moveAround();
+			}
+		}
+	}
+	
 	private static void moveAround() throws GameActionException {
 		if (rand.nextDouble() < 0.05) {
 			if (rand.nextDouble() < 0.5) {
@@ -351,7 +420,7 @@ public class RobotPlayer {
 				rc.mine();
 			}
 		} else { // otherwise, look for ore
-			moveAround();
+			locateBestOre();
 		}
 	}
 
