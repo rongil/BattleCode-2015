@@ -222,7 +222,8 @@ public class RobotPlayer {
 					// Wash hands.
 					break;
 				case HELIPAD:
-					spawnUnit(RobotType.DRONE);
+					// int droneCount = rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
+					spawnUnit(RobotType.DRONE);					
 					break;
 				case LAUNCHER:
 					// TODO: Fix missile launching
