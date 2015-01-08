@@ -66,20 +66,28 @@ public class RobotPlayer {
 	private static final int NUM_ENEMY_LAUNCHERS_CHANNEL = 38;
 	private static final int NUM_ENEMY_MISSILES_CHANNEL = 39;
 
-	static Direction facing;
-	static Direction[] directions = { Direction.NORTH, Direction.NORTH_EAST,
-			Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
-			Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST };
-	static Random rand; /*
-						 * this will help to distinguish each robot otherwise,
-						 * each robot will behave exactly the same
-						 */
-	static Team Enemy;
-	static RobotController rc;
+	private static Direction facing;
+	private static Direction[] directions = { Direction.NORTH,
+			Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
+			Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
+			Direction.NORTH_WEST };
+	private static Random rand; /*
+								 * this will help to distinguish each robot
+								 * otherwise, each robot will behave exactly the
+								 * same
+								 */
+	private static Team Enemy;
+	private static RobotController rc;
+
+	private static int roundNum;
+	private static RobotInfo[] friendlyRobots;
+	private static RobotInfo[] enemyRobots;
 
 	public static void run(RobotController myRC) {
+
 		rc = myRC;
 		Enemy = rc.getTeam().opponent();
+
 		rand = new Random(rc.getID());
 		facing = getRandomDirection(); // randomize starting direction
 
@@ -88,13 +96,16 @@ public class RobotPlayer {
 			try {
 				// Random number from 0 to 1 for probabilistic decisions
 				double fate = rand.nextDouble();
+				// Get the round number
+				roundNum = Clock.getRoundNum();
 
 				switch (rc.getType()) {
 				case HQ:
 					/**********************************************************
-					 * Update unit counts every so often!
+					 * Update unit counts every so often! Distributes the
+					 * counting over a few consecutive rounds.
 					 *********************************************************/
-					if (Clock.getRoundNum() % 20 == 0) {
+					if (roundNum % 20 < 5) {
 						updateUnitCounts();
 					}
 					attackEnemyZero(); /*
@@ -128,7 +139,8 @@ public class RobotPlayer {
 					attackEnemyZero();
 
 					// Limit the number of miner factories
-					if (Clock.getRoundNum() < 400) {
+					if (Clock.getRoundNum() < 500
+							&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
 						buildUnit(RobotType.MINERFACTORY);
 					}
 
@@ -166,11 +178,10 @@ public class RobotPlayer {
 						if (rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
 							buildUnit(RobotType.SUPPLYDEPOT);
 						}
-					} else if (0.2 <= fate
-							&& fate < 0.35
+					} else if (roundNum < 1500
 							&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
 						buildUnit(RobotType.MINERFACTORY);
-					} else if (0.35 <= fate && fate < 0.5) {
+					} else if (0.2 <= fate && fate < 0.5) {
 						buildUnit(RobotType.TANKFACTORY);
 					} else if (0.5 <= fate && fate < 0.65) {
 						buildUnit(RobotType.HELIPAD);
@@ -295,25 +306,6 @@ public class RobotPlayer {
 
 				if (isSafe(spawnLoc)) {
 					rc.spawn(testDir, roboType);
-
-					if (roboType == RobotType.SUPPLYDEPOT) {
-						rc.broadcast(
-								NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL,
-								rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) + 1);
-					} else if (roboType == RobotType.BEAVER) {
-						rc.broadcast(
-								NUM_FRIENDLY_BEAVERS_CHANNEL,
-								rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) + 1);
-					} else if (roboType == RobotType.TECHNOLOGYINSTITUTE) {
-						rc.broadcast(
-								NUM_FRIENDLY_TECHINSTITUTE_CHANNEL,
-								rc.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) + 1);
-					} else if (roboType == RobotType.TRAININGFIELD) {
-						rc.broadcast(
-								NUM_FRIENDLY_TRAININGFIELD_CHANNEL,
-								rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) + 1);
-					}
-
 					break;
 				}
 			} else {
@@ -326,77 +318,91 @@ public class RobotPlayer {
 		return Direction.values()[(int) rand.nextDouble() * 8];
 	}
 
-	private static Direction bugNav(MapLocation target) throws GameActionException {
-		// TODO: make it possible for robots to enter non-safe squares when they have
+	private static Direction bugNav(MapLocation target)
+			throws GameActionException {
+		// TODO: make it possible for robots to enter non-safe squares when they
+		// have
 		// strength in numbers
-		
-	    Direction straight = rc.getLocation().directionTo(target);
-	    MapLocation currentLoc = rc.getLocation();
-	    
-	    Direction[] possDirs = new Direction[8];
-	    possDirs[0] = straight;
-	    possDirs[7] = straight.opposite();
-	    
-	    double orderOne = rand.nextDouble();
-	    double orderTwo = rand.nextDouble();
-	    double orderThree = rand.nextDouble();
-	    
-	    possDirs[1] = (orderOne > 0.5) ? straight.rotateLeft() : straight.rotateRight();
-	    possDirs[2] = (orderOne > 0.5) ? straight.rotateRight() : straight.rotateLeft();
-	    
-	    possDirs[3] = (orderTwo > 0.5) ? straight.rotateLeft().rotateLeft() : straight.rotateRight().rotateRight();
-	    possDirs[4] = possDirs[3].opposite();
-	    
-	    possDirs[5] = (orderThree > 0.5) ? possDirs[7].rotateLeft() : possDirs[7].rotateRight();
-	    possDirs[6] = (orderThree > 0.5) ? possDirs[7].rotateRight() : possDirs[7].rotateLeft();
-	    
-	    for(Direction bestDirection : possDirs){
-	    	MapLocation possSquare = currentLoc.add(bestDirection);
-	    	if(isSafe(possSquare) && rc.canMove(bestDirection)){
-	            return bestDirection;
-	        }
-	    }
-	    
-	    return Direction.NONE;
+
+		Direction straight = rc.getLocation().directionTo(target);
+		MapLocation currentLoc = rc.getLocation();
+
+		Direction[] possDirs = new Direction[8];
+		possDirs[0] = straight;
+		possDirs[7] = straight.opposite();
+
+		double orderOne = rand.nextDouble();
+		double orderTwo = rand.nextDouble();
+		double orderThree = rand.nextDouble();
+
+		possDirs[1] = (orderOne > 0.5) ? straight.rotateLeft() : straight
+				.rotateRight();
+		possDirs[2] = (orderOne > 0.5) ? straight.rotateRight() : straight
+				.rotateLeft();
+
+		possDirs[3] = (orderTwo > 0.5) ? straight.rotateLeft().rotateLeft()
+				: straight.rotateRight().rotateRight();
+		possDirs[4] = possDirs[3].opposite();
+
+		possDirs[5] = (orderThree > 0.5) ? possDirs[7].rotateLeft()
+				: possDirs[7].rotateRight();
+		possDirs[6] = (orderThree > 0.5) ? possDirs[7].rotateRight()
+				: possDirs[7].rotateLeft();
+
+		for (Direction bestDirection : possDirs) {
+			MapLocation possSquare = currentLoc.add(bestDirection);
+			if (isSafe(possSquare) && rc.canMove(bestDirection)) {
+				return bestDirection;
+			}
+		}
+
+		return Direction.NONE;
 	}
 
 	private static void locateBestOre() throws GameActionException {
-		if (rc.isCoreReady()){
+		if (rc.isCoreReady()) {
 			MapLocation currentLocation = rc.getLocation();
-			
+
 			int radius = (int) Math.pow(rc.getType().sensorRadiusSquared, 0.5);
-			
+
 			double bestOreCount = 0.0;
 			MapLocation bestDestination = null;
-			
-			for(Direction possDirection : Direction.values()){
-				MapLocation squareOne = currentLocation.add(possDirection, (int) 0.25 * radius);
-				MapLocation squareTwo = currentLocation.add(possDirection, (int) 0.5 * radius);
-				MapLocation squareThree = currentLocation.add(possDirection, (int) 0.75 * radius);
-				MapLocation squareFour = currentLocation.add(possDirection, radius);
-				
-				double totalOreCount = rc.senseOre(squareOne) + rc.senseOre(squareTwo) + rc.senseOre(squareThree) + rc.senseOre(squareFour);
-				
-				if(totalOreCount > bestOreCount || bestDestination == null){
+
+			for (Direction possDirection : Direction.values()) {
+				MapLocation squareOne = currentLocation.add(possDirection,
+						(int) (0.25 * radius));
+				MapLocation squareTwo = currentLocation.add(possDirection,
+						(int) (0.5 * radius));
+				MapLocation squareThree = currentLocation.add(possDirection,
+						(int) (0.75 * radius));
+				MapLocation squareFour = currentLocation.add(possDirection,
+						radius);
+
+				double totalOreCount = rc.senseOre(squareOne)
+						+ rc.senseOre(squareTwo) + rc.senseOre(squareThree)
+						+ rc.senseOre(squareFour);
+
+				if (totalOreCount > bestOreCount || bestDestination == null) {
 					bestOreCount = totalOreCount;
 					bestDestination = squareFour;
-				}else if(totalOreCount == bestOreCount){
-					bestDestination = (rand.nextDouble() > 0.5) ? bestDestination : squareFour;
+				} else if (totalOreCount == bestOreCount) {
+					bestDestination = (rand.nextDouble() > 0.5) ? bestDestination
+							: squareFour;
 				}
 			}
-			
-			if(bestDestination != null){
+
+			if (bestDestination != null) {
 				Direction bestDirection = bugNav(bestDestination);
-				
-				if(bestDirection != Direction.NONE){
+
+				if (bestDirection != Direction.NONE) {
 					rc.move(bestDirection);
 				}
-			}else{
+			} else {
 				moveAround();
 			}
 		}
 	}
-	
+
 	private static void moveAround() throws GameActionException {
 		if (rand.nextDouble() < 0.05) {
 			if (rand.nextDouble() < 0.5) {
@@ -543,246 +549,309 @@ public class RobotPlayer {
 		}
 	}
 
+	// NOTE: These variables are kept down here since they are solely used while
+	// updating quantity values.
+	// Friendly Buildings
+	private static int numFriendlySupplyDepot;
+	private static int numFriendlyMinerFactory;
+	private static int numFriendlyTechInstitute;
+	private static int numFriendlyBarracks;
+	private static int numFriendlyHelipad;
+	private static int numFriendlyTrainingField;
+	private static int numFriendlyTankFactory;
+	private static int numFriendlyAerospaceLab;
+	private static int numFriendlyHandwashStation;
+	// Friendly other units
+	private static int numFriendlyBeavers;
+	private static int numFriendlyMiners;
+	private static int numFriendlyComputers;
+	private static int numFriendlySoldiers;
+	private static int numFriendlyBashers;
+	private static int numFriendlyDrones;
+	private static int numFriendlyTanks;
+	private static int numFriendlyLaunchers;
+	private static int numFriendlyMissiles;
+	// Enemy Buildings
+	private static int numEnemySupplyDepot;
+	private static int numEnemyMinerFactory;
+	private static int numEnemyTechInstitute;
+	private static int numEnemyBarracks;
+	private static int numEnemyHelipad;
+	private static int numEnemyTrainingField;
+	private static int numEnemyTankFactory;
+	private static int numEnemyAerospaceLab;
+	private static int numEnemyHandwashStation;
+	// Enemy other units
+	private static int numEnemyBeavers;
+	private static int numEnemyMiners;
+	private static int numEnemyComputers;
+	private static int numEnemySoldiers;
+	private static int numEnemyBashers;
+	private static int numEnemyDrones;
+	private static int numEnemyTanks;
+	private static int numEnemyCommanders;
+	private static int numEnemyLaunchers;
+	private static int numEnemyMissiles;
+
 	private static void updateUnitCounts() throws GameActionException {
-		// Collect all robots into separate RobotInfo arrays.
-		RobotInfo[] myRobots = rc.senseNearbyRobots(999999, rc.getTeam());
-		RobotInfo[] enemyRobots = rc.senseNearbyRobots(999999, rc.getTeam()
-				.opponent());
 
-		// FRIENDLY
-		// Buildings
-		int numFriendlySupplyDepot = 0;
-		int numFriendlyMinerFactory = 0;
-		int numFriendlyTechInstitute = 0;
-		int numFriendlyBarracks = 0;
-		int numFriendlyHelipad = 0;
-		int numFriendlyTrainingField = 0;
-		int numFriendlyTankFactory = 0;
-		int numFriendlyAerospaceLab = 0;
-		int numFriendlyHandwashStation = 0;
-		// Other units
-		int numFriendlyBeavers = 0;
-		int numFriendlyMiners = 0;
-		int numFriendlyComputers = 0;
-		int numFriendlySoldiers = 0;
-		int numFriendlyBashers = 0;
-		int numFriendlyDrones = 0;
-		int numFriendlyTanks = 0;
-		int numFriendlyLaunchers = 0;
-		int numFriendlyMissiles = 0;
-
-		// ENEMY
-		// Buildings
-		int numEnemySupplyDepot = 0;
-		int numEnemyMinerFactory = 0;
-		int numEnemyTechInstitute = 0;
-		int numEnemyBarracks = 0;
-		int numEnemyHelipad = 0;
-		int numEnemyTrainingField = 0;
-		int numEnemyTankFactory = 0;
-		int numEnemyAerospaceLab = 0;
-		int numEnemyHandwashStation = 0;
-		// Other units
-		int numEnemyBeavers = 0;
-		int numEnemyMiners = 0;
-		int numEnemyComputers = 0;
-		int numEnemySoldiers = 0;
-		int numEnemyBashers = 0;
-		int numEnemyDrones = 0;
-		int numEnemyTanks = 0;
-		int numEnemyCommanders = 0;
-		int numEnemyLaunchers = 0;
-		int numEnemyMissiles = 0;
-
-		/*
-		 * Our Robots
-		 */
-		for (RobotInfo r : myRobots) {
-			switch (r.type) {
-			case AEROSPACELAB:
-				++numFriendlyAerospaceLab;
-				break;
-			case BARRACKS:
-				++numFriendlyBarracks;
-				break;
-			case BASHER:
-				++numFriendlyBashers;
-				break;
-			case BEAVER:
-				++numFriendlyBeavers;
-				break;
-			case COMPUTER:
-				++numFriendlyComputers;
-				break;
-			case DRONE:
-				++numFriendlyDrones;
-				break;
-			case HANDWASHSTATION:
-				++numFriendlyHandwashStation;
-				break;
-			case HELIPAD:
-				++numFriendlyHelipad;
-				break;
-			case HQ:
-				// No need to count HQ!
-				break;
-			case LAUNCHER:
-				++numFriendlyLaunchers;
-				break;
-			case MINER:
-				++numFriendlyMiners;
-				break;
-			case MINERFACTORY:
-				++numFriendlyMinerFactory;
-				break;
-			case MISSILE:
-				++numFriendlyMissiles;
-				break;
-			case SOLDIER:
-				++numFriendlySoldiers;
-				break;
-			case SUPPLYDEPOT:
-				++numFriendlySupplyDepot;
-				break;
-			case TANK:
-				++numFriendlyTanks;
-				break;
-			case TANKFACTORY:
-				++numFriendlyTankFactory;
-				break;
-			case TECHNOLOGYINSTITUTE:
-				++numFriendlyTechInstitute;
-				break;
-			case TOWER:
-				break;
-			case TRAININGFIELD:
-				++numFriendlyTrainingField;
-				break;
-			default:
-				break;
-
-			}
+		// Run part of the work on each round
+		int roundNumMod = roundNum % 20;
+		if (roundNumMod == 0) {
+			// Collect all robots into separate RobotInfo arrays.
+			friendlyRobots = rc.senseNearbyRobots(999999, rc.getTeam());
+			enemyRobots = rc.senseNearbyRobots(999999, rc.getTeam().opponent());
 		}
-		// Friendly Buildings Broadcasts
-		rc.broadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL, numFriendlySupplyDepot);
-		rc.broadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL, numFriendlyMinerFactory);
-		rc.broadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL,
-				numFriendlyTechInstitute);
-		rc.broadcast(NUM_FRIENDLY_BARRACKS_CHANNEL, numFriendlyBarracks);
-		rc.broadcast(NUM_FRIENDLY_HELIPAD_CHANNEL, numFriendlyHelipad);
-		rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL,
-				numFriendlyTrainingField);
-		rc.broadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL, numFriendlyTankFactory);
-		rc.broadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL, numFriendlyAerospaceLab);
-		rc.broadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL,
-				numFriendlyHandwashStation);
-		// Friendly Units Broadcasts
-		rc.broadcast(NUM_FRIENDLY_BEAVERS_CHANNEL, numFriendlyBeavers);
-		rc.broadcast(NUM_FRIENDLY_MINERS_CHANNEL, numFriendlyMiners);
-		rc.broadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL, numFriendlyComputers);
-		rc.broadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL, numFriendlySoldiers);
-		rc.broadcast(NUM_FRIENDLY_BASHERS_CHANNEL, numFriendlyBashers);
-		rc.broadcast(NUM_FRIENDLY_DRONES_CHANNEL, numFriendlyDrones);
-		rc.broadcast(NUM_FRIENDLY_TANKS_CHANNEL, numFriendlyTanks);
-		rc.broadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL, numFriendlyLaunchers);
-		rc.broadcast(NUM_FRIENDLY_MISSILES_CHANNEL, numFriendlyMissiles);
+		int friendlyChunkSize = (int) Math.floor(friendlyRobots.length / 4);
+		int enemyChunkSize = (int) Math.floor(enemyRobots.length / 4);
+		int friendlyLoopStart = friendlyChunkSize * roundNumMod;
+		int friendlyLoopEnd = friendlyChunkSize * (roundNumMod + 1);
+		int enemyLoopStart = enemyChunkSize * roundNumMod;
+		int enemyLoopEnd = enemyChunkSize * (roundNumMod + 1);
 
-		/**
-		 * Enemy Robots
-		 */
-		for (RobotInfo r : enemyRobots) {
-			if (Clock.getBytecodesLeft() < 800) {
-				return; // Prevent bytecode overflows
+		/**********************************************************************
+		 * NOTE: Exhibits fall through since the same loop is used for cases
+		 * 1-3.
+		 * -------------------------------------------------------------------
+		 * Case 0: Initializes quantities to 0. Runs first fourth of the array.
+		 * Cases 1-3: Each run a different fourth of the array. Case 4:
+		 * Broadcasts all the quantities.
+		 *********************************************************************/
+		switch (roundNumMod) {
+		case 0:
+			// Set quantity variables to 0
+			// Friendly Buildings
+			numFriendlySupplyDepot = 0;
+			numFriendlyMinerFactory = 0;
+			numFriendlyTechInstitute = 0;
+			numFriendlyBarracks = 0;
+			numFriendlyHelipad = 0;
+			numFriendlyTrainingField = 0;
+			numFriendlyTankFactory = 0;
+			numFriendlyAerospaceLab = 0;
+			numFriendlyHandwashStation = 0;
+			// Friendly other units
+			numFriendlyBeavers = 0;
+			numFriendlyMiners = 0;
+			numFriendlyComputers = 0;
+			numFriendlySoldiers = 0;
+			numFriendlyBashers = 0;
+			numFriendlyDrones = 0;
+			numFriendlyTanks = 0;
+			numFriendlyLaunchers = 0;
+			numFriendlyMissiles = 0;
+			// Enemy Buildings
+			numEnemySupplyDepot = 0;
+			numEnemyMinerFactory = 0;
+			numEnemyTechInstitute = 0;
+			numEnemyBarracks = 0;
+			numEnemyHelipad = 0;
+			numEnemyTrainingField = 0;
+			numEnemyTankFactory = 0;
+			numEnemyAerospaceLab = 0;
+			numEnemyHandwashStation = 0;
+			// Enemy other units
+			numEnemyBeavers = 0;
+			numEnemyMiners = 0;
+			numEnemyComputers = 0;
+			numEnemySoldiers = 0;
+			numEnemyBashers = 0;
+			numEnemyDrones = 0;
+			numEnemyTanks = 0;
+			numEnemyCommanders = 0;
+			numEnemyLaunchers = 0;
+			numEnemyMissiles = 0;
+		case 1:
+		case 2:
+		case 3:
+			// Friendly Robot Loop
+			for (int i = friendlyLoopStart; i < friendlyLoopEnd; ++i) {
+				switch (friendlyRobots[i].type) {
+				case AEROSPACELAB:
+					++numFriendlyAerospaceLab;
+					break;
+				case BARRACKS:
+					++numFriendlyBarracks;
+					break;
+				case BASHER:
+					++numFriendlyBashers;
+					break;
+				case BEAVER:
+					++numFriendlyBeavers;
+					break;
+				case COMPUTER:
+					++numFriendlyComputers;
+					break;
+				case DRONE:
+					++numFriendlyDrones;
+					break;
+				case HANDWASHSTATION:
+					++numFriendlyHandwashStation;
+					break;
+				case HELIPAD:
+					++numFriendlyHelipad;
+					break;
+				case HQ:
+					// No need to count HQ!
+					break;
+				case LAUNCHER:
+					++numFriendlyLaunchers;
+					break;
+				case MINER:
+					++numFriendlyMiners;
+					break;
+				case MINERFACTORY:
+					++numFriendlyMinerFactory;
+					break;
+				case MISSILE:
+					++numFriendlyMissiles;
+					break;
+				case SOLDIER:
+					++numFriendlySoldiers;
+					break;
+				case SUPPLYDEPOT:
+					++numFriendlySupplyDepot;
+					break;
+				case TANK:
+					++numFriendlyTanks;
+					break;
+				case TANKFACTORY:
+					++numFriendlyTankFactory;
+					break;
+				case TECHNOLOGYINSTITUTE:
+					++numFriendlyTechInstitute;
+					break;
+				case TOWER:
+					break;
+				case TRAININGFIELD:
+					++numFriendlyTrainingField;
+					break;
+				default:
+					break;
+				}
 			}
-			switch (r.type) {
-			case AEROSPACELAB:
-				++numEnemyAerospaceLab;
-				break;
-			case BARRACKS:
-				++numEnemyBarracks;
-				break;
-			case BASHER:
-				++numEnemyBashers;
-				break;
-			case BEAVER:
-				++numEnemyBeavers;
-				break;
-			case COMMANDER:
-				++numEnemyCommanders;
-				break;
-			case COMPUTER:
-				++numEnemyComputers;
-				break;
-			case DRONE:
-				++numEnemyDrones;
-				break;
-			case HANDWASHSTATION:
-				++numEnemyHandwashStation;
-				break;
-			case HELIPAD:
-				++numEnemyHelipad;
-				break;
-			case HQ:
-				// No need to count HQ!
-				break;
-			case LAUNCHER:
-				++numEnemyLaunchers;
-				break;
-			case MINER:
-				++numEnemyMiners;
-				break;
-			case MINERFACTORY:
-				++numEnemyMinerFactory;
-				break;
-			case MISSILE:
-				++numEnemyMissiles;
-				break;
-			case SOLDIER:
-				++numEnemySoldiers;
-				break;
-			case SUPPLYDEPOT:
-				++numEnemySupplyDepot;
-				break;
-			case TANK:
-				++numEnemyTanks;
-				break;
-			case TANKFACTORY:
-				++numEnemyTankFactory;
-				break;
-			case TECHNOLOGYINSTITUTE:
-				++numEnemyTechInstitute;
-				break;
-			case TOWER:
-				break;
-			case TRAININGFIELD:
-				++numEnemyTrainingField;
-				break;
-			default:
-				break;
+
+			// Enemy Robot Loop
+			for (int j = enemyLoopStart; j < enemyLoopEnd; ++j) {
+				switch (enemyRobots[j].type) {
+				case AEROSPACELAB:
+					++numEnemyAerospaceLab;
+					break;
+				case BARRACKS:
+					++numEnemyBarracks;
+					break;
+				case BASHER:
+					++numEnemyBashers;
+					break;
+				case BEAVER:
+					++numEnemyBeavers;
+					break;
+				case COMMANDER:
+					++numEnemyCommanders;
+					break;
+				case COMPUTER:
+					++numEnemyComputers;
+					break;
+				case DRONE:
+					++numEnemyDrones;
+					break;
+				case HANDWASHSTATION:
+					++numEnemyHandwashStation;
+					break;
+				case HELIPAD:
+					++numEnemyHelipad;
+					break;
+				case HQ: // No need to count HQ! break; case LAUNCHER:
+					++numEnemyLaunchers;
+					break;
+				case MINER:
+					++numEnemyMiners;
+					break;
+				case MINERFACTORY:
+					++numEnemyMinerFactory;
+					break;
+				case MISSILE:
+					++numEnemyMissiles;
+					break;
+				case SOLDIER:
+					++numEnemySoldiers;
+					break;
+				case SUPPLYDEPOT:
+					++numEnemySupplyDepot;
+					break;
+				case TANK:
+					++numEnemyTanks;
+					break;
+				case TANKFACTORY:
+					++numEnemyTankFactory;
+					break;
+				case TECHNOLOGYINSTITUTE:
+					++numEnemyTechInstitute;
+					break;
+				case TOWER:
+					break;
+				case TRAININGFIELD:
+					++numEnemyTrainingField;
+					break;
+				default:
+					break;
+
+				}
 
 			}
+			break;
+		case 4:
+			// Friendly Buildings Broadcasts
+			rc.broadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL,
+					numFriendlySupplyDepot);
+			rc.broadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL,
+					numFriendlyMinerFactory);
+			rc.broadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL,
+					numFriendlyTechInstitute);
+			rc.broadcast(NUM_FRIENDLY_BARRACKS_CHANNEL, numFriendlyBarracks);
+			rc.broadcast(NUM_FRIENDLY_HELIPAD_CHANNEL, numFriendlyHelipad);
+			rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL,
+					numFriendlyTrainingField);
+			rc.broadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL,
+					numFriendlyTankFactory);
+			rc.broadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL,
+					numFriendlyAerospaceLab);
+			rc.broadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL,
+					numFriendlyHandwashStation);
+			// Friendly Units Broadcasts
+			rc.broadcast(NUM_FRIENDLY_BEAVERS_CHANNEL, numFriendlyBeavers);
+			rc.broadcast(NUM_FRIENDLY_MINERS_CHANNEL, numFriendlyMiners);
+			rc.broadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL, numFriendlyComputers);
+			rc.broadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL, numFriendlySoldiers);
+			rc.broadcast(NUM_FRIENDLY_BASHERS_CHANNEL, numFriendlyBashers);
+			rc.broadcast(NUM_FRIENDLY_DRONES_CHANNEL, numFriendlyDrones);
+			rc.broadcast(NUM_FRIENDLY_TANKS_CHANNEL, numFriendlyTanks);
+			rc.broadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL, numFriendlyLaunchers);
+			rc.broadcast(NUM_FRIENDLY_MISSILES_CHANNEL, numFriendlyMissiles);
+			// Enemy Buildings Broadcasts
+			rc.broadcast(NUM_ENEMY_SUPPLYDEPOT_CHANNEL, numEnemySupplyDepot);
+			rc.broadcast(NUM_ENEMY_MINERFACTORY_CHANNEL, numEnemyMinerFactory);
+			rc.broadcast(NUM_ENEMY_TECHINSTITUTE_CHANNEL, numEnemyTechInstitute);
+			rc.broadcast(NUM_ENEMY_BARRACKS_CHANNEL, numEnemyBarracks);
+			rc.broadcast(NUM_ENEMY_HELIPAD_CHANNEL, numEnemyHelipad);
+			rc.broadcast(NUM_ENEMY_TRAININGFIELD_CHANNEL, numEnemyTrainingField);
+			rc.broadcast(NUM_ENEMY_TANKFACTORY_CHANNEL, numEnemyTankFactory);
+			rc.broadcast(NUM_ENEMY_AEROSPACELAB_CHANNEL, numEnemyAerospaceLab);
+			rc.broadcast(NUM_ENEMY_HANDWASHSTATION_CHANNEL,
+					numEnemyHandwashStation);
+			// Enemy Units Broadcasts
+			rc.broadcast(NUM_ENEMY_BEAVERS_CHANNEL, numEnemyBeavers);
+			rc.broadcast(NUM_ENEMY_MINERS_CHANNEL, numEnemyMiners);
+			rc.broadcast(NUM_ENEMY_COMPUTERS_CHANNEL, numEnemyComputers);
+			rc.broadcast(NUM_ENEMY_SOLDIERS_CHANNEL, numEnemySoldiers);
+			rc.broadcast(NUM_ENEMY_BASHERS_CHANNEL, numEnemyBashers);
+			rc.broadcast(NUM_ENEMY_DRONES_CHANNEL, numEnemyDrones);
+			rc.broadcast(NUM_ENEMY_TANKS_CHANNEL, numEnemyTanks);
+			rc.broadcast(NUM_ENEMY_COMMANDERS_CHANNEL, numEnemyCommanders);
+			rc.broadcast(NUM_ENEMY_LAUNCHERS_CHANNEL, numEnemyLaunchers);
+			rc.broadcast(NUM_ENEMY_MISSILES_CHANNEL, numEnemyMissiles);
+			break;
 		}
 
-		// Enemy Buildings Broadcasts
-		rc.broadcast(NUM_ENEMY_SUPPLYDEPOT_CHANNEL, numEnemySupplyDepot);
-		rc.broadcast(NUM_ENEMY_MINERFACTORY_CHANNEL, numEnemyMinerFactory);
-		rc.broadcast(NUM_ENEMY_TECHINSTITUTE_CHANNEL, numEnemyTechInstitute);
-		rc.broadcast(NUM_ENEMY_BARRACKS_CHANNEL, numEnemyBarracks);
-		rc.broadcast(NUM_ENEMY_HELIPAD_CHANNEL, numEnemyHelipad);
-		rc.broadcast(NUM_ENEMY_TRAININGFIELD_CHANNEL, numEnemyTrainingField);
-		rc.broadcast(NUM_ENEMY_TANKFACTORY_CHANNEL, numEnemyTankFactory);
-		rc.broadcast(NUM_ENEMY_AEROSPACELAB_CHANNEL, numEnemyAerospaceLab);
-		rc.broadcast(NUM_ENEMY_HANDWASHSTATION_CHANNEL, numEnemyHandwashStation);
-		// Enemy Units Broadcasts
-		rc.broadcast(NUM_ENEMY_BEAVERS_CHANNEL, numEnemyBeavers);
-		rc.broadcast(NUM_ENEMY_MINERS_CHANNEL, numEnemyMiners);
-		rc.broadcast(NUM_ENEMY_COMPUTERS_CHANNEL, numEnemyComputers);
-		rc.broadcast(NUM_ENEMY_SOLDIERS_CHANNEL, numEnemySoldiers);
-		rc.broadcast(NUM_ENEMY_BASHERS_CHANNEL, numEnemyBashers);
-		rc.broadcast(NUM_ENEMY_DRONES_CHANNEL, numEnemyDrones);
-		rc.broadcast(NUM_ENEMY_TANKS_CHANNEL, numEnemyTanks);
-		rc.broadcast(NUM_ENEMY_COMMANDERS_CHANNEL, numEnemyCommanders);
-		rc.broadcast(NUM_ENEMY_LAUNCHERS_CHANNEL, numEnemyLaunchers);
-		rc.broadcast(NUM_ENEMY_MISSILES_CHANNEL, numEnemyMissiles);
 	}
 }
