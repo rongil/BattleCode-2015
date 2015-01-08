@@ -24,8 +24,8 @@ public class RobotPlayer {
 	 * 30-39: Enemy Units
 	 *************************************************************************/
 	// Friendly Buildings Channels
-	private static final int NUM_FRIENDLY_SUPPLY_DEPOT_CHANNEL = 1;
-	private static final int NUM_FRIENDLY_MINER_FACTORY_CHANNEL = 2;
+	private static final int NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL = 1;
+	private static final int NUM_FRIENDLY_MINERFACTORY_CHANNEL = 2;
 	private static final int NUM_FRIENDLY_TECHINSTITUTE_CHANNEL = 3;
 	private static final int NUM_FRIENDLY_BARRACKS_CHANNEL = 4;
 	private static final int NUM_FRIENDLY_HELIPAD_CHANNEL = 5;
@@ -127,37 +127,48 @@ public class RobotPlayer {
 				case BEAVER:
 					attackEnemyZero();
 
-					if (Clock.getRoundNum() < 500) {
+					// Limit the number of miner factories
+					if (Clock.getRoundNum() < 400) {
 						buildUnit(RobotType.MINERFACTORY);
 					}
 
-					/*
-					 * P(TRAININGFIELD) = 0.025 
+					/**********************************************************
+					 * P(TRAININGFIELD) = 0.025
+					 * --------------------------------------------------------
 					 * P(TECHNOLOGYINSTITUTE) = 0.025
+					 * --------------------------------------------------------
 					 * P(HANDWASHSTATION) = 0.05
+					 * --------------------------------------------------------
 					 * P(MINERFACTORY) = 0.1
+					 * --------------------------------------------------------
 					 * P(SUPPLYDEPOT) = 0.15
+					 * --------------------------------------------------------
 					 * P(TANKFACTORY) = 0.15
+					 * --------------------------------------------------------
 					 * P(HELIPAD) = 0.15
+					 * --------------------------------------------------------
 					 * P(AEROSPACELAB) = 0.15
+					 * -------------------------------------------------------
 					 * P(BARRACKS) = 0.2
-					 */
+					 *********************************************************/
 
 					else if (fate < 0.025) {
-						if(rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1){
+						if (rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
 							buildUnit(RobotType.TRAININGFIELD);
 						}
 					} else if (0.025 <= fate && fate < 0.05) {
-						if(rc.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1){
+						if (rc.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
 							buildUnit(RobotType.TECHNOLOGYINSTITUTE);
 						}
 					} else if (0.05 <= fate && fate < 0.06) {
 						buildUnit(RobotType.HANDWASHSTATION);
 					} else if (0.1 <= fate && fate < 0.2) {
-						if(rc.readBroadcast(NUM_FRIENDLY_SUPPLY_DEPOT_CHANNEL) < 10){
+						if (rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
 							buildUnit(RobotType.SUPPLYDEPOT);
 						}
-					} else if (0.2 <= fate && fate < 0.35) {
+					} else if (0.2 <= fate
+							&& fate < 0.35
+							&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
 						buildUnit(RobotType.MINERFACTORY);
 					} else if (0.35 <= fate && fate < 0.5) {
 						buildUnit(RobotType.TANKFACTORY);
@@ -173,6 +184,8 @@ public class RobotPlayer {
 
 					break;
 				case COMMANDER:
+					attackEnemyZero();
+					moveAround();
 					break;
 				case COMPUTER:
 					break;
@@ -193,12 +206,14 @@ public class RobotPlayer {
 					mineAndMove();
 					break;
 				case MINERFACTORY:
-					int minerCount = rc.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
-					
-					if(rand.nextDouble() <= Math.pow(Math.E, -minerCount * 0.05)){
+					int minerCount = rc
+							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
+
+					if (rand.nextDouble() <= Math.pow(Math.E,
+							-minerCount * 0.05)) {
 						spawnUnit(RobotType.MINER);
 					}
-					
+
 					break;
 				case MISSILE:
 					rc.explode();
@@ -228,6 +243,15 @@ public class RobotPlayer {
 					attackEnemyZero(); // basic attacking method
 					break;
 				case TRAININGFIELD:
+					// Limit the number of commanders that will be produced in
+					// the game (assuming any die) since their cost increases.
+					int numCommanders = rc
+							.readBroadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL);
+					if (!rc.hasCommander() && numCommanders < 3) {
+						spawnUnit(RobotType.COMMANDER);
+						rc.broadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL,
+								numCommanders + 1);
+					}
 					break;
 				default:
 					break;
@@ -271,17 +295,25 @@ public class RobotPlayer {
 
 				if (isSafe(spawnLoc)) {
 					rc.spawn(testDir, roboType);
-					
-					if(roboType == RobotType.SUPPLYDEPOT){
-						rc.broadcast(NUM_FRIENDLY_SUPPLY_DEPOT_CHANNEL, rc.readBroadcast(NUM_FRIENDLY_SUPPLY_DEPOT_CHANNEL) + 1);
-					}else if(roboType == RobotType.BEAVER){
-						rc.broadcast(NUM_FRIENDLY_BEAVERS_CHANNEL, rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) + 1);
-					}else if(roboType == RobotType.TECHNOLOGYINSTITUTE){
-						rc.broadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL, rc.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) + 1);
-					}else if(roboType == RobotType.TRAININGFIELD){
-						rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) + 1);
+
+					if (roboType == RobotType.SUPPLYDEPOT) {
+						rc.broadcast(
+								NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL,
+								rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) + 1);
+					} else if (roboType == RobotType.BEAVER) {
+						rc.broadcast(
+								NUM_FRIENDLY_BEAVERS_CHANNEL,
+								rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) + 1);
+					} else if (roboType == RobotType.TECHNOLOGYINSTITUTE) {
+						rc.broadcast(
+								NUM_FRIENDLY_TECHINSTITUTE_CHANNEL,
+								rc.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) + 1);
+					} else if (roboType == RobotType.TRAININGFIELD) {
+						rc.broadcast(
+								NUM_FRIENDLY_TRAININGFIELD_CHANNEL,
+								rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) + 1);
 					}
-					
+
 					break;
 				}
 			} else {
@@ -465,7 +497,6 @@ public class RobotPlayer {
 		int numFriendlyBashers = 0;
 		int numFriendlyDrones = 0;
 		int numFriendlyTanks = 0;
-		int numFriendlyCommanders = 0;
 		int numFriendlyLaunchers = 0;
 		int numFriendlyMissiles = 0;
 
@@ -496,7 +527,7 @@ public class RobotPlayer {
 		 * Our Robots
 		 */
 		for (RobotInfo r : myRobots) {
-			switch(r.type) {
+			switch (r.type) {
 			case AEROSPACELAB:
 				++numFriendlyAerospaceLab;
 				break;
@@ -508,9 +539,6 @@ public class RobotPlayer {
 				break;
 			case BEAVER:
 				++numFriendlyBeavers;
-				break;
-			case COMMANDER:
-				++numFriendlyCommanders;
 				break;
 			case COMPUTER:
 				++numFriendlyComputers;
@@ -561,13 +589,12 @@ public class RobotPlayer {
 				break;
 			default:
 				break;
-			
+
 			}
 		}
 		// Friendly Buildings Broadcasts
-		rc.broadcast(NUM_FRIENDLY_SUPPLY_DEPOT_CHANNEL, numFriendlySupplyDepot);
-		rc.broadcast(NUM_FRIENDLY_MINER_FACTORY_CHANNEL,
-				numFriendlyMinerFactory);
+		rc.broadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL, numFriendlySupplyDepot);
+		rc.broadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL, numFriendlyMinerFactory);
 		rc.broadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL,
 				numFriendlyTechInstitute);
 		rc.broadcast(NUM_FRIENDLY_BARRACKS_CHANNEL, numFriendlyBarracks);
@@ -586,7 +613,6 @@ public class RobotPlayer {
 		rc.broadcast(NUM_FRIENDLY_BASHERS_CHANNEL, numFriendlyBashers);
 		rc.broadcast(NUM_FRIENDLY_DRONES_CHANNEL, numFriendlyDrones);
 		rc.broadcast(NUM_FRIENDLY_TANKS_CHANNEL, numFriendlyTanks);
-		rc.broadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL, numFriendlyCommanders);
 		rc.broadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL, numFriendlyLaunchers);
 		rc.broadcast(NUM_FRIENDLY_MISSILES_CHANNEL, numFriendlyMissiles);
 
@@ -662,7 +688,7 @@ public class RobotPlayer {
 				break;
 			default:
 				break;
-			
+
 			}
 		}
 
