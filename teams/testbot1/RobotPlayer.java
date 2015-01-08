@@ -125,9 +125,13 @@ public class RobotPlayer {
 					break;
 				case BARRACKS:
 					if (fate < .6) {
-						spawnUnit(RobotType.SOLDIER);
+						if (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) < 120) {
+							spawnUnit(RobotType.SOLDIER);
+						}
 					} else {
-						spawnUnit(RobotType.BASHER);
+						if (rc.readBroadcast(NUM_FRIENDLY_BASHERS_CHANNEL) < 50) {
+							spawnUnit(RobotType.BASHER);
+						}
 					}
 					break;
 				case BASHER:
@@ -138,24 +142,20 @@ public class RobotPlayer {
 				case BEAVER:
 					attackEnemyZero();
 
-					// Limit the number of miner factories
-					if (Clock.getRoundNum() < 500
-							&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
-						buildUnit(RobotType.MINERFACTORY);
-					}
-
 					/**********************************************************
+					 * Probability List
+					 * --------------------------------------------------------
 					 * P(TRAININGFIELD) = 0.025
 					 * --------------------------------------------------------
 					 * P(TECHNOLOGYINSTITUTE) = 0.025
 					 * --------------------------------------------------------
 					 * P(HANDWASHSTATION) = 0.05
 					 * --------------------------------------------------------
-					 * P(MINERFACTORY) = 0.1
+					 * P(MINERFACTORY) = Non-probabilistic
 					 * --------------------------------------------------------
 					 * P(SUPPLYDEPOT) = 0.15
 					 * --------------------------------------------------------
-					 * P(TANKFACTORY) = 0.15
+					 * P(TANKFACTORY) = 0.3
 					 * --------------------------------------------------------
 					 * P(HELIPAD) = 0.15
 					 * --------------------------------------------------------
@@ -164,7 +164,11 @@ public class RobotPlayer {
 					 * P(BARRACKS) = 0.2
 					 *********************************************************/
 
-					else if (fate < 0.025) {
+					// Limit the number of miner factories
+					if (roundNum < 500
+							&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
+						buildUnit(RobotType.MINERFACTORY);
+					} else if (fate < 0.025) {
 						if (rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
 							buildUnit(RobotType.TRAININGFIELD);
 						}
@@ -187,7 +191,7 @@ public class RobotPlayer {
 						buildUnit(RobotType.HELIPAD);
 					} else if (0.65 <= fate && fate < 0.8) {
 						buildUnit(RobotType.AEROSPACELAB);
-					} else {
+					} else if (0.8 <= fate && fate < 1.0) {
 						buildUnit(RobotType.BARRACKS);
 					}
 
@@ -205,12 +209,14 @@ public class RobotPlayer {
 					moveAround();
 					break;
 				case HANDWASHSTATION:
+					// Wash hands.
 					break;
 				case HELIPAD:
 					spawnUnit(RobotType.DRONE);
 					break;
 				case LAUNCHER:
-					rc.launchMissile(getRandomDirection()); // TODO: Fix later
+					// TODO: Fix missile launching
+					rc.launchMissile(getRandomDirection());
 					break;
 				case MINER:
 					attackEnemyZero();
@@ -320,9 +326,8 @@ public class RobotPlayer {
 
 	private static Direction bugNav(MapLocation target)
 			throws GameActionException {
-		// TODO: make it possible for robots to enter non-safe squares when they
-		// have
-		// strength in numbers
+		// TODO: Make it possible for robots to enter non-safe squares when they
+		// have strength in numbers
 
 		Direction straight = rc.getLocation().directionTo(target);
 		MapLocation currentLoc = rc.getLocation();
@@ -404,7 +409,7 @@ public class RobotPlayer {
 	}
 
 	private static void moveAround() throws GameActionException {
-		if (rand.nextDouble() < 0.05) {
+		if (rand.nextDouble() < 0.1) {
 			if (rand.nextDouble() < 0.5) {
 				facing = facing.rotateLeft(); // 45 degree turn
 			} else {
@@ -549,8 +554,11 @@ public class RobotPlayer {
 		}
 	}
 
-	// NOTE: These variables are kept down here since they are solely used while
-	// updating quantity values.
+	/**************************************************************************
+	 * NOTE: These variables are kept down here since they are solely used when
+	 * updating quantity values. They need to be maintained outside the method
+	 * since they are used across multiple rounds.
+	 *************************************************************************/
 	// Friendly Buildings
 	private static int numFriendlySupplyDepot;
 	private static int numFriendlyMinerFactory;
