@@ -1,4 +1,5 @@
 // Defense Idea: defend midway between HQ's AND defend at a certain radius away from your own HQ
+
 package defenseBot1;
 
 import battlecode.common.*;
@@ -409,34 +410,36 @@ public class RobotPlayer {
 
 			MapLocation currentLocation = rc.getLocation();
 			if(currentLocation.distanceSquaredTo(myHQ) > 2 * currentLocation.distanceSquaredTo(enemyHQ)){
-				double turnLittle = rand.nextDouble();
-				Direction currentDirection = currentLocation.directionTo(myHQ);
+//				double turnLittle = rand.nextDouble();
+//				Direction currentDirection = currentLocation.directionTo(myHQ);
+//				
+//				if(turnLittle < 0.33){
+//					currentDirection = currentDirection.rotateLeft();
+//				}else if(turnLittle > 0.33 & turnLittle < 0.66){
+//					currentDirection = currentDirection.rotateRight();
+//				}
+//				
+//				MapLocation targetLocation = currentLocation.add(currentDirection);
+//				Direction targetDirection = bugNav(targetLocation);
 				
-				if(turnLittle < 0.33){
-					currentDirection = currentDirection.rotateLeft();
-				}else if(turnLittle > 0.33 & turnLittle < 0.66){
-					currentDirection = currentDirection.rotateRight();
-				}
-				
-				MapLocation targetLocation = currentLocation.add(currentDirection);
-				Direction targetDirection = bugNav(targetLocation);
-				
+				Direction targetDirection = bugNav(myHQ);
 				if(targetDirection != Direction.NONE){
 					rc.move(targetDirection);
 				}
 			}else if(currentLocation.distanceSquaredTo(enemyHQ) > 1.1 * currentLocation.distanceSquaredTo(myHQ)){
-				double turnLittle = rand.nextDouble();
-				Direction currentDirection = currentLocation.directionTo(enemyHQ);
+//				double turnLittle = rand.nextDouble();
+//				Direction currentDirection = currentLocation.directionTo(enemyHQ);
+//				
+//				if(turnLittle < 0.33){
+//					currentDirection = currentDirection.rotateLeft();
+//				}else if(turnLittle > 0.33 & turnLittle < 0.66){
+//					currentDirection = currentDirection.rotateRight();
+//				}
+//				
+//				MapLocation targetLocation = currentLocation.add(currentDirection);
+//				Direction targetDirection = bugNav(targetLocation);
 				
-				if(turnLittle < 0.33){
-					currentDirection = currentDirection.rotateLeft();
-				}else if(turnLittle > 0.33 & turnLittle < 0.66){
-					currentDirection = currentDirection.rotateRight();
-				}
-				
-				MapLocation targetLocation = currentLocation.add(currentDirection);
-				Direction targetDirection = bugNav(targetLocation);
-				
+				Direction targetDirection = bugNav(enemyHQ);
 				if(targetDirection != Direction.NONE){
 					rc.move(targetDirection);
 				}
