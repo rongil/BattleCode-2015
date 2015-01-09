@@ -296,7 +296,11 @@ public class RobotPlayer {
 					break;
 				case MINER:
 					attackEnemyZero();
-					mineAndMove();
+					if(roundNum > 800){
+						defendHQ();
+					}else{
+						mineAndMove();
+					}
 					break;
 				case MINERFACTORY:
 					int minerCount = rc
@@ -401,7 +405,7 @@ public class RobotPlayer {
 //					rc.move(targetDirection);
 //				}
 //			}
-			
+//			
 			MapLocation currentLocation = rc.getLocation();
 			if(currentLocation.distanceSquaredTo(myHQ) > 2 * currentLocation.distanceSquaredTo(enemyHQ)){
 				Direction targetDirection = bugNav(myHQ);
