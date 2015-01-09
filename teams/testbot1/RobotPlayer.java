@@ -650,25 +650,104 @@ public class RobotPlayer {
 		}
 	}
 
+	private static void flyOnBoundary() throws GameActionException {
+		defendHQ();
+		moveAround();
+	}
+	
 	private static void defendHQ() throws GameActionException {
-		int currentRadiusSquared = rc.readBroadcast(HQ_RADIUS_CHANNEL);
-		MapLocation currentLocation = rc.getLocation();
+		if(rc.isCoreReady()){
+//			int currentRadiusSquared = rc.readBroadcast(HQ_RADIUS_CHANNEL);
+//			MapLocation currentLocation = rc.getLocation();
+//			double squaredDistanceDiff = Math.abs(currentLocation.distanceSquaredTo(myHQ)
+//					- currentRadiusSquared);
+//			if (squaredDistanceDiff > 36.0 * RobotType.HQ.attackRadiusSquared || squaredDistanceDiff < 25.0 * RobotType.HQ.attackRadiusSquared) {
+//				Direction rightDirection = myHQ.directionTo(currentLocation);
+//				MapLocation targetLocation = myHQ.add(rightDirection, 1);
+//				
+//				Direction targetDirection = bugNav(targetLocation); 
+//				if(targetDirection != Direction.NONE){
+//					rc.move(targetDirection);
+//				}
+//			}
 
-		if (Math.abs(currentLocation.distanceSquaredTo(myHQ)
-				- currentRadiusSquared) > 2.5) {
-			Direction rightDirection = myHQ.directionTo(currentLocation);
-			MapLocation targetLocation = myHQ.add(rightDirection, 1);
-			bugNav(targetLocation);
+			MapLocation currentLocation = rc.getLocation();
+			if(currentLocation.distanceSquaredTo(myHQ) > 2 * currentLocation.distanceSquaredTo(enemyHQ)){
+//				double turnLittle = rand.nextDouble();
+//				Direction currentDirection = currentLocation.directionTo(myHQ);
+//				
+//				if(turnLittle < 0.33){
+//					currentDirection = currentDirection.rotateLeft();
+//				}else if(turnLittle > 0.33 & turnLittle < 0.66){
+//					currentDirection = currentDirection.rotateRight();
+//				}
+//				
+//				MapLocation targetLocation = currentLocation.add(currentDirection);
+//				Direction targetDirection = bugNav(targetLocation);
+				
+				Direction targetDirection = bugNav(myHQ);
+				if(targetDirection != Direction.NONE){
+					rc.move(targetDirection);
+				}
+			}else if(currentLocation.distanceSquaredTo(enemyHQ) > 1.1 * currentLocation.distanceSquaredTo(myHQ)){
+//				double turnLittle = rand.nextDouble();
+//				Direction currentDirection = currentLocation.directionTo(enemyHQ);
+//				
+//				if(turnLittle < 0.33){
+//					currentDirection = currentDirection.rotateLeft();
+//				}else if(turnLittle > 0.33 & turnLittle < 0.66){
+//					currentDirection = currentDirection.rotateRight();
+//				}
+//				
+//				MapLocation targetLocation = currentLocation.add(currentDirection);
+//				Direction targetDirection = bugNav(targetLocation);
+				
+				Direction targetDirection = bugNav(enemyHQ);
+				if(targetDirection != Direction.NONE){
+					rc.move(targetDirection);
+				}
+			}else{
+				double turnVar = rand.nextDouble();
+				MapLocation newLocation;
+				Direction newDirection;
+				if(turnVar < 0.5){
+					newDirection = currentLocation.directionTo(myHQ).rotateRight().rotateRight();
+					newLocation = currentLocation.add(newDirection);
+				}else{
+					newDirection = currentLocation.directionTo(myHQ).rotateLeft().rotateLeft();
+					newLocation = currentLocation.add(newDirection);
+				}
+				
+				Direction targetDirection = bugNav(newLocation);
+				if(targetDirection != Direction.NONE){
+					rc.move(targetDirection);
+				}
+			}
 		}
 	}
 
 	private static void broadcastRadiusSquared() throws GameActionException {
-		double soldierCount = (double) rc
-				.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL);
-		int radiusSquared = (int) Math.pow(soldierCount / (2.0 * Math.PI), 2);
+		int radiusSquared;		
+		MapLocation[] towerLocations = rc.senseTowerLocations();
+		
+		if(towerLocations.length != 0){
+			double maxTowerDistanceSquared = 0;
+			
+			for(MapLocation towerLocation : towerLocations){
+				double TowerHQdistSquared = myHQ.distanceSquaredTo(towerLocation);
+				maxTowerDistanceSquared = (TowerHQdistSquared > maxTowerDistanceSquared) ? TowerHQdistSquared : maxTowerDistanceSquared;
+			}
+			
+			radiusSquared = (int) maxTowerDistanceSquared;
+		}else{
+			double soldierCount = (double) rc
+					.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL);
+			radiusSquared = (int) Math.pow(soldierCount / (2.0 * Math.PI), 2);			
+		}
+		
 		rc.broadcast(HQ_RADIUS_CHANNEL, radiusSquared);
 	}
-
+	
 	private static void spawnUnit(RobotType roboType)
 			throws GameActionException {
 		Direction testDir = getRandomDirection();
@@ -754,10 +833,10 @@ public class RobotPlayer {
 						+ rc.senseOre(squareTwo) + rc.senseOre(squareThree)
 						+ rc.senseOre(squareFour);
 
-				if (totalOreCount > bestOreCount || bestDestination == null) {
+				if (totalOreCount > bestOreCount) {
 					bestOreCount = totalOreCount;
 					bestDestination = squareFour;
-				} else if (totalOreCount == bestOreCount) {
+				} else if (totalOreCount == bestOreCount  && bestDestination != null) {
 					bestDestination = (rand.nextDouble() > 0.5) ? bestDestination
 							: squareFour;
 				}
@@ -770,7 +849,9 @@ public class RobotPlayer {
 					rc.move(bestDirection);
 				}
 			} else {
-				moveAround();
+				//moveAround();
+				//flyOnBoundary();
+				defendHQ();
 			}
 		}
 	}
