@@ -70,7 +70,7 @@ public class RobotPlayer {
 
 	// Soldier Radius
 	private static final int HQ_RADIUS_CHANNEL = 100;
-
+	
 	private static Direction facing;
 	private static Direction[] directions = { Direction.NORTH,
 			Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
@@ -147,7 +147,8 @@ public class RobotPlayer {
 				case BASHER:
 					// BASHERs attack automatically, so let's just move around
 					// mostly randomly
-					moveAround();
+					// moveAround();
+					flyOnBoundary();
 					break;
 				case BEAVER:
 					attackEnemyZero();
@@ -210,13 +211,28 @@ public class RobotPlayer {
 					break;
 				case COMMANDER:
 					attackEnemyZero();
-					moveAround();
+					//moveAround();
+					flyOnBoundary();
 					break;
 				case COMPUTER:
 					break;
 				case DRONE:
 					attackEnemyZero();
-					moveAround();
+					
+					MapLocation[] towerLocations = rc.senseTowerLocations();
+					if(rc.isCoreReady()){
+						if(rand.nextDouble() > 0.1 || towerLocations.length == 0){
+							flyOnBoundary();
+						}else{
+							int towerNumber = rand.nextInt(towerLocations.length);
+							Direction towerDirection = bugNav(towerLocations[towerNumber]);
+							
+							if(towerDirection != Direction.NONE){
+								rc.move(bugNav(towerLocations[towerNumber]));
+							}
+						}
+					}
+
 					break;
 				case HANDWASHSTATION:
 					// Wash hands.
@@ -249,7 +265,7 @@ public class RobotPlayer {
 					break;
 				case SOLDIER:
 					attackEnemyZero(); // soldiers attack, not mine
-					defendHQ();
+					flyOnBoundary();
 					/*
 					 * moveAround(); POSSIBLE OPTIMIZATION: chase enemies In
 					 * addition, soldiers need to attack towers eventually, so
@@ -314,22 +330,73 @@ public class RobotPlayer {
 		}
 	}
 
-	private static void defendHQ() throws GameActionException {
-		int currentRadiusSquared = rc.readBroadcast(HQ_RADIUS_CHANNEL);
-		MapLocation currentLocation = rc.getLocation();
+//	private static void findBestTarget(){
+//		MapLocation possEnemies[] = 
+//	}
+	private static void flyOnBoundary() throws GameActionException {
+		defendHQ();
+		moveAround();
+	}
 
-		if (Math.abs(currentLocation.distanceSquaredTo(myHQ)
-				- currentRadiusSquared) > 2.5) {
-			Direction rightDirection = myHQ.directionTo(currentLocation);
-			MapLocation targetLocation = myHQ.add(rightDirection, 1);
-			bugNav(targetLocation);
+	private static void defendHQ() throws GameActionException {
+		if(rc.isCoreReady()){
+//			int currentRadiusSquared = rc.readBroadcast(HQ_RADIUS_CHANNEL);
+//			MapLocation currentLocation = rc.getLocation();
+//
+//			if (Math.abs(currentLocation.distanceSquaredTo(myHQ)
+//					- currentRadiusSquared) > 40.0 * RobotType.HQ.attackRadiusSquared) {
+//				Direction rightDirection = myHQ.directionTo(currentLocation);
+//				MapLocation targetLocation = myHQ.add(rightDirection, 1);
+//				
+//				Direction targetDirection = bugNav(targetLocation); 
+//				if(targetDirection != Direction.NONE){
+//					rc.move(targetDirection);
+//				}
+//			}
+			
+			MapLocation currentLocation = rc.getLocation();
+			if(currentLocation.distanceSquaredTo(myHQ) > 2 * currentLocation.distanceSquaredTo(enemyHQ)){
+				Direction targetDirection = bugNav(myHQ);
+				if(targetDirection != Direction.NONE){
+					rc.move(targetDirection);
+				}
+			}else if(currentLocation.distanceSquaredTo(enemyHQ) > 1.1 * currentLocation.distanceSquaredTo(myHQ)){
+				Direction targetDirection = bugNav(enemyHQ);
+				if(targetDirection != Direction.NONE){
+					rc.move(targetDirection);
+				}
+			}else{
+				double turnVar = rand.nextDouble();
+				if(turnVar < 0.5){
+					Direction newDirection = currentLocation.directionTo(myHQ).rotateRight().rotateRight();
+					MapLocation newLocation = currentLocation.add(newDirection);
+				}else{
+					Direction newDirection = currentLocation.directionTo(myHQ).rotateLeft().rotateLeft();
+					MapLocation newLocation = currentLocation.add(newDirection);
+				}
+			}
 		}
 	}
 
 	private static void broadcastRadiusSquared() throws GameActionException {
-		double soldierCount = (double) rc
-				.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL);
-		int radiusSquared = (int) Math.pow(soldierCount / (2.0 * Math.PI), 2);
+		int radiusSquared;		
+		MapLocation[] towerLocations = rc.senseTowerLocations();
+		
+		if(towerLocations.length != 0){
+			double maxTowerDistanceSquared = 0;
+			
+			for(MapLocation towerLocation : towerLocations){
+				double TowerHQdistSquared = myHQ.distanceSquaredTo(towerLocation);
+				maxTowerDistanceSquared = (TowerHQdistSquared > maxTowerDistanceSquared) ? TowerHQdistSquared : maxTowerDistanceSquared;
+			}
+			
+			radiusSquared = (int) maxTowerDistanceSquared;
+		}else{
+			double soldierCount = (double) rc
+					.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL);
+			radiusSquared = (int) Math.pow(soldierCount / (2.0 * Math.PI), 2);			
+		}
+		
 		rc.broadcast(HQ_RADIUS_CHANNEL, radiusSquared);
 	}
 
@@ -418,10 +485,10 @@ public class RobotPlayer {
 						+ rc.senseOre(squareTwo) + rc.senseOre(squareThree)
 						+ rc.senseOre(squareFour);
 
-				if (totalOreCount > bestOreCount || bestDestination == null) {
+				if (totalOreCount > bestOreCount) {
 					bestOreCount = totalOreCount;
 					bestDestination = squareFour;
-				} else if (totalOreCount == bestOreCount) {
+				} else if (totalOreCount == bestOreCount && bestDestination != null) {
 					bestDestination = (rand.nextDouble() > 0.5) ? bestDestination
 							: squareFour;
 				}
@@ -434,7 +501,9 @@ public class RobotPlayer {
 					rc.move(bestDirection);
 				}
 			} else {
-				moveAround();
+				//moveAround();
+				//flyOnBoundary();
+				defendHQ();
 			}
 		}
 	}
