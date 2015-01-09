@@ -1,8 +1,9 @@
 package swarmbot1;
 
-import battlecode.common.*;
-
+import java.util.HashMap;
 import java.util.Random;
+
+import battlecode.common.*;
 
 /**
  * Keeping everything static to save the bytecode from the this statement
@@ -11,7 +12,7 @@ import java.util.Random;
 public class RobotPlayer {
 
 	/**************************************************************************
-	 * BROADCAST _CHANNELS
+	 * BROADCAST_CHANNELS
 	 * ------------------------------------------------------------------------
 	 * NOTE: Building/Units order follows directly from online documentation.
 	 * ------------------------------------------------------------------------
@@ -24,7 +25,12 @@ public class RobotPlayer {
 	 * 30-39: Enemy Units
 	 * ------------------------------------------------------------------------
 	 * 100-999: Coordinate Planning + Rallying Points
+	 * ------------------------------------------------------------------------
+	 * 1000-1999: Offense/Defense Signals (e.g. Swarm)
+	 * ------------------------------------------------------------------------
+	 * 2000-2999: Priority Mappings
 	 *************************************************************************/
+
 	// Friendly Buildings Channels
 	private static final int NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL = 1;
 	private static final int NUM_FRIENDLY_MINERFACTORY_CHANNEL = 2;
@@ -68,8 +74,50 @@ public class RobotPlayer {
 	private static final int NUM_ENEMY_LAUNCHERS_CHANNEL = 38;
 	private static final int NUM_ENEMY_MISSILES_CHANNEL = 39;
 
-	// Soldier Radius
+	// Coordinate Planning + Rallying Points
 	private static final int HQ_RADIUS_CHANNEL = 100;
+	// TODO: Use a single channel and some int manipulation to reduce number of
+	// channels for location broadcasting
+	private static final int GENERAL_SWARM_LOCATION_X_CHANNEL = 200;
+	private static final int GENERAL_SWARM_LOCATION_Y_CHANNEL = 210;
+	private static final int BEAVER_SWARM_LOCATION_X_CHANNEL = 201;
+	private static final int BEAVER_SWARM_LOCATION_Y_CHANNEL = 211;
+	private static final int MINER_SWARM_LOCATION_X_CHANNEL = 202;
+	private static final int MINER_SWARM_LOCATION_Y_CHANNEL = 212;
+	private static final int COMPUTER_SWARM_LOCATION_X_CHANNEL = 203;
+	private static final int COMPUTER_SWARM_LOCATION_Y_CHANNEL = 213;
+	private static final int SOLDIER_SWARM_LOCATION_X_CHANNEL = 204;
+	private static final int SOLDIER_SWARM_LOCATION_Y_CHANNEL = 214;
+	private static final int BASHER_SWARM_LOCATION_X_CHANNEL = 205;
+	private static final int BASHER_SWARM_LOCATION_Y_CHANNEL = 215;
+	private static final int DRONE_SWARM_LOCATION_X_CHANNEL = 206;
+	private static final int DRONE_SWARM_LOCATION_Y_CHANNEL = 216;
+	private static final int TANK_SWARM_LOCATION_X_CHANNEL = 207;
+	private static final int TANK_SWARM_LOCATION_Y_CHANNEL = 217;
+	private static final int COMMANDER_SWARM_LOCATION_X_CHANNEL = 208;
+	private static final int COMMANDER_SWARM_LOCATION_Y_CHANNEL = 218;
+	private static final int MISSILE_SWARM_LOCATION_X_CHANNEL = 209;
+	private static final int MISSILE_SWARM_LOCATION_Y_CHANNEL = 219;
+
+	// Offensive + Defensive Signals
+	private static final int GENERAL_SWARM_CHANNEL = 1000;
+	private static final int BEAVER_SWARM_CHANNEL = 1001;
+	private static final int MINER_SWARM_CHANNEL = 1002;
+	private static final int COMPUTER_SWARM_CHANNEL = 1003;
+	private static final int SOLDIER_SWARM_CHANNEL = 1004;
+	private static final int BASHER_SWARM_CHANNEL = 1005;
+	private static final int DRONE_SWARM_CHANNEL = 1006;
+	private static final int TANK_SWARM_CHANNEL = 1007;
+	private static final int COMMANDER_SWARM_CHANNEL = 1008;
+	private static final int MISSILE_SWARM_CHANNEL = 1009;
+
+	// ------------------------------------------------------------------------
+	// Action Constants
+	// ------------------------------------------------------------------------
+	private static final int NO_ACTION = 0;
+	private static final int GO_TO_LOCATION = 1;
+
+	// ^^^^^^^^^^^^^^^^^^ BROADCAST CONSTANTS END HERE ^^^^^^^^^^^^^^^^^^^^^^^^
 
 	private static Direction facing;
 	private static Direction[] directions = { Direction.NORTH,
@@ -77,12 +125,14 @@ public class RobotPlayer {
 			Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
 			Direction.NORTH_WEST };
 	private static Random rand; /*
-								 * this will help to distinguish each robot
+								 * This will help to distinguish each robot
 								 * otherwise, each robot will behave exactly the
-								 * same
+								 * same.
 								 */
 	private static Team Enemy;
 	private static RobotController rc;
+
+	private static HashMap<RobotType, Integer> attackPriorityMap;
 
 	private static int roundNum;
 	private static RobotInfo[] friendlyRobots;
@@ -91,8 +141,6 @@ public class RobotPlayer {
 	private static MapLocation myHQ;
 	private static MapLocation enemyHQ;
 
-	private static int swarm;
-
 	public static void run(RobotController myRC) {
 
 		rc = myRC;
@@ -100,36 +148,159 @@ public class RobotPlayer {
 		myHQ = rc.senseHQLocation();
 		enemyHQ = rc.senseEnemyHQLocation();
 
-		rand = new Random(rc.getID());
-		facing = getRandomDirection(); // randomize starting direction
+		boolean skipFirstRound = true;
 
-		// if the run method ends, the robot dies
+		// Attack Priority Map (only for attacking structures)
+		// Lower Number -> Higher Priority
+
+		switch (rc.getType()) {
+		case BASHER:
+		case BEAVER:
+		case COMMANDER:
+		case DRONE:
+		case HQ:
+		case MINER:
+		case SOLDIER:
+		case TANK:
+		case TOWER:
+			attackPriorityMap = new HashMap<RobotType, Integer>();
+			attackPriorityMap.put(RobotType.AEROSPACELAB, 6);
+			attackPriorityMap.put(RobotType.BARRACKS, 4); // Troop production
+			attackPriorityMap.put(RobotType.BASHER, 5);
+			attackPriorityMap.put(RobotType.BEAVER, 2); // Buildings
+			attackPriorityMap.put(RobotType.COMMANDER, 5);
+			attackPriorityMap.put(RobotType.COMPUTER, 0); // One HP
+			attackPriorityMap.put(RobotType.DRONE, 5);
+			attackPriorityMap.put(RobotType.HANDWASHSTATION, 7);
+			attackPriorityMap.put(RobotType.HELIPAD, 5);
+			attackPriorityMap.put(RobotType.HQ, 0); // Main target
+			attackPriorityMap.put(RobotType.LAUNCHER, 5);
+			attackPriorityMap.put(RobotType.MINER, 3);
+			attackPriorityMap.put(RobotType.MINERFACTORY, 3); // Ore collection
+			attackPriorityMap.put(RobotType.MISSILE, 5);
+			attackPriorityMap.put(RobotType.SOLDIER, 5);
+			attackPriorityMap.put(RobotType.SUPPLYDEPOT, 6);
+			attackPriorityMap.put(RobotType.TANK, 5);
+			attackPriorityMap.put(RobotType.TANKFACTORY, 5);
+			attackPriorityMap.put(RobotType.TECHNOLOGYINSTITUTE, 7);
+			attackPriorityMap.put(RobotType.TOWER, 1); // Weaken HQ
+			attackPriorityMap.put(RobotType.TRAININGFIELD, 6);
+			skipFirstRound = true;
+			break;
+		default:
+			break;
+
+		}
+
+		rand = new Random(rc.getID());
+		facing = getRandomDirection(); // Randomize starting direction
+
+		// Warning: If the run method ends, the robot dies!
 		while (true) {
 			try {
+				// Avoid too much computation if initializing anything.
+				if (skipFirstRound) {
+					skipFirstRound = false;
+					rc.yield();
+				}
+
 				// Random number from 0 to 1 for probabilistic decisions
 				double fate = rand.nextDouble();
 				// Get the round number
 				roundNum = Clock.getRoundNum();
-				swarm = rc.readBroadcast(1000);
+				// Get robot type
+				RobotType type = rc.getType();
+				// General robot swarm variable
+				int allRobotSwarm;
 
-				switch (rc.getType()) {
+				switch (type) {
 				case HQ:
 					/**********************************************************
 					 * Update unit counts every so often! Distributes the
 					 * counting over a few consecutive rounds.
 					 *********************************************************/
-					if (roundNum % 20 < 5) {
+					if (roundNum % 5 < 5) { // NOTE: This can be adjusted to
+											// give slots to other computations,
+											// such as optimal path finding.
 						updateUnitCounts();
 					}
-					attackEnemyZero(); /*
-										 * we can this method first before
-										 * spawning beavers because we probably
-										 * will want to spawn more efficient
-										 * creatures such as miners; in
-										 * addition, spawning introduces
-										 * attacking delay
-										 */
-					// Limit number of beavers
+
+					/**********************************************************
+					 * Robot Army Coordination Signals
+					 *********************************************************/
+
+					// Start Offensive Swarm Conditions | Friendly(>=) Enemy(<)
+					// ========================================================
+					// Total Robot Difference ----------------------------> 300
+					// Number of Friendly Bashers ------------------------> 70
+					// Number of Friendly Soldiers -----------------------> 150
+					// Number of Friendly Tanks --------------------------> 40
+					// Number of Friendly Drones -------------------------> 60
+					// Number of Friendly Missiles -----------------------> 30
+					// Round 1800+ AND Number of Friendly Soldiers -------> 30
+					// OR Number of Friendly Bashers -----> 30
+					// OR Number of Friendly Miners ------> 30
+					// OR Number of Friendly Tanks ------> 15
+
+					int currentNumFriendlyBashers = rc
+							.readBroadcast(NUM_FRIENDLY_BASHERS_CHANNEL);
+					int currentNumFriendlySoldiers = rc
+							.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL);
+					int currentNumFriendlyTanks = rc
+							.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL);
+					int currentNumFriendlyDrones = rc
+							.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
+					int currentNumFriendlyMissiles = rc
+							.readBroadcast(NUM_FRIENDLY_MISSILES_CHANNEL);
+					int currentNumFriendlyMiners = rc
+							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
+					MapLocation[] towers = rc.senseEnemyTowerLocations();
+					if ((friendlyRobots.length - enemyRobots.length >= 300
+							|| currentNumFriendlyBashers >= 70
+							|| currentNumFriendlySoldiers >= 150
+							|| currentNumFriendlyTanks >= 40
+							|| currentNumFriendlyDrones >= 60 || currentNumFriendlyMissiles >= 30)
+							|| (roundNum > 1800 && (currentNumFriendlySoldiers > 30
+									|| currentNumFriendlyBashers > 30
+									|| currentNumFriendlyTanks > 15 || currentNumFriendlyMiners > 30))) {
+						towers = rc.senseEnemyTowerLocations();
+						MapLocation location = enemyHQ; // Default
+						if (towers.length > 2) { // Leave at most 2 towers
+							location = towers[0];
+						}
+
+						RobotType[] types = { RobotType.BASHER,
+								RobotType.COMMANDER, RobotType.DRONE,
+								RobotType.MINER, RobotType.MISSILE,
+								RobotType.SOLDIER, RobotType.TANK };
+						broadcastSwarmInfo(types, GO_TO_LOCATION, location);
+
+						// Stop Offensive Swarm Conditions (<=):
+						// =====================================================
+						// Total Robot Difference -----------------------> -150
+						// Number of Friendly Soldiers ------------------> 5
+						// Number of Friendly Miners --------------------> 5
+					} else if (friendlyRobots.length - enemyRobots.length <= -150
+							|| (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) < 5 || rc
+									.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL) < 5
+									&& rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL) < 1)) {
+						RobotType[] types = { RobotType.BASHER,
+								RobotType.COMMANDER, RobotType.DRONE,
+								RobotType.MINER, RobotType.MISSILE,
+								RobotType.SOLDIER, RobotType.TANK };
+						broadcastSwarmInfo(types, NO_ACTION, null);
+
+					}
+
+					/*
+					 * We call this method before spawning beavers because we
+					 * probably will want to spawn more efficient creatures such
+					 * as miners; in addition, spawning introduces attacking
+					 * delay.
+					 */
+					attackEnemyZero();
+
+					// Limited beaver spawn
 					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 10) {
 						spawnUnit(RobotType.BEAVER);
 					}
@@ -137,23 +308,57 @@ public class RobotPlayer {
 					spawnUnit(RobotType.LAUNCHER);
 					break;
 				case BARRACKS:
-					if (fate < .6) {
-						if (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) < 120) {
-							spawnUnit(RobotType.SOLDIER);
-						}
+					if (fate < .9) {
+						spawnUnit(RobotType.SOLDIER);
 					} else {
-						if (rc.readBroadcast(NUM_FRIENDLY_BASHERS_CHANNEL) < 50) {
-							spawnUnit(RobotType.BASHER);
-						}
+						spawnUnit(RobotType.BASHER);
 					}
 					break;
 				case BASHER:
-					// BASHERs attack automatically, so let's just move around
-					// mostly randomly
-					moveAround();
+					attackEnemyZero();
+					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
+					int basherSwarm = rc.readBroadcast(BASHER_SWARM_CHANNEL);
+					if (basherSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(BASHER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(BASHER_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+					} else if (allRobotSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+
+					} else {
+						// BASHERs attack automatically, so let's just move
+						// around mostly randomly.
+						moveAround();
+					}
 					break;
 				case BEAVER:
+					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
+					int beaverSwarm = rc.readBroadcast(BEAVER_SWARM_CHANNEL);
 					attackEnemyZero();
+					if (beaverSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(BEAVER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(BEAVER_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+					} else if (allRobotSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+
+					}
 
 					/**********************************************************
 					 * Probability List
@@ -181,13 +386,23 @@ public class RobotPlayer {
 					if (roundNum < 500
 							&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
 						buildUnit(RobotType.MINERFACTORY);
-					} else if (fate < 0.025) {
-						if (rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
-							buildUnit(RobotType.TRAININGFIELD);
+					} else if (roundNum < 600) {
+						if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
+							buildUnit(RobotType.BARRACKS);
+						} else {
+							buildUnit(RobotType.TANKFACTORY);
 						}
-					} else if (0.025 <= fate && fate < 0.05) {
-						if (rc.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
-							buildUnit(RobotType.TECHNOLOGYINSTITUTE);
+					} else if (rc
+							.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
+						boolean success = buildUnit(RobotType.TECHNOLOGYINSTITUTE);
+						if (success) {
+							rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
+						}
+					} else if (rc
+							.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
+						boolean success = buildUnit(RobotType.TRAININGFIELD);
+						if (success) {
+							rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
 						}
 					} else if (0.05 <= fate && fate < 0.06) {
 						buildUnit(RobotType.HANDWASHSTATION);
@@ -198,13 +413,16 @@ public class RobotPlayer {
 					} else if (roundNum < 1500
 							&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
 						buildUnit(RobotType.MINERFACTORY);
-					} else if (0.2 <= fate && fate < 0.5) {
-						buildUnit(RobotType.TANKFACTORY);
-					} else if (0.5 <= fate && fate < 0.65) {
+					} else if (0.2 <= fate && fate < 0.45) {
+						if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 3) {
+							buildUnit(RobotType.TANKFACTORY);
+						}
+					} else if (0.45 <= fate && fate < 0.55) {
 						buildUnit(RobotType.HELIPAD);
 					} else if (0.65 <= fate && fate < 0.8) {
 						buildUnit(RobotType.AEROSPACELAB);
-					} else if (0.8 <= fate && fate < 1.0) {
+					} else if (0.8 <= fate
+							|| rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 5) {
 						buildUnit(RobotType.BARRACKS);
 					}
 
@@ -213,35 +431,70 @@ public class RobotPlayer {
 					break;
 				case COMMANDER:
 					attackEnemyZero();
-					if (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) > 80
-							|| rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) > 40
-							|| swarm == 1) {
-						rc.broadcast(100, 0);
-						MapLocation[] towers = rc.senseEnemyTowerLocations();
-						if (towers.length > 1) {
-							tryMove(rc.getLocation().directionTo(towers[0]));
-						} else {
-							tryMove(rc.getLocation().directionTo(enemyHQ));
-						}
+					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
+					int commanderSwarm = rc
+							.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					if (commanderSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(COMMANDER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(COMMANDER_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+					} else if (allRobotSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+
 					} else {
 						moveAround();
 					}
-					// moveAround();
 					break;
 				case COMPUTER:
+					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
+					int computerSwarm = rc
+							.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					if (computerSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(COMPUTER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(COMPUTER_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+					} else if (allRobotSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+
+					} else {
+						moveAround();
+					}
 					break;
 				case DRONE:
 					attackEnemyZero();
-					if (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) > 80
-							|| rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) > 40
-							|| swarm == 1) {
-						rc.broadcast(100, 0);
-						MapLocation[] towers = rc.senseEnemyTowerLocations();
-						if (towers.length > 1) {
-							tryMove(rc.getLocation().directionTo(towers[0]));
-						} else {
-							tryMove(rc.getLocation().directionTo(enemyHQ));
-						}
+					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
+					int droneSwarm = rc.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					if (droneSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(DRONE_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(DRONE_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+					} else if (allRobotSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+
 					} else {
 						moveAround();
 					}
@@ -250,7 +503,7 @@ public class RobotPlayer {
 					// Wash hands.
 					break;
 				case HELIPAD:
-					spawnUnit(RobotType.DRONE);
+						spawnUnit(RobotType.DRONE);
 					break;
 				case LAUNCHER:
 					// TODO: Fix missile launching
@@ -258,16 +511,23 @@ public class RobotPlayer {
 					break;
 				case MINER:
 					attackEnemyZero();
-					if (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) > 80
-							|| rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) > 40
-							|| swarm == 1) {
-						rc.broadcast(100, 0);
-						MapLocation[] towers = rc.senseEnemyTowerLocations();
-						if (towers.length > 1) {
-							tryMove(rc.getLocation().directionTo(towers[0]));
-						} else {
-							tryMove(rc.getLocation().directionTo(enemyHQ));
-						}
+					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
+					int minerSwarm = rc.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					if (minerSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(MINER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(MINER_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+					} else if (allRobotSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+
 					} else {
 						mineAndMove();
 					}
@@ -275,43 +535,91 @@ public class RobotPlayer {
 				case MINERFACTORY:
 					int minerCount = rc
 							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
-
-					if (rand.nextDouble() <= Math.pow(Math.E,
-							-minerCount * 0.05)) {
+					double miningFate = rand.nextDouble();
+					if (roundNum < 1500
+							&& miningFate <= Math.pow(Math.E,
+									-minerCount * 0.07)) {
+						spawnUnit(RobotType.MINER);
+					} else if (minerCount < 10) {
 						spawnUnit(RobotType.MINER);
 					}
 
 					break;
 				case MISSILE:
-					rc.explode();
+					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
+					int missileSwarm = rc
+							.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					if (missileSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(MISSILE_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(MISSILE_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+					} else if (allRobotSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+
+					} else {
+						rc.explode();
+					}
 					break;
 				case SOLDIER:
 					attackEnemyZero(); // soldiers attack, not mine
-					if (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) > 80
-							|| rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) > 40
-							|| swarm == 1) {
-						rc.broadcast(1000, 1);
-						MapLocation[] towers = rc.senseEnemyTowerLocations();
-						if (towers.length > 1) {
-							tryMove(rc.getLocation().directionTo(towers[0]));
-						} else {
-							tryMove(rc.getLocation().directionTo(enemyHQ));
-						}
+					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
+					int soldierSwarm = rc
+							.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					if (soldierSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(SOLDIER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(SOLDIER_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+					} else if (allRobotSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+
 					} else {
+						/*
+						 * moveAround(); POSSIBLE OPTIMIZATION: chase enemies In
+						 * addition, soldiers need to attack towers eventually,
+						 * so they will have to move within attacking range of
+						 * the towers, which is not possible under moveAround()
+						 */
 						moveAround();
 					}
-					/*
-					 * moveAround(); POSSIBLE OPTIMIZATION: chase enemies In
-					 * addition, soldiers need to attack towers eventually, so
-					 * they will have to move within attacking range of the
-					 * towers, which is not possible under moveAround()
-					 */
 					break;
 				case SUPPLYDEPOT:
 					break;
 				case TANK:
 					attackEnemyZero();
-					moveAround();
+					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
+					int tankSwarm = rc.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					if (tankSwarm == GO_TO_LOCATION) {
+						int x = rc.readBroadcast(TANK_SWARM_LOCATION_X_CHANNEL);
+						int y = rc.readBroadcast(TANK_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+					} else if (allRobotSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+
+					} else {
+						moveAround();
+					}
 					break;
 				case TANKFACTORY:
 					spawnUnit(RobotType.TANK);
@@ -336,18 +644,23 @@ public class RobotPlayer {
 					break;
 				}
 
-				/*
-				 * If robots go low on supplies, they will become less effective
-				 * in attacking; HQ supplies goods at a constant rate + any
-				 * additional units from having supply depots built; these units
-				 * are to be passed from HQ among the robots in a way such that
-				 * all robots are sufficiently supplied
-				 * 
-				 * NOTE: robots that are low on supplies will have a white
-				 * square around them
-				 */
+				// Missiles have 500 bytecode limit (the cost of JUST calling
+				// transfer supplies).
+				if (type != RobotType.MISSILE) {
+					/*
+					 * If robots go low on supplies, they will become less
+					 * effective in attacking; HQ supplies goods at a constant
+					 * rate + any additional units from having supply depots
+					 * built; these units are to be passed from HQ among the
+					 * robots in a way such that all robots are sufficiently
+					 * supplied.
+					 * 
+					 * NOTE: Robots that are low on supplies will have a white
+					 * square around them.
+					 */
 
-				transferSupplies();
+					transferSupplies();
+				}
 
 			} catch (GameActionException e) { /*
 											 * spawn method contains
@@ -564,6 +877,42 @@ public class RobotPlayer {
 		}
 	}
 
+	private static void attackBestEnemy() throws GameActionException {
+		// Don't do anything if the weapon is not ready.
+		if (!rc.isWeaponReady()) {
+			return;
+		}
+
+		RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getLocation(),
+				rc.getType().attackRadiusSquared, rc.getTeam().opponent());
+		RobotInfo target = null;
+		int currentTargetPriority;
+		int enemyPriority;
+		for (RobotInfo enemy : nearbyEnemies) {
+			if (Clock.getBytecodeNum() > 2000) {
+				break;
+			}
+			if (rc.canAttackLocation(enemy.location)) {
+				if (target != null) {
+					currentTargetPriority = attackPriorityMap.get(target.type);
+					enemyPriority = attackPriorityMap.get(enemy.type);
+				} else {
+					target = enemy;
+					continue;
+				}
+
+				// TODO: Add more detail in choosing an enemy to attack.
+				if (enemyPriority < currentTargetPriority) {
+					target = enemy;
+				}
+			}
+
+		}
+		if (target != null) {
+			rc.attackLocation(target.location);
+		}
+	}
+
 	private static void transferSupplies() throws GameActionException {
 		RobotInfo[] nearbyAllies = rc.senseNearbyRobots(rc.getLocation(),
 				GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
@@ -585,15 +934,18 @@ public class RobotPlayer {
 		}
 	}
 
-	private static void buildUnit(RobotType roboType)
+	private static boolean buildUnit(RobotType roboType)
 			throws GameActionException {
 		if (rc.getTeamOre() > roboType.oreCost) {
 			Direction buildDir = getRandomDirection();
 
 			if (rc.isCoreReady() && rc.canBuild(buildDir, roboType)) {
 				rc.build(buildDir, roboType);
+				return true;
 			}
 		}
+
+		return false;
 	}
 
 	// This method will attempt to move in Direction d (or as close to it as
@@ -636,6 +988,103 @@ public class RobotPlayer {
 		default:
 			return -1;
 		}
+	}
+
+	private static void broadcastSwarmInfo(RobotType[] types, int action,
+			MapLocation location) throws GameActionException {
+		// Broadcast location only if a new one was provided
+		if (location != null) {
+			int x = location.x;
+			int y = location.y;
+			for (RobotType type : types) {
+				switch (type) {
+				case BASHER:
+					rc.broadcast(BASHER_SWARM_CHANNEL, action);
+					rc.broadcast(BASHER_SWARM_LOCATION_X_CHANNEL, x);
+					rc.broadcast(BASHER_SWARM_LOCATION_Y_CHANNEL, y);
+					break;
+				case BEAVER:
+					rc.broadcast(BEAVER_SWARM_CHANNEL, action);
+					rc.broadcast(BEAVER_SWARM_LOCATION_X_CHANNEL, x);
+					rc.broadcast(BEAVER_SWARM_LOCATION_Y_CHANNEL, y);
+					break;
+				case COMMANDER:
+					rc.broadcast(COMMANDER_SWARM_CHANNEL, action);
+					rc.broadcast(COMMANDER_SWARM_LOCATION_X_CHANNEL, x);
+					rc.broadcast(COMMANDER_SWARM_LOCATION_Y_CHANNEL, y);
+					break;
+				case COMPUTER:
+					rc.broadcast(COMPUTER_SWARM_CHANNEL, action);
+					rc.broadcast(COMPUTER_SWARM_LOCATION_X_CHANNEL, x);
+					rc.broadcast(COMPUTER_SWARM_LOCATION_Y_CHANNEL, y);
+					break;
+				case DRONE:
+					rc.broadcast(DRONE_SWARM_CHANNEL, action);
+					rc.broadcast(DRONE_SWARM_LOCATION_X_CHANNEL, x);
+					rc.broadcast(DRONE_SWARM_LOCATION_Y_CHANNEL, y);
+					break;
+				case MINER:
+					rc.broadcast(MINER_SWARM_CHANNEL, action);
+					rc.broadcast(MINER_SWARM_LOCATION_X_CHANNEL, x);
+					rc.broadcast(MINER_SWARM_LOCATION_Y_CHANNEL, y);
+					break;
+				case MISSILE:
+					rc.broadcast(MISSILE_SWARM_CHANNEL, action);
+					rc.broadcast(MISSILE_SWARM_LOCATION_X_CHANNEL, x);
+					rc.broadcast(MISSILE_SWARM_LOCATION_Y_CHANNEL, y);
+					break;
+				case SOLDIER:
+					rc.broadcast(SOLDIER_SWARM_CHANNEL, action);
+					rc.broadcast(SOLDIER_SWARM_LOCATION_X_CHANNEL, x);
+					rc.broadcast(SOLDIER_SWARM_LOCATION_Y_CHANNEL, y);
+					break;
+				case TANK:
+					rc.broadcast(TANK_SWARM_CHANNEL, action);
+					rc.broadcast(TANK_SWARM_LOCATION_X_CHANNEL, x);
+					rc.broadcast(TANK_SWARM_LOCATION_Y_CHANNEL, y);
+					break;
+				default:
+					break;
+
+				}
+			}
+		} else {
+			for (RobotType type : types) {
+				switch (type) {
+				case BASHER:
+					rc.broadcast(BASHER_SWARM_CHANNEL, action);
+					break;
+				case BEAVER:
+					rc.broadcast(BEAVER_SWARM_CHANNEL, action);
+					break;
+				case COMMANDER:
+					rc.broadcast(COMMANDER_SWARM_CHANNEL, action);
+					break;
+				case COMPUTER:
+					rc.broadcast(COMPUTER_SWARM_CHANNEL, action);
+					break;
+				case DRONE:
+					rc.broadcast(DRONE_SWARM_CHANNEL, action);
+					break;
+				case MINER:
+					rc.broadcast(MINER_SWARM_CHANNEL, action);
+					break;
+				case MISSILE:
+					rc.broadcast(MISSILE_SWARM_CHANNEL, action);
+					break;
+				case SOLDIER:
+					rc.broadcast(SOLDIER_SWARM_CHANNEL, action);
+					break;
+				case TANK:
+					rc.broadcast(TANK_SWARM_CHANNEL, action);
+					break;
+				default:
+					break;
+
+				}
+			}
+		}
+
 	}
 
 	/**************************************************************************
@@ -689,7 +1138,7 @@ public class RobotPlayer {
 
 		// Run part of the work on each round
 		int roundNumMod = roundNum % 20;
-		if (roundNumMod == 0) {
+		if (roundNumMod == 0 || friendlyRobots == null || enemyRobots == null) {
 			// Collect all robots into separate RobotInfo arrays.
 			friendlyRobots = rc.senseNearbyRobots(999999, rc.getTeam());
 			enemyRobots = rc.senseNearbyRobots(999999, rc.getTeam().opponent());

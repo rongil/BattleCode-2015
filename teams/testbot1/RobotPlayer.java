@@ -11,7 +11,7 @@ import java.util.Random;
 public class RobotPlayer {
 
 	/**************************************************************************
-	 * BROADCAST _CHANNELS
+	 * BROADCAST_CHANNELS
 	 * ------------------------------------------------------------------------
 	 * NOTE: Building/Units order follows directly from online documentation.
 	 * ------------------------------------------------------------------------
@@ -24,6 +24,8 @@ public class RobotPlayer {
 	 * 30-39: Enemy Units
 	 * ------------------------------------------------------------------------
 	 * 100-999: Coordinate Planning + Rallying Points
+	 * ------------------------------------------------------------------------
+	 * 1000-1999: Offense/Defense Signals (e.g. Swarm)
 	 *************************************************************************/
 	// Friendly Buildings Channels
 	private static final int NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL = 1;
@@ -68,8 +70,50 @@ public class RobotPlayer {
 	private static final int NUM_ENEMY_LAUNCHERS_CHANNEL = 38;
 	private static final int NUM_ENEMY_MISSILES_CHANNEL = 39;
 
-	// Soldier Radius
+	// Coordinate Planning + Rallying Points
 	private static final int HQ_RADIUS_CHANNEL = 100;
+	// TODO: Use a single channel and some int manipulation to reduce number of
+	// channels for location broadcasting
+	private static final int GENERAL_SWARM_LOCATION_X_CHANNEL = 200;
+	private static final int GENERAL_SWARM_LOCATION_Y_CHANNEL = 210;
+	private static final int BEAVER_SWARM_LOCATION_X_CHANNEL = 201;
+	private static final int BEAVER_SWARM_LOCATION_Y_CHANNEL = 211;
+	private static final int MINER_SWARM_LOCATION_X_CHANNEL = 202;
+	private static final int MINER_SWARM_LOCATION_Y_CHANNEL = 212;
+	private static final int COMPUTER_SWARM_LOCATION_X_CHANNEL = 203;
+	private static final int COMPUTER_SWARM_LOCATION_Y_CHANNEL = 213;
+	private static final int SOLDIER_SWARM_LOCATION_X_CHANNEL = 204;
+	private static final int SOLDIER_SWARM_LOCATION_Y_CHANNEL = 214;
+	private static final int BASHER_SWARM_LOCATION_X_CHANNEL = 205;
+	private static final int BASHER_SWARM_LOCATION_Y_CHANNEL = 215;
+	private static final int DRONE_SWARM_LOCATION_X_CHANNEL = 206;
+	private static final int DRONE_SWARM_LOCATION_Y_CHANNEL = 216;
+	private static final int TANK_SWARM_LOCATION_X_CHANNEL = 207;
+	private static final int TANK_SWARM_LOCATION_Y_CHANNEL = 217;
+	private static final int COMMANDER_SWARM_LOCATION_X_CHANNEL = 208;
+	private static final int COMMANDER_SWARM_LOCATION_Y_CHANNEL = 218;
+	private static final int MISSILE_SWARM_LOCATION_X_CHANNEL = 209;
+	private static final int MISSILE_SWARM_LOCATION_Y_CHANNEL = 219;
+
+	// Offensive + Defensive Signals
+	private static final int GENERAL_SWARM_CHANNEL = 1000;
+	private static final int BEAVER_SWARM_CHANNEL = 1001;
+	private static final int MINER_SWARM_CHANNEL = 1002;
+	private static final int COMPUTER_SWARM_CHANNEL = 1003;
+	private static final int SOLDIER_SWARM_CHANNEL = 1004;
+	private static final int BASHER_SWARM_CHANNEL = 1005;
+	private static final int DRONE_SWARM_CHANNEL = 1006;
+	private static final int TANK_SWARM_CHANNEL = 1007;
+	private static final int COMMANDER_SWARM_CHANNEL = 1008;
+	private static final int MISSILE_SWARM_CHANNEL = 1009;
+
+	// ------------------------------------------------------------------------
+	// Action Constants
+	// ------------------------------------------------------------------------
+	private static final int NO_ACTION = 0;
+	private static final int GO_TO_LOCATION = 1;
+
+	// ^^^^^^^^^^^^^^^^^^ BROADCAST CONSTANTS END HERE ^^^^^^^^^^^^^^^^^^^^^^^^
 
 	private static Direction facing;
 	private static Direction[] directions = { Direction.NORTH,
@@ -77,9 +121,9 @@ public class RobotPlayer {
 			Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
 			Direction.NORTH_WEST };
 	private static Random rand; /*
-								 * this will help to distinguish each robot
+								 * This will help to distinguish each robot
 								 * otherwise, each robot will behave exactly the
-								 * same
+								 * same.
 								 */
 	private static Team Enemy;
 	private static RobotController rc;
@@ -99,9 +143,9 @@ public class RobotPlayer {
 		enemyHQ = rc.senseEnemyHQLocation();
 
 		rand = new Random(rc.getID());
-		facing = getRandomDirection(); // randomize starting direction
+		facing = getRandomDirection(); // Randomize starting direction
 
-		// if the run method ends, the robot dies
+		// Warning: If the run method ends, the robot dies!
 		while (true) {
 			try {
 				// Random number from 0 to 1 for probabilistic decisions
@@ -115,18 +159,21 @@ public class RobotPlayer {
 					 * Update unit counts every so often! Distributes the
 					 * counting over a few consecutive rounds.
 					 *********************************************************/
-					if (roundNum % 20 < 5) {
+					if (roundNum % 5 < 5) { // NOTE: This can be adjusted to
+											// give slots to other computations,
+											// such as optimal path finding.
 						updateUnitCounts();
 					}
-					attackEnemyZero(); /*
-										 * we can this method first before
-										 * spawning beavers because we probably
-										 * will want to spawn more efficient
-										 * creatures such as miners; in
-										 * addition, spawning introduces
-										 * attacking delay
-										 */
-					// Limit number of beavers
+
+					/*
+					 * We call this method before spawning beavers because we
+					 * probably will want to spawn more efficient creatures such
+					 * as miners; in addition, spawning introduces attacking
+					 * delay.
+					 */
+					attackEnemyZero();
+
+					// Limited Beaver Spawn
 					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 10) {
 						spawnUnit(RobotType.BEAVER);
 					}
