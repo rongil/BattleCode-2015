@@ -200,9 +200,9 @@ public class RobotPlayer {
 					// Number of Friendly Drones -------------------------> 60
 					// Number of Friendly Missiles -----------------------> 30
 					// Round 1800+ AND Number of Friendly Soldiers -------> 30
-					// OR Number of Friendly Bashers -----> 30
-					// OR Number of Friendly Miners ------> 30
-					// OR Number of Friendly Tanks ------> 15
+					// ________________OR Number of Friendly Bashers -----> 30
+					// ________________OR Number of Friendly Miners ------> 30
+					// ________________OR Number of Friendly Tanks ------> 15
 
 					int currentNumFriendlyBashers = rc
 							.readBroadcast(NUM_FRIENDLY_BASHERS_CHANNEL);

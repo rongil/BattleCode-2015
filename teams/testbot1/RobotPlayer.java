@@ -193,16 +193,11 @@ public class RobotPlayer {
 
 					// Start Offensive Swarm Conditions | Friendly(>=) Enemy(<)
 					// ========================================================
-					// Total Robot Difference ----------------------------> 300
-					// Number of Friendly Bashers ------------------------> 70
-					// Number of Friendly Soldiers -----------------------> 150
-					// Number of Friendly Tanks --------------------------> 40
-					// Number of Friendly Drones -------------------------> 60
-					// Number of Friendly Missiles -----------------------> 30
+					// Total Robot Difference ----------------------------> 150
 					// Round 1800+ AND Number of Friendly Soldiers -------> 30
-					// OR Number of Friendly Bashers -----> 30
-					// OR Number of Friendly Miners ------> 30
-					// OR Number of Friendly Tanks ------> 15
+					// ________________OR Number of Friendly Bashers -----> 30
+					// ________________OR Number of Friendly Miners ------> 30
+					// ________________OR Number of Friendly Tanks -------> 15
 
 					int currentNumFriendlyBashers = rc
 							.readBroadcast(NUM_FRIENDLY_BASHERS_CHANNEL);
@@ -217,11 +212,7 @@ public class RobotPlayer {
 					int currentNumFriendlyMiners = rc
 							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
 					MapLocation[] towers = rc.senseEnemyTowerLocations();
-					if ((friendlyRobots.length - enemyRobots.length >= 300
-							|| currentNumFriendlyBashers >= 70
-							|| currentNumFriendlySoldiers >= 150
-							|| currentNumFriendlyTanks >= 40
-							|| currentNumFriendlyDrones >= 60 || currentNumFriendlyMissiles >= 30)
+					if (friendlyRobots.length - enemyRobots.length >= 150
 							|| (roundNum > 1800 && (currentNumFriendlySoldiers > 30
 									|| currentNumFriendlyBashers > 30
 									|| currentNumFriendlyTanks > 15 || currentNumFriendlyMiners > 30))) {
@@ -237,12 +228,14 @@ public class RobotPlayer {
 								RobotType.SOLDIER, RobotType.TANK };
 						broadcastSwarmInfo(types, GO_TO_LOCATION, location);
 
-						// Stop Offensive Swarm Conditions (<=):
+						// Stop Offensive Swarm Conditions (<):
 						// =====================================================
-						// Total Robot Difference -----------------------> -150
-						// Number of Friendly Soldiers ------------------> 5
-						// Number of Friendly Miners --------------------> 5
-					} else if (friendlyRobots.length - enemyRobots.length <= -150
+						// Total Robot Difference -------------------------> -30
+						// Number of Friendly Soldiers --------------------> 5
+						// ____OR Number of Friendly Miners ---------------> 5
+						// AND Number of Friendly Tanks Remaining ---------> 1
+						//
+					} else if ((friendlyRobots.length - enemyRobots.length <= -30 && roundNum < 1800)
 							|| (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) < 5 || rc
 									.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL) < 5
 									&& rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL) < 1)) {
@@ -413,32 +406,32 @@ public class RobotPlayer {
 								new MapLocation(x, y)));
 
 					} else {
-						//moveAround();
+						// moveAround();
 						flyOnBoundary();
 					}
 					break;
 				case COMPUTER:
-//					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
-//					int computerSwarm = rc
-//							.readBroadcast(COMMANDER_SWARM_CHANNEL);
-//					if (computerSwarm == GO_TO_LOCATION) {
-//						int x = rc
-//								.readBroadcast(COMPUTER_SWARM_LOCATION_X_CHANNEL);
-//						int y = rc
-//								.readBroadcast(COMPUTER_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
-//					} else if (allRobotSwarm == GO_TO_LOCATION) {
-//						int x = rc
-//								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
-//						int y = rc
-//								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
-//
-//					} else {
-//						moveAround();
-//					}
+					// allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
+					// int computerSwarm = rc
+					// .readBroadcast(COMMANDER_SWARM_CHANNEL);
+					// if (computerSwarm == GO_TO_LOCATION) {
+					// int x = rc
+					// .readBroadcast(COMPUTER_SWARM_LOCATION_X_CHANNEL);
+					// int y = rc
+					// .readBroadcast(COMPUTER_SWARM_LOCATION_Y_CHANNEL);
+					// tryMove(rc.getLocation().directionTo(
+					// new MapLocation(x, y)));
+					// } else if (allRobotSwarm == GO_TO_LOCATION) {
+					// int x = rc
+					// .readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
+					// int y = rc
+					// .readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
+					// tryMove(rc.getLocation().directionTo(
+					// new MapLocation(x, y)));
+					//
+					// } else {
+					// moveAround();
+					// }
 					break;
 				case DRONE:
 					attackEnemyZero();
@@ -460,16 +453,18 @@ public class RobotPlayer {
 								new MapLocation(x, y)));
 
 					} else {
-						//moveAround();
+						// moveAround();
 						MapLocation[] towerLocations = rc.senseTowerLocations();
-						if(rc.isCoreReady()){
-							if(rand.nextDouble() > 0.1 || towerLocations.length == 0){
+						if (rc.isCoreReady()) {
+							if (rand.nextDouble() > 0.1
+									|| towerLocations.length == 0) {
 								flyOnBoundary();
-							}else{
-								int towerNumber = rand.nextInt(towerLocations.length);
+							} else {
+								int towerNumber = rand
+										.nextInt(towerLocations.length);
 								Direction towerDirection = bugNav(towerLocations[towerNumber]);
-								
-								if(towerDirection != Direction.NONE){
+
+								if (towerDirection != Direction.NONE) {
 									rc.move(bugNav(towerLocations[towerNumber]));
 								}
 							}
@@ -572,7 +567,7 @@ public class RobotPlayer {
 						 * so they will have to move within attacking range of
 						 * the towers, which is not possible under moveAround()
 						 */
-						//moveAround();
+						// moveAround();
 						flyOnBoundary();
 					}
 					break;
