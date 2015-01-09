@@ -193,7 +193,7 @@ public class RobotPlayer {
 
 					// Start Offensive Swarm Conditions | Friendly(>=) Enemy(<)
 					// ========================================================
-					// Total Robot Difference ----------------------------> 150
+					// Total Robot Difference ----------------------------> 200
 					// Round 1800+ AND Number of Friendly Soldiers -------> 30
 					// ________________OR Number of Friendly Bashers -----> 30
 					// ________________OR Number of Friendly Miners ------> 30
@@ -212,7 +212,7 @@ public class RobotPlayer {
 					int currentNumFriendlyMiners = rc
 							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
 					MapLocation[] towers = rc.senseEnemyTowerLocations();
-					if (friendlyRobots.length - enemyRobots.length >= 150
+					if (friendlyRobots.length - enemyRobots.length >= 200
 							|| (roundNum > 1800 && (currentNumFriendlySoldiers > 30
 									|| currentNumFriendlyBashers > 30
 									|| currentNumFriendlyTanks > 15 || currentNumFriendlyMiners > 30))) {
@@ -232,13 +232,12 @@ public class RobotPlayer {
 						// =====================================================
 						// Total Robot Difference -------------------------> -30
 						// Number of Friendly Soldiers --------------------> 5
-						// ____OR Number of Friendly Miners ---------------> 5
-						// AND Number of Friendly Tanks Remaining ---------> 1
+						// ___AND Number of Friendly Miners ---------------> 15
+						// ___AND Number of Friendly Tanks Remaining ------> 1
 						//
-					} else if ((friendlyRobots.length - enemyRobots.length <= -30 && roundNum < 1800)
-							|| (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) < 5 || rc
-									.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL) < 5
-									&& rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL) < 1)) {
+					} else if (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) < 5
+							&& rc.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL) < 15
+							&& rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL) < 1) {
 						RobotType[] types = { RobotType.BASHER,
 								RobotType.COMMANDER, RobotType.DRONE,
 								RobotType.MINER, RobotType.MISSILE,
@@ -591,7 +590,8 @@ public class RobotPlayer {
 								new MapLocation(x, y)));
 
 					} else {
-						moveAround();
+						// moveAround();
+						flyOnBoundary();
 					}
 					break;
 				case TANKFACTORY:
@@ -654,72 +654,83 @@ public class RobotPlayer {
 		defendHQ();
 		moveAround();
 	}
-	
+
 	private static void defendHQ() throws GameActionException {
-		if(rc.isCoreReady()){
-//			int currentRadiusSquared = rc.readBroadcast(HQ_RADIUS_CHANNEL);
-//			MapLocation currentLocation = rc.getLocation();
-//			double squaredDistanceDiff = Math.abs(currentLocation.distanceSquaredTo(myHQ)
-//					- currentRadiusSquared);
-//			if (squaredDistanceDiff > 36.0 * RobotType.HQ.attackRadiusSquared || squaredDistanceDiff < 25.0 * RobotType.HQ.attackRadiusSquared) {
-//				Direction rightDirection = myHQ.directionTo(currentLocation);
-//				MapLocation targetLocation = myHQ.add(rightDirection, 1);
-//				
-//				Direction targetDirection = bugNav(targetLocation); 
-//				if(targetDirection != Direction.NONE){
-//					rc.move(targetDirection);
-//				}
-//			}
+		if (rc.isCoreReady()) {
+			// int currentRadiusSquared = rc.readBroadcast(HQ_RADIUS_CHANNEL);
+			// MapLocation currentLocation = rc.getLocation();
+			// double squaredDistanceDiff =
+			// Math.abs(currentLocation.distanceSquaredTo(myHQ)
+			// - currentRadiusSquared);
+			// if (squaredDistanceDiff > 36.0 * RobotType.HQ.attackRadiusSquared
+			// || squaredDistanceDiff < 25.0 * RobotType.HQ.attackRadiusSquared)
+			// {
+			// Direction rightDirection = myHQ.directionTo(currentLocation);
+			// MapLocation targetLocation = myHQ.add(rightDirection, 1);
+			//
+			// Direction targetDirection = bugNav(targetLocation);
+			// if(targetDirection != Direction.NONE){
+			// rc.move(targetDirection);
+			// }
+			// }
 
 			MapLocation currentLocation = rc.getLocation();
-			if(currentLocation.distanceSquaredTo(myHQ) > 2 * currentLocation.distanceSquaredTo(enemyHQ)){
-//				double turnLittle = rand.nextDouble();
-//				Direction currentDirection = currentLocation.directionTo(myHQ);
-//				
-//				if(turnLittle < 0.33){
-//					currentDirection = currentDirection.rotateLeft();
-//				}else if(turnLittle > 0.33 & turnLittle < 0.66){
-//					currentDirection = currentDirection.rotateRight();
-//				}
-//				
-//				MapLocation targetLocation = currentLocation.add(currentDirection);
-//				Direction targetDirection = bugNav(targetLocation);
-				
+			if (currentLocation.distanceSquaredTo(myHQ) > 2 * currentLocation
+					.distanceSquaredTo(enemyHQ)) {
+				// double turnLittle = rand.nextDouble();
+				// Direction currentDirection =
+				// currentLocation.directionTo(myHQ);
+				//
+				// if(turnLittle < 0.33){
+				// currentDirection = currentDirection.rotateLeft();
+				// }else if(turnLittle > 0.33 & turnLittle < 0.66){
+				// currentDirection = currentDirection.rotateRight();
+				// }
+				//
+				// MapLocation targetLocation =
+				// currentLocation.add(currentDirection);
+				// Direction targetDirection = bugNav(targetLocation);
+
 				Direction targetDirection = bugNav(myHQ);
-				if(targetDirection != Direction.NONE){
+				if (targetDirection != Direction.NONE) {
 					rc.move(targetDirection);
 				}
-			}else if(currentLocation.distanceSquaredTo(enemyHQ) > 1.1 * currentLocation.distanceSquaredTo(myHQ)){
-//				double turnLittle = rand.nextDouble();
-//				Direction currentDirection = currentLocation.directionTo(enemyHQ);
-//				
-//				if(turnLittle < 0.33){
-//					currentDirection = currentDirection.rotateLeft();
-//				}else if(turnLittle > 0.33 & turnLittle < 0.66){
-//					currentDirection = currentDirection.rotateRight();
-//				}
-//				
-//				MapLocation targetLocation = currentLocation.add(currentDirection);
-//				Direction targetDirection = bugNav(targetLocation);
-				
+			} else if (currentLocation.distanceSquaredTo(enemyHQ) > 1.1 * currentLocation
+					.distanceSquaredTo(myHQ)) {
+				// double turnLittle = rand.nextDouble();
+				// Direction currentDirection =
+				// currentLocation.directionTo(enemyHQ);
+				//
+				// if(turnLittle < 0.33){
+				// currentDirection = currentDirection.rotateLeft();
+				// }else if(turnLittle > 0.33 & turnLittle < 0.66){
+				// currentDirection = currentDirection.rotateRight();
+				// }
+				//
+				// MapLocation targetLocation =
+				// currentLocation.add(currentDirection);
+				// Direction targetDirection = bugNav(targetLocation);
+
 				Direction targetDirection = bugNav(enemyHQ);
-				if(targetDirection != Direction.NONE){
+				if (targetDirection != Direction.NONE) {
 					rc.move(targetDirection);
 				}
-			}else{
+			} else {
 				double turnVar = rand.nextDouble();
 				MapLocation newLocation;
 				Direction newDirection;
-				if(turnVar < 0.5){
-					newDirection = currentLocation.directionTo(myHQ).rotateRight().rotateRight();
+				if (turnVar < 0.5) {
+					newDirection = currentLocation.directionTo(myHQ)
+							.rotateRight().rotateRight();
 					newLocation = currentLocation.add(newDirection);
-				}else{
-					newDirection = currentLocation.directionTo(myHQ).rotateLeft().rotateLeft();
+				} else {
+					newDirection = currentLocation.directionTo(myHQ)
+							.rotateLeft().rotateLeft();
 					newLocation = currentLocation.add(newDirection);
 				}
-				
+
 				Direction targetDirection = bugNav(newLocation);
-				if(targetDirection != Direction.NONE){
+				if (targetDirection != Direction.NONE) {
 					rc.move(targetDirection);
 				}
 			}
@@ -727,27 +738,29 @@ public class RobotPlayer {
 	}
 
 	private static void broadcastRadiusSquared() throws GameActionException {
-		int radiusSquared;		
+		int radiusSquared;
 		MapLocation[] towerLocations = rc.senseTowerLocations();
-		
-		if(towerLocations.length != 0){
+
+		if (towerLocations.length != 0) {
 			double maxTowerDistanceSquared = 0;
-			
-			for(MapLocation towerLocation : towerLocations){
-				double TowerHQdistSquared = myHQ.distanceSquaredTo(towerLocation);
-				maxTowerDistanceSquared = (TowerHQdistSquared > maxTowerDistanceSquared) ? TowerHQdistSquared : maxTowerDistanceSquared;
+
+			for (MapLocation towerLocation : towerLocations) {
+				double TowerHQdistSquared = myHQ
+						.distanceSquaredTo(towerLocation);
+				maxTowerDistanceSquared = (TowerHQdistSquared > maxTowerDistanceSquared) ? TowerHQdistSquared
+						: maxTowerDistanceSquared;
 			}
-			
+
 			radiusSquared = (int) maxTowerDistanceSquared;
-		}else{
+		} else {
 			double soldierCount = (double) rc
 					.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL);
-			radiusSquared = (int) Math.pow(soldierCount / (2.0 * Math.PI), 2);			
+			radiusSquared = (int) Math.pow(soldierCount / (2.0 * Math.PI), 2);
 		}
-		
+
 		rc.broadcast(HQ_RADIUS_CHANNEL, radiusSquared);
 	}
-	
+
 	private static void spawnUnit(RobotType roboType)
 			throws GameActionException {
 		Direction testDir = getRandomDirection();
@@ -836,7 +849,8 @@ public class RobotPlayer {
 				if (totalOreCount > bestOreCount) {
 					bestOreCount = totalOreCount;
 					bestDestination = squareFour;
-				} else if (totalOreCount == bestOreCount  && bestDestination != null) {
+				} else if (totalOreCount == bestOreCount
+						&& bestDestination != null) {
 					bestDestination = (rand.nextDouble() > 0.5) ? bestDestination
 							: squareFour;
 				}
@@ -849,8 +863,8 @@ public class RobotPlayer {
 					rc.move(bestDirection);
 				}
 			} else {
-				//moveAround();
-				//flyOnBoundary();
+				// moveAround();
+				// flyOnBoundary();
 				defendHQ();
 			}
 		}
@@ -986,28 +1000,28 @@ public class RobotPlayer {
 		case SOLDIER:
 		case TANK:
 		case TOWER:
-			 attackPriorityMap = new HashMap<RobotType, Integer>();
-			 attackPriorityMap.put(RobotType.AEROSPACELAB, 6);
-			 attackPriorityMap.put(RobotType.BARRACKS, 4); // Troop production
-			 attackPriorityMap.put(RobotType.BASHER, 5);
-			 attackPriorityMap.put(RobotType.BEAVER, 2); // Buildings
-			 attackPriorityMap.put(RobotType.COMMANDER, 5);
-			 attackPriorityMap.put(RobotType.COMPUTER, 0); // One HP
-			 attackPriorityMap.put(RobotType.DRONE, 5);
-			 attackPriorityMap.put(RobotType.HANDWASHSTATION, 7);
-			 attackPriorityMap.put(RobotType.HELIPAD, 5);
-			 attackPriorityMap.put(RobotType.HQ, 0); // Main target
-			 attackPriorityMap.put(RobotType.LAUNCHER, 5);
-			 attackPriorityMap.put(RobotType.MINER, 3);
-			 attackPriorityMap.put(RobotType.MINERFACTORY, 3); // Ore collection
-			 attackPriorityMap.put(RobotType.MISSILE, 5);
-			 attackPriorityMap.put(RobotType.SOLDIER, 5);
-			 attackPriorityMap.put(RobotType.SUPPLYDEPOT, 6);
-			 attackPriorityMap.put(RobotType.TANK, 5);
-			 attackPriorityMap.put(RobotType.TANKFACTORY, 5);
-			 attackPriorityMap.put(RobotType.TECHNOLOGYINSTITUTE, 7);
-			 attackPriorityMap.put(RobotType.TOWER, 1); // Weaken HQ
-			 attackPriorityMap.put(RobotType.TRAININGFIELD, 6);
+			attackPriorityMap = new HashMap<RobotType, Integer>();
+			attackPriorityMap.put(RobotType.AEROSPACELAB, 6);
+			attackPriorityMap.put(RobotType.BARRACKS, 4); // Troop production
+			attackPriorityMap.put(RobotType.BASHER, 5);
+			attackPriorityMap.put(RobotType.BEAVER, 2); // Buildings
+			attackPriorityMap.put(RobotType.COMMANDER, 5);
+			attackPriorityMap.put(RobotType.COMPUTER, 0); // One HP
+			attackPriorityMap.put(RobotType.DRONE, 5);
+			attackPriorityMap.put(RobotType.HANDWASHSTATION, 7);
+			attackPriorityMap.put(RobotType.HELIPAD, 5);
+			attackPriorityMap.put(RobotType.HQ, 0); // Main target
+			attackPriorityMap.put(RobotType.LAUNCHER, 5);
+			attackPriorityMap.put(RobotType.MINER, 3);
+			attackPriorityMap.put(RobotType.MINERFACTORY, 3); // Ore collection
+			attackPriorityMap.put(RobotType.MISSILE, 5);
+			attackPriorityMap.put(RobotType.SOLDIER, 5);
+			attackPriorityMap.put(RobotType.SUPPLYDEPOT, 6);
+			attackPriorityMap.put(RobotType.TANK, 5);
+			attackPriorityMap.put(RobotType.TANKFACTORY, 5);
+			attackPriorityMap.put(RobotType.TECHNOLOGYINSTITUTE, 7);
+			attackPriorityMap.put(RobotType.TOWER, 1); // Weaken HQ
+			attackPriorityMap.put(RobotType.TRAININGFIELD, 6);
 			skipFirstRound = true;
 			break;
 		default:
