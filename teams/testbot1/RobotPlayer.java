@@ -392,41 +392,41 @@ public class RobotPlayer {
 
 	private static void defendHQ() throws GameActionException {
 		if(rc.isCoreReady()){
-//			int currentRadiusSquared = rc.readBroadcast(HQ_RADIUS_CHANNEL);
+			int currentRadiusSquared = rc.readBroadcast(HQ_RADIUS_CHANNEL);
+			MapLocation currentLocation = rc.getLocation();
+			double squaredDistanceDiff = Math.abs(currentLocation.distanceSquaredTo(myHQ)
+					- currentRadiusSquared);
+			if (squaredDistanceDiff > 36.0 * RobotType.HQ.attackRadiusSquared || squaredDistanceDiff < 25.0 * RobotType.HQ.attackRadiusSquared) {
+				Direction rightDirection = myHQ.directionTo(currentLocation);
+				MapLocation targetLocation = myHQ.add(rightDirection, 1);
+				
+				Direction targetDirection = bugNav(targetLocation); 
+				if(targetDirection != Direction.NONE){
+					rc.move(targetDirection);
+				}
+			}
+
 //			MapLocation currentLocation = rc.getLocation();
-//
-//			if (Math.abs(currentLocation.distanceSquaredTo(myHQ)
-//					- currentRadiusSquared) > 40.0 * RobotType.HQ.attackRadiusSquared) {
-//				Direction rightDirection = myHQ.directionTo(currentLocation);
-//				MapLocation targetLocation = myHQ.add(rightDirection, 1);
-//				
-//				Direction targetDirection = bugNav(targetLocation); 
+//			if(currentLocation.distanceSquaredTo(myHQ) > 2 * currentLocation.distanceSquaredTo(enemyHQ)){
+//				Direction targetDirection = bugNav(myHQ);
 //				if(targetDirection != Direction.NONE){
 //					rc.move(targetDirection);
 //				}
+//			}else if(currentLocation.distanceSquaredTo(enemyHQ) > 1.1 * currentLocation.distanceSquaredTo(myHQ)){
+//				Direction targetDirection = bugNav(enemyHQ);
+//				if(targetDirection != Direction.NONE){
+//					rc.move(targetDirection);
+//				}
+//			}else{
+//				double turnVar = rand.nextDouble();
+//				if(turnVar < 0.5){
+//					Direction newDirection = currentLocation.directionTo(myHQ).rotateRight().rotateRight();
+//					MapLocation newLocation = currentLocation.add(newDirection);
+//				}else{
+//					Direction newDirection = currentLocation.directionTo(myHQ).rotateLeft().rotateLeft();
+//					MapLocation newLocation = currentLocation.add(newDirection);
+//				}
 //			}
-//			
-			MapLocation currentLocation = rc.getLocation();
-			if(currentLocation.distanceSquaredTo(myHQ) > 2 * currentLocation.distanceSquaredTo(enemyHQ)){
-				Direction targetDirection = bugNav(myHQ);
-				if(targetDirection != Direction.NONE){
-					rc.move(targetDirection);
-				}
-			}else if(currentLocation.distanceSquaredTo(enemyHQ) > 1.1 * currentLocation.distanceSquaredTo(myHQ)){
-				Direction targetDirection = bugNav(enemyHQ);
-				if(targetDirection != Direction.NONE){
-					rc.move(targetDirection);
-				}
-			}else{
-				double turnVar = rand.nextDouble();
-				if(turnVar < 0.5){
-					Direction newDirection = currentLocation.directionTo(myHQ).rotateRight().rotateRight();
-					MapLocation newLocation = currentLocation.add(newDirection);
-				}else{
-					Direction newDirection = currentLocation.directionTo(myHQ).rotateLeft().rotateLeft();
-					MapLocation newLocation = currentLocation.add(newDirection);
-				}
-			}
 		}
 	}
 
