@@ -134,7 +134,7 @@ public class RobotPlayer {
 	private static Team Enemy;
 	private static RobotController rc;
 
-//	private static HashMap<RobotType, Integer> attackPriorityMap;
+	// private static HashMap<RobotType, Integer> attackPriorityMap;
 
 	private static int roundNum;
 	private static RobotInfo[] friendlyRobots;
@@ -152,47 +152,7 @@ public class RobotPlayer {
 
 		boolean skipFirstRound = true;
 
-		// Attack Priority Map (only for attacking structures)
-		// Lower Number -> Higher Priority
-
-		switch (rc.getType()) {
-		case BASHER:
-		case BEAVER:
-		case COMMANDER:
-		case DRONE:
-		case HQ:
-		case MINER:
-		case SOLDIER:
-		case TANK:
-		case TOWER:
-//			attackPriorityMap = new HashMap<RobotType, Integer>();
-//			attackPriorityMap.put(RobotType.AEROSPACELAB, 6);
-//			attackPriorityMap.put(RobotType.BARRACKS, 4); // Troop production
-//			attackPriorityMap.put(RobotType.BASHER, 5);
-//			attackPriorityMap.put(RobotType.BEAVER, 2); // Buildings
-//			attackPriorityMap.put(RobotType.COMMANDER, 5);
-//			attackPriorityMap.put(RobotType.COMPUTER, 0); // One HP
-//			attackPriorityMap.put(RobotType.DRONE, 5);
-//			attackPriorityMap.put(RobotType.HANDWASHSTATION, 7);
-//			attackPriorityMap.put(RobotType.HELIPAD, 5);
-//			attackPriorityMap.put(RobotType.HQ, 0); // Main target
-//			attackPriorityMap.put(RobotType.LAUNCHER, 5);
-//			attackPriorityMap.put(RobotType.MINER, 3);
-//			attackPriorityMap.put(RobotType.MINERFACTORY, 3); // Ore collection
-//			attackPriorityMap.put(RobotType.MISSILE, 5);
-//			attackPriorityMap.put(RobotType.SOLDIER, 5);
-//			attackPriorityMap.put(RobotType.SUPPLYDEPOT, 6);
-//			attackPriorityMap.put(RobotType.TANK, 5);
-//			attackPriorityMap.put(RobotType.TANKFACTORY, 5);
-//			attackPriorityMap.put(RobotType.TECHNOLOGYINSTITUTE, 7);
-//			attackPriorityMap.put(RobotType.TOWER, 1); // Weaken HQ
-//			attackPriorityMap.put(RobotType.TRAININGFIELD, 6);
-			skipFirstRound = true;
-			break;
-		default:
-			break;
-
-		}
+		// skipFirstRound = initializeAttackPriorityMap();
 
 		rand = new Random(rc.getID());
 		facing = getRandomDirection(); // Randomize starting direction
@@ -505,7 +465,7 @@ public class RobotPlayer {
 					// Wash hands.
 					break;
 				case HELIPAD:
-						spawnUnit(RobotType.DRONE);
+					spawnUnit(RobotType.DRONE);
 					break;
 				case LAUNCHER:
 					// TODO: Fix missile launching
@@ -879,41 +839,93 @@ public class RobotPlayer {
 		}
 	}
 
-//	private static void attackBestEnemy() throws GameActionException {
-//		// Don't do anything if the weapon is not ready.
-//		if (!rc.isWeaponReady()) {
-//			return;
-//		}
-//
-//		RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getLocation(),
-//				rc.getType().attackRadiusSquared, rc.getTeam().opponent());
-//		RobotInfo target = null;
-//		int currentTargetPriority;
-//		int enemyPriority;
-//		for (RobotInfo enemy : nearbyEnemies) {
-//			if (Clock.getBytecodeNum() > 2000) {
-//				break;
-//			}
-//			if (rc.canAttackLocation(enemy.location)) {
-//				if (target != null) {
-//					currentTargetPriority = attackPriorityMap.get(target.type);
-//					enemyPriority = attackPriorityMap.get(enemy.type);
-//				} else {
-//					target = enemy;
-//					continue;
-//				}
-//
-//				// TODO: Add more detail in choosing an enemy to attack.
-//				if (enemyPriority < currentTargetPriority) {
-//					target = enemy;
-//				}
-//			}
-//
-//		}
-//		if (target != null) {
-//			rc.attackLocation(target.location);
-//		}
-//	}
+	// private static void attackBestEnemy() throws GameActionException {
+	// // Don't do anything if the weapon is not ready.
+	// if (!rc.isWeaponReady()) {
+	// return;
+	// }
+	//
+	// RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getLocation(),
+	// rc.getType().attackRadiusSquared, rc.getTeam().opponent());
+	// RobotInfo target = null;
+	// int currentTargetPriority;
+	// int enemyPriority;
+	// for (RobotInfo enemy : nearbyEnemies) {
+	// if (Clock.getBytecodeNum() > 2000) {
+	// break;
+	// }
+	// if (rc.canAttackLocation(enemy.location)) {
+	// if (target != null) {
+	// currentTargetPriority = attackPriorityMap.get(target.type);
+	// enemyPriority = attackPriorityMap.get(enemy.type);
+	// } else {
+	// target = enemy;
+	// continue;
+	// }
+	//
+	// // TODO: Add more detail in choosing an enemy to attack.
+	// if (enemyPriority < currentTargetPriority) {
+	// target = enemy;
+	// }
+	// }
+	//
+	// }
+	// if (target != null) {
+	// rc.attackLocation(target.location);
+	// }
+	// }
+
+	@SuppressWarnings("fallthrough")
+	private static boolean initializeAttackPriorityMap() {
+
+		boolean skipFirstRound = false;
+
+		// WARNING: INTENTIONAL FALLTHROUGH IS USED!
+		// ---------------------------------------------------
+		// Attack Priority Map (only for attacking structures)
+		// Lower Number -> Higher Priority
+		switch (rc.getType()) {
+		case BASHER:
+		case BEAVER:
+		case COMMANDER:
+		case DRONE:
+		case HQ:
+		case MINER:
+		case SOLDIER:
+		case TANK:
+		case TOWER:
+			// attackPriorityMap = new HashMap<RobotType, Integer>();
+			// attackPriorityMap.put(RobotType.AEROSPACELAB, 6);
+			// attackPriorityMap.put(RobotType.BARRACKS, 4); // Troop production
+			// attackPriorityMap.put(RobotType.BASHER, 5);
+			// attackPriorityMap.put(RobotType.BEAVER, 2); // Buildings
+			// attackPriorityMap.put(RobotType.COMMANDER, 5);
+			// attackPriorityMap.put(RobotType.COMPUTER, 0); // One HP
+			// attackPriorityMap.put(RobotType.DRONE, 5);
+			// attackPriorityMap.put(RobotType.HANDWASHSTATION, 7);
+			// attackPriorityMap.put(RobotType.HELIPAD, 5);
+			// attackPriorityMap.put(RobotType.HQ, 0); // Main target
+			// attackPriorityMap.put(RobotType.LAUNCHER, 5);
+			// attackPriorityMap.put(RobotType.MINER, 3);
+			// attackPriorityMap.put(RobotType.MINERFACTORY, 3); // Ore
+			// collection
+			// attackPriorityMap.put(RobotType.MISSILE, 5);
+			// attackPriorityMap.put(RobotType.SOLDIER, 5);
+			// attackPriorityMap.put(RobotType.SUPPLYDEPOT, 6);
+			// attackPriorityMap.put(RobotType.TANK, 5);
+			// attackPriorityMap.put(RobotType.TANKFACTORY, 5);
+			// attackPriorityMap.put(RobotType.TECHNOLOGYINSTITUTE, 7);
+			// attackPriorityMap.put(RobotType.TOWER, 1); // Weaken HQ
+			// attackPriorityMap.put(RobotType.TRAININGFIELD, 6);
+			skipFirstRound = true;
+			break;
+		default:
+			break;
+
+		}
+
+		return skipFirstRound;
+	}
 
 	private static void transferSupplies() throws GameActionException {
 		RobotInfo[] nearbyAllies = rc.senseNearbyRobots(rc.getLocation(),
@@ -1136,6 +1148,7 @@ public class RobotPlayer {
 	private static int numEnemyLaunchers;
 	private static int numEnemyMissiles;
 
+	@SuppressWarnings("fallthrough")
 	private static void updateUnitCounts() throws GameActionException {
 
 		// Run part of the work on each round
@@ -1153,8 +1166,8 @@ public class RobotPlayer {
 		int enemyLoopEnd = enemyChunkSize * (roundNumMod + 1);
 
 		/**********************************************************************
-		 * NOTE: Exhibits fall through since the same loop is used for cases
-		 * 1-3.
+		 * WARNING: Exhibits intentional FALLTHROUGH since the same loop is used
+		 * for cases 1-3.
 		 * -------------------------------------------------------------------
 		 * Case 0: Initializes quantities to 0. Runs first fourth of the array.
 		 * Cases 1-3: Each run a different fourth of the array. Case 4:
