@@ -392,41 +392,70 @@ public class RobotPlayer {
 
 	private static void defendHQ() throws GameActionException {
 		if(rc.isCoreReady()){
-			int currentRadiusSquared = rc.readBroadcast(HQ_RADIUS_CHANNEL);
+//			int currentRadiusSquared = rc.readBroadcast(HQ_RADIUS_CHANNEL);
+//			MapLocation currentLocation = rc.getLocation();
+//			double squaredDistanceDiff = Math.abs(currentLocation.distanceSquaredTo(myHQ)
+//					- currentRadiusSquared);
+//			if (squaredDistanceDiff > 36.0 * RobotType.HQ.attackRadiusSquared || squaredDistanceDiff < 25.0 * RobotType.HQ.attackRadiusSquared) {
+//				Direction rightDirection = myHQ.directionTo(currentLocation);
+//				MapLocation targetLocation = myHQ.add(rightDirection, 1);
+//				
+//				Direction targetDirection = bugNav(targetLocation); 
+//				if(targetDirection != Direction.NONE){
+//					rc.move(targetDirection);
+//				}
+//			}
+
 			MapLocation currentLocation = rc.getLocation();
-			double squaredDistanceDiff = Math.abs(currentLocation.distanceSquaredTo(myHQ)
-					- currentRadiusSquared);
-			if (squaredDistanceDiff > 36.0 * RobotType.HQ.attackRadiusSquared || squaredDistanceDiff < 25.0 * RobotType.HQ.attackRadiusSquared) {
-				Direction rightDirection = myHQ.directionTo(currentLocation);
-				MapLocation targetLocation = myHQ.add(rightDirection, 1);
+			if(currentLocation.distanceSquaredTo(myHQ) > 2 * currentLocation.distanceSquaredTo(enemyHQ)){
+				double turnLittle = rand.nextDouble();
+				Direction currentDirection = currentLocation.directionTo(myHQ);
 				
-				Direction targetDirection = bugNav(targetLocation); 
+				if(turnLittle < 0.33){
+					currentDirection = currentDirection.rotateLeft();
+				}else if(turnLittle > 0.33 & turnLittle < 0.66){
+					currentDirection = currentDirection.rotateRight();
+				}
+				
+				MapLocation targetLocation = currentLocation.add(currentDirection);
+				Direction targetDirection = bugNav(targetLocation);
+				
+				if(targetDirection != Direction.NONE){
+					rc.move(targetDirection);
+				}
+			}else if(currentLocation.distanceSquaredTo(enemyHQ) > 1.1 * currentLocation.distanceSquaredTo(myHQ)){
+				double turnLittle = rand.nextDouble();
+				Direction currentDirection = currentLocation.directionTo(enemyHQ);
+				
+				if(turnLittle < 0.33){
+					currentDirection = currentDirection.rotateLeft();
+				}else if(turnLittle > 0.33 & turnLittle < 0.66){
+					currentDirection = currentDirection.rotateRight();
+				}
+				
+				MapLocation targetLocation = currentLocation.add(currentDirection);
+				Direction targetDirection = bugNav(targetLocation);
+				
+				if(targetDirection != Direction.NONE){
+					rc.move(targetDirection);
+				}
+			}else{
+				double turnVar = rand.nextDouble();
+				MapLocation newLocation;
+				Direction newDirection;
+				if(turnVar < 0.5){
+					newDirection = currentLocation.directionTo(myHQ).rotateRight().rotateRight();
+					newLocation = currentLocation.add(newDirection);
+				}else{
+					newDirection = currentLocation.directionTo(myHQ).rotateLeft().rotateLeft();
+					newLocation = currentLocation.add(newDirection);
+				}
+				
+				Direction targetDirection = bugNav(newLocation);
 				if(targetDirection != Direction.NONE){
 					rc.move(targetDirection);
 				}
 			}
-
-//			MapLocation currentLocation = rc.getLocation();
-//			if(currentLocation.distanceSquaredTo(myHQ) > 2 * currentLocation.distanceSquaredTo(enemyHQ)){
-//				Direction targetDirection = bugNav(myHQ);
-//				if(targetDirection != Direction.NONE){
-//					rc.move(targetDirection);
-//				}
-//			}else if(currentLocation.distanceSquaredTo(enemyHQ) > 1.1 * currentLocation.distanceSquaredTo(myHQ)){
-//				Direction targetDirection = bugNav(enemyHQ);
-//				if(targetDirection != Direction.NONE){
-//					rc.move(targetDirection);
-//				}
-//			}else{
-//				double turnVar = rand.nextDouble();
-//				if(turnVar < 0.5){
-//					Direction newDirection = currentLocation.directionTo(myHQ).rotateRight().rotateRight();
-//					MapLocation newLocation = currentLocation.add(newDirection);
-//				}else{
-//					Direction newDirection = currentLocation.directionTo(myHQ).rotateLeft().rotateLeft();
-//					MapLocation newLocation = currentLocation.add(newDirection);
-//				}
-//			}
 		}
 	}
 
