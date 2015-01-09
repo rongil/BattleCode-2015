@@ -650,6 +650,11 @@ public class RobotPlayer {
 		}
 	}
 
+	private static int measureCrowdedNess(MapLocation loc, int radiusSquared) {
+	    // TODO: make more sophisticated
+	    return rc.senseNearbyRobots(loc, radiusSquared, null).length;
+	}
+	
 	private static void flyOnBoundary() throws GameActionException {
 		defendHQ();
 		moveAround();
