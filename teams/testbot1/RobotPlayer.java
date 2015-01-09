@@ -130,7 +130,10 @@ public class RobotPlayer {
 								 * This will help to distinguish each robot
 								 * otherwise, each robot will behave exactly the
 								 * same.
+
 								 */
+	
+	private static Team Friend;
 	private static Team Enemy;
 	private static RobotController rc;
 
@@ -146,7 +149,8 @@ public class RobotPlayer {
 	public static void run(RobotController myRC) {
 
 		rc = myRC;
-		Enemy = rc.getTeam().opponent();
+		Friend = rc.getTeam();
+		Enemy = Friend.opponent();
 		myHQ = rc.senseHQLocation();
 		enemyHQ = rc.senseEnemyHQLocation();
 
@@ -338,49 +342,51 @@ public class RobotPlayer {
 					 *********************************************************/
 
 					// Limit the number of miner factories
-					if (roundNum < 500
-							&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
-						buildUnit(RobotType.MINERFACTORY);
-					} else if (roundNum < 600) {
-						if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
+					if(measureCrowdedNess(rc.getLocation(), 4) < 10){
+						if (roundNum < 500
+								&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
+							buildUnit(RobotType.MINERFACTORY);
+						} else if (roundNum < 600) {
+							if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
+								buildUnit(RobotType.BARRACKS);
+							} else {
+								buildUnit(RobotType.TANKFACTORY);
+							}
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
+							boolean success = buildUnit(RobotType.TECHNOLOGYINSTITUTE);
+							if (success) {
+								rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
+							}
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
+							boolean success = buildUnit(RobotType.TRAININGFIELD);
+							if (success) {
+								rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
+							}
+						} else if (0.05 <= fate && fate < 0.06) {
+							buildUnit(RobotType.HANDWASHSTATION);
+						} else if (0.1 <= fate && fate < 0.2) {
+							if (rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
+								buildUnit(RobotType.SUPPLYDEPOT);
+							}
+						} else if (roundNum < 1500
+								&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
+							buildUnit(RobotType.MINERFACTORY);
+						} else if (0.2 <= fate && fate < 0.45) {
+							if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 3) {
+								buildUnit(RobotType.TANKFACTORY);
+							}
+						} else if (0.45 <= fate && fate < 0.55) {
+							buildUnit(RobotType.HELIPAD);
+						} else if (0.65 <= fate && fate < 0.8) {
+							buildUnit(RobotType.AEROSPACELAB);
+						} else if (0.8 <= fate
+								|| rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 5) {
 							buildUnit(RobotType.BARRACKS);
-						} else {
-							buildUnit(RobotType.TANKFACTORY);
 						}
-					} else if (rc
-							.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
-						boolean success = buildUnit(RobotType.TECHNOLOGYINSTITUTE);
-						if (success) {
-							rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
-						}
-					} else if (rc
-							.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
-						boolean success = buildUnit(RobotType.TRAININGFIELD);
-						if (success) {
-							rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
-						}
-					} else if (0.05 <= fate && fate < 0.06) {
-						buildUnit(RobotType.HANDWASHSTATION);
-					} else if (0.1 <= fate && fate < 0.2) {
-						if (rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
-							buildUnit(RobotType.SUPPLYDEPOT);
-						}
-					} else if (roundNum < 1500
-							&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
-						buildUnit(RobotType.MINERFACTORY);
-					} else if (0.2 <= fate && fate < 0.45) {
-						if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 3) {
-							buildUnit(RobotType.TANKFACTORY);
-						}
-					} else if (0.45 <= fate && fate < 0.55) {
-						buildUnit(RobotType.HELIPAD);
-					} else if (0.65 <= fate && fate < 0.8) {
-						buildUnit(RobotType.AEROSPACELAB);
-					} else if (0.8 <= fate
-							|| rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 5) {
-						buildUnit(RobotType.BARRACKS);
 					}
-
+				
 					mineAndMove();
 
 					break;
@@ -652,7 +658,16 @@ public class RobotPlayer {
 
 	private static int measureCrowdedNess(MapLocation loc, int radiusSquared) {
 	    // TODO: make more sophisticated
-	    return rc.senseNearbyRobots(loc, radiusSquared, null).length;
+	    int numBadTiles = 0;
+	    
+	    if (radiusSquared <= 9) {
+	        for (MapLocation location : loc.getAllMapLocationsWithinRadiusSq(loc, radiusSquared)) {
+	            if (rc.senseTerrainTile(location) != TerrainTile.NORMAL) {
+	                ++numBadTiles;
+	            }
+	        }
+	    }
+	    return rc.senseNearbyRobots(loc, radiusSquared, Friend).length + numBadTiles;
 	}
 	
 	private static void flyOnBoundary() throws GameActionException {
