@@ -1087,41 +1087,38 @@ public class RobotPlayer {
 		}
 	}
 
-	// private static void attackBestEnemy() throws GameActionException {
-	// // Don't do anything if the weapon is not ready.
-	// if (!rc.isWeaponReady()) {
-	// return;
-	// }
-	//
-	// RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getLocation(),
-	// rc.getType().attackRadiusSquared, rc.getTeam().opponent());
-	// RobotInfo target = null;
-	// int currentTargetPriority;
-	// int enemyPriority;
-	// for (RobotInfo enemy : nearbyEnemies) {
-	// if (Clock.getBytecodeNum() > 2000) {
-	// break;
-	// }
-	// if (rc.canAttackLocation(enemy.location)) {
-	// if (target != null) {
-	// currentTargetPriority = attackPriorityMap.get(target.type);
-	// enemyPriority = attackPriorityMap.get(enemy.type);
-	// } else {
-	// target = enemy;
-	// continue;
-	// }
-	//
-	// // TODO: Add more detail in choosing an enemy to attack.
-	// if (enemyPriority < currentTargetPriority) {
-	// target = enemy;
-	// }
-	// }
-	//
-	// }
-	// if (target != null) {
-	// rc.attackLocation(target.location);
-	// }
-	// }
+	private static void attackBestEnemy() throws GameActionException {
+		// Don't do anything if the weapon is not ready.
+		if (!rc.isWeaponReady()) {
+			return;
+		}
+
+		RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getLocation(),
+				rc.getType().attackRadiusSquared, rc.getTeam().opponent());
+		RobotInfo target = null;
+		//int currentTargetPriority;
+		//int enemyPriority;
+		for (RobotInfo enemy : nearbyEnemies) {
+			if (Clock.getBytecodeNum() > 2000) {
+				break;
+			}
+			if (rc.canAttackLocation(enemy.location)) {
+				// TODO: Add more detail in choosing an enemy to attack.
+				// Currently attacks the lowest health enemy in range.
+				if (target == null || enemy.health < target.health) {
+					// currentTargetPriority =
+					// attackPriorityMap.get(target.type);
+					// enemyPriority = attackPriorityMap.get(enemy.type);
+					target = enemy;
+				}
+
+			}
+
+		}
+		if (target != null) {
+			rc.attackLocation(target.location);
+		}
+	}
 
 	@SuppressWarnings("fallthrough")
 	private static boolean initializeAttackPriorityMap() {
