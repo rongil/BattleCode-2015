@@ -69,8 +69,6 @@ public class RobotPlayer {
 				roundNum = Clock.getRoundNum();
 				// Get robot type
 				RobotType type = rc.getType();
-				// General robot swarm variable
-				int allRobotSwarm;
 
 				switch (type) {
 				case HQ:
@@ -92,9 +90,10 @@ public class RobotPlayer {
 					 * Robot Army Coordination Signals
 					 *********************************************************/
 
-					// Start Offensive Swarm Conditions | Friendly(>=) Enemy(<)
+					// Start Offensive Swarm Conditions| Friendly(>=) Enemy(<=)
 					// ========================================================
-					// Total Robot Difference ----------------------------> 200
+					// Total Robot Difference ----------------------------> 300
+					// ____AND Tower Strength ----------------------------> 2
 					// Round 1800+ AND Number of Friendly Soldiers -------> 30
 					// ________________OR Number of Friendly Bashers -----> 30
 					// ________________OR Number of Friendly Miners ------> 30
@@ -106,22 +105,30 @@ public class RobotPlayer {
 							.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL);
 					int currentNumFriendlyTanks = rc
 							.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL);
-					// int currentNumFriendlyDrones =
-					// rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
-					// int currentNumFriendlyMissiles = rc
-					// .readBroadcast(NUM_FRIENDLY_MISSILES_CHANNEL);
 					int currentNumFriendlyMiners = rc
 							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
 					MapLocation[] towers = rc.senseEnemyTowerLocations();
-					if (friendlyRobots.length - enemyRobots.length >= 200
+					if ((friendlyRobots.length - enemyRobots.length >= 300 && rc
+							.readBroadcast(TOWER_STRENGTH_CHANNEL) <= 2)
 							|| (roundNum > 1800 && (currentNumFriendlySoldiers > 30
 									|| currentNumFriendlyBashers > 30
 									|| currentNumFriendlyTanks > 15 || currentNumFriendlyMiners > 30))) {
 
 						towers = rc.senseEnemyTowerLocations();
-						MapLocation location = enemyHQ; // Default
+						MapLocation location = enemyHQ; // Default to enemy HQ
+
 						if (towers.length > 2) { // Leave at most 2 towers
+							int minDistance = towers[0].distanceSquaredTo(myHQ);
 							location = towers[0];
+							// Bytecode conserving loop format
+							for (int i = towers.length; --i > 0;) {
+								int distance = towers[i]
+										.distanceSquaredTo(myHQ);
+								if (distance < minDistance) {
+									location = towers[i];
+									minDistance = distance;
+								}
+							}
 						}
 
 						RobotType[] types = { RobotType.BASHER,
@@ -164,33 +171,23 @@ public class RobotPlayer {
 					spawnUnit(RobotType.LAUNCHER);
 					break;
 				case BARRACKS:
-					if (fate < .9) {
-						spawnUnit(RobotType.SOLDIER);
-					} else {
-						spawnUnit(RobotType.BASHER);
+					if (roundNum >= 600) {
+						if (fate < .9) {
+							spawnUnit(RobotType.SOLDIER);
+						} else {
+							spawnUnit(RobotType.BASHER);
+						}
 					}
 					break;
 				case BASHER:
 					attackEnemyZero();
-					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
 					int basherSwarm = rc.readBroadcast(BASHER_SWARM_CHANNEL);
 					if (basherSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(BASHER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(BASHER_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
-					} else if (allRobotSwarm == GO_TO_LOCATION) {
-						int x = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
-						int y = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
-						moveTowardDestination(new MapLocation(x, y), false);
-
 					} else {
 						// BASHERs attack automatically, so let's just move
 						// around mostly randomly.
@@ -199,7 +196,6 @@ public class RobotPlayer {
 					}
 					break;
 				case BEAVER:
-					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
 					int beaverSwarm = rc.readBroadcast(BEAVER_SWARM_CHANNEL);
 					attackEnemyZero();
 					if (beaverSwarm == GO_TO_LOCATION) {
@@ -207,16 +203,6 @@ public class RobotPlayer {
 								.readBroadcast(BEAVER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(BEAVER_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
-						moveTowardDestination(new MapLocation(x, y), false);
-					} else if (allRobotSwarm == GO_TO_LOCATION) {
-						int x = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
-						int y = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					}
 
@@ -295,7 +281,6 @@ public class RobotPlayer {
 					break;
 				case COMMANDER:
 					attackEnemyZero();
-					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
 					int commanderSwarm = rc
 							.readBroadcast(COMMANDER_SWARM_CHANNEL);
 					if (commanderSwarm == GO_TO_LOCATION) {
@@ -303,16 +288,6 @@ public class RobotPlayer {
 								.readBroadcast(COMMANDER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(COMMANDER_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
-						moveTowardDestination(new MapLocation(x, y), false);
-					} else if (allRobotSwarm == GO_TO_LOCATION) {
-						int x = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
-						int y = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
@@ -320,47 +295,27 @@ public class RobotPlayer {
 					}
 					break;
 				case COMPUTER:
-					// allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
-					// int computerSwarm = rc
-					// .readBroadcast(COMMANDER_SWARM_CHANNEL);
-					// if (computerSwarm == GO_TO_LOCATION) {
-					// int x = rc
-					// .readBroadcast(COMPUTER_SWARM_LOCATION_X_CHANNEL);
-					// int y = rc
-					// .readBroadcast(COMPUTER_SWARM_LOCATION_Y_CHANNEL);
-					// tryMove(rc.getLocation().directionTo(
-					// new MapLocation(x, y)));
-					// } else if (allRobotSwarm == GO_TO_LOCATION) {
-					// int x = rc
-					// .readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
-					// int y = rc
-					// .readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-					// tryMove(rc.getLocation().directionTo(
-					// new MapLocation(x, y)));
-					//
-					// } else {
-					// moveAround();
-					// }
+					int computerSwarm = rc
+							.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					if (computerSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(COMPUTER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(COMPUTER_SWARM_LOCATION_Y_CHANNEL);
+						tryMove(rc.getLocation().directionTo(
+								new MapLocation(x, y)));
+					} else {
+						// moveAround();
+					}
 					break;
 				case DRONE:
 					attackEnemyZero();
-					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
 					int droneSwarm = rc.readBroadcast(COMMANDER_SWARM_CHANNEL);
 					if (droneSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(DRONE_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(DRONE_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
-						moveTowardDestination(new MapLocation(x, y), false);
-					} else if (allRobotSwarm == GO_TO_LOCATION) {
-						int x = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
-						int y = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
@@ -396,23 +351,12 @@ public class RobotPlayer {
 					break;
 				case MINER:
 					attackEnemyZero();
-					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
 					int minerSwarm = rc.readBroadcast(COMMANDER_SWARM_CHANNEL);
 					if (minerSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(MINER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(MINER_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
-						moveTowardDestination(new MapLocation(x, y), false);
-					} else if (allRobotSwarm == GO_TO_LOCATION) {
-						int x = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
-						int y = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						mineAndMove();
@@ -432,7 +376,6 @@ public class RobotPlayer {
 
 					break;
 				case MISSILE:
-					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
 					int missileSwarm = rc
 							.readBroadcast(COMMANDER_SWARM_CHANNEL);
 					if (missileSwarm == GO_TO_LOCATION) {
@@ -440,24 +383,13 @@ public class RobotPlayer {
 								.readBroadcast(MISSILE_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(MISSILE_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
-						moveTowardDestination(new MapLocation(x, y), false);
-					} else if (allRobotSwarm == GO_TO_LOCATION) {
-						int x = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
-						int y = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						rc.explode();
 					}
 					break;
 				case SOLDIER:
-					attackEnemyZero(); // soldiers attack, not mine
-					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
+					attackEnemyZero(); // Soldiers attack, not mine.
 					int soldierSwarm = rc
 							.readBroadcast(COMMANDER_SWARM_CHANNEL);
 					if (soldierSwarm == GO_TO_LOCATION) {
@@ -465,16 +397,6 @@ public class RobotPlayer {
 								.readBroadcast(SOLDIER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(SOLDIER_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
-						moveTowardDestination(new MapLocation(x, y), false);
-					} else if (allRobotSwarm == GO_TO_LOCATION) {
-						int x = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
-						int y = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						/*
@@ -491,21 +413,10 @@ public class RobotPlayer {
 					break;
 				case TANK:
 					attackEnemyZero();
-					allRobotSwarm = rc.readBroadcast(GENERAL_SWARM_CHANNEL);
 					int tankSwarm = rc.readBroadcast(COMMANDER_SWARM_CHANNEL);
 					if (tankSwarm == GO_TO_LOCATION) {
 						int x = rc.readBroadcast(TANK_SWARM_LOCATION_X_CHANNEL);
 						int y = rc.readBroadcast(TANK_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
-						moveTowardDestination(new MapLocation(x, y), false);
-					} else if (allRobotSwarm == GO_TO_LOCATION) {
-						int x = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
-						int y = rc
-								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						// tryMove(rc.getLocation().directionTo(
-						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
@@ -526,9 +437,11 @@ public class RobotPlayer {
 					int numCommanders = rc
 							.readBroadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL);
 					if (!rc.hasCommander() && numCommanders < 3) {
-						spawnUnit(RobotType.COMMANDER);
-						rc.broadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL,
-								numCommanders + 1);
+						boolean success = spawnUnit(RobotType.COMMANDER);
+						if (success) {
+							rc.broadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL,
+									numCommanders + 1);
+						}
 					}
 					break;
 				default:
@@ -563,8 +476,8 @@ public class RobotPlayer {
 				e.printStackTrace();
 			}
 
-			rc.yield(); // robot yields its turn --> saves bytecode to avoid
-						// hitting limit
+			rc.yield(); // Robot yields its turn --> saves bytecode to avoid
+						// hitting the limit.
 		}
 	}
 
@@ -711,8 +624,9 @@ public class RobotPlayer {
 			// }
 
 			MapLocation currentLocation = rc.getLocation();
-			if (currentLocation.distanceSquaredTo(myHQ) > 2 * currentLocation
-					.distanceSquaredTo(enemyHQ)) {
+			int distanceToMyHQ = currentLocation.distanceSquaredTo(myHQ);
+			int distanceToEnemyHQ = currentLocation.distanceSquaredTo(enemyHQ);
+			if (distanceToMyHQ > .6 * distanceToEnemyHQ) {
 				// double turnLittle = rand.nextDouble();
 				// Direction currentDirection =
 				// currentLocation.directionTo(myHQ);
@@ -733,8 +647,7 @@ public class RobotPlayer {
 				// }
 				moveTowardDestination(myHQ, true);
 
-			} else if (currentLocation.distanceSquaredTo(enemyHQ) > 1.1 * currentLocation
-					.distanceSquaredTo(myHQ)) {
+			} else if (distanceToMyHQ < .2 * distanceToEnemyHQ) {
 				// double turnLittle = rand.nextDouble();
 				// Direction currentDirection =
 				// currentLocation.directionTo(enemyHQ);
@@ -803,7 +716,7 @@ public class RobotPlayer {
 		rc.broadcast(HQ_RADIUS_CHANNEL, radiusSquared);
 	}
 
-	private static void spawnUnit(RobotType roboType)
+	private static boolean spawnUnit(RobotType roboType)
 			throws GameActionException {
 		Direction testDir = getRandomDirection();
 
@@ -813,12 +726,14 @@ public class RobotPlayer {
 
 				if (isSafe(spawnLoc)) {
 					rc.spawn(testDir, roboType);
-					break;
+					return true;
 				}
 			} else {
 				testDir = testDir.rotateLeft();
 			}
 		}
+
+		return false;
 	}
 
 	private static Direction getRandomDirection() {
@@ -1096,8 +1011,8 @@ public class RobotPlayer {
 		RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getLocation(),
 				rc.getType().attackRadiusSquared, rc.getTeam().opponent());
 		RobotInfo target = null;
-		//int currentTargetPriority;
-		//int enemyPriority;
+		// int currentTargetPriority;
+		// int enemyPriority;
 		for (RobotInfo enemy : nearbyEnemies) {
 			if (Clock.getBytecodeNum() > 2000) {
 				break;
@@ -1652,6 +1567,7 @@ public class RobotPlayer {
 		}
 
 		rc.broadcast(TOWER_STRENGTH_CHANNEL, towerStrength);
+		System.out.println(towerStrength);
 	}
 
 	// ^^^^^^^^^^^^^^^^^^^^^^^^^^ END OF MAP ANALYSIS ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1725,8 +1641,6 @@ public class RobotPlayer {
 	private static final int HQ_RADIUS_CHANNEL = 100;
 	// TODO: Use a single channel and some int manipulation to reduce number of
 	// channels for location broadcasting
-	private static final int GENERAL_SWARM_LOCATION_X_CHANNEL = 200;
-	private static final int GENERAL_SWARM_LOCATION_Y_CHANNEL = 210;
 	private static final int BEAVER_SWARM_LOCATION_X_CHANNEL = 201;
 	private static final int BEAVER_SWARM_LOCATION_Y_CHANNEL = 211;
 	private static final int MINER_SWARM_LOCATION_X_CHANNEL = 202;
@@ -1747,7 +1661,6 @@ public class RobotPlayer {
 	private static final int MISSILE_SWARM_LOCATION_Y_CHANNEL = 219;
 
 	// Offensive + Defensive Signals
-	private static final int GENERAL_SWARM_CHANNEL = 1000;
 	private static final int BEAVER_SWARM_CHANNEL = 1001;
 	private static final int MINER_SWARM_CHANNEL = 1002;
 	private static final int COMPUTER_SWARM_CHANNEL = 1003;
