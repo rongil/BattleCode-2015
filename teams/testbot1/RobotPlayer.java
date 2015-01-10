@@ -281,15 +281,17 @@ public class RobotPlayer {
 								.readBroadcast(BASHER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(BASHER_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 
 					} else {
 						// BASHERs attack automatically, so let's just move
@@ -307,16 +309,17 @@ public class RobotPlayer {
 								.readBroadcast(BEAVER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(BEAVER_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
-
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					}
 
 					/**********************************************************
@@ -400,16 +403,17 @@ public class RobotPlayer {
 								.readBroadcast(COMMANDER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(COMMANDER_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
-
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
 						flyOnBoundary();
@@ -447,16 +451,17 @@ public class RobotPlayer {
 								.readBroadcast(DRONE_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(DRONE_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
-
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
 						MapLocation[] towerLocations = rc.senseTowerLocations();
@@ -467,11 +472,12 @@ public class RobotPlayer {
 							} else {
 								int towerNumber = rand
 										.nextInt(towerLocations.length);
-								Direction towerDirection = bugNav(towerLocations[towerNumber]);
-
-								if (towerDirection != Direction.NONE) {
-									rc.move(bugNav(towerLocations[towerNumber]));
-								}
+//								Direction towerDirection = bugNav(towerLocations[towerNumber]);
+//								if (towerDirection != Direction.NONE) {
+//									rc.move(bugNav(towerLocations[towerNumber]));
+//								}
+								
+								moveTowardDestination(towerLocations[towerNumber], true);
 							}
 						}
 					}
@@ -495,16 +501,17 @@ public class RobotPlayer {
 								.readBroadcast(MINER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(MINER_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
-
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						mineAndMove();
 					}
@@ -531,16 +538,17 @@ public class RobotPlayer {
 								.readBroadcast(MISSILE_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(MISSILE_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
-
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						rc.explode();
 					}
@@ -555,16 +563,17 @@ public class RobotPlayer {
 								.readBroadcast(SOLDIER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(SOLDIER_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
-
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						/*
 						 * moveAround(); POSSIBLE OPTIMIZATION: chase enemies In
@@ -585,16 +594,17 @@ public class RobotPlayer {
 					if (tankSwarm == GO_TO_LOCATION) {
 						int x = rc.readBroadcast(TANK_SWARM_LOCATION_X_CHANNEL);
 						int y = rc.readBroadcast(TANK_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
-
+//						tryMove(rc.getLocation().directionTo(
+//								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
 						flyOnBoundary();
@@ -805,10 +815,12 @@ public class RobotPlayer {
 				// currentLocation.add(currentDirection);
 				// Direction targetDirection = bugNav(targetLocation);
 
-				Direction targetDirection = bugNav(myHQ);
-				if (targetDirection != Direction.NONE) {
-					rc.move(targetDirection);
-				}
+//				Direction targetDirection = bugNav(myHQ);
+//				if (targetDirection != Direction.NONE) {
+//					rc.move(targetDirection);
+//				}
+				moveTowardDestination(myHQ, true);
+				
 			} else if (currentLocation.distanceSquaredTo(enemyHQ) > 1.1 * currentLocation
 					.distanceSquaredTo(myHQ)) {
 				// double turnLittle = rand.nextDouble();
@@ -825,10 +837,12 @@ public class RobotPlayer {
 				// currentLocation.add(currentDirection);
 				// Direction targetDirection = bugNav(targetLocation);
 
-				Direction targetDirection = bugNav(enemyHQ);
-				if (targetDirection != Direction.NONE) {
-					rc.move(targetDirection);
-				}
+//				Direction targetDirection = bugNav(enemyHQ);
+//				if (targetDirection != Direction.NONE) {
+//					rc.move(targetDirection);
+//				}
+				
+				moveTowardDestination(enemyHQ ,true);
 			} else {
 				double turnVar = rand.nextDouble();
 				MapLocation newLocation;
@@ -843,10 +857,12 @@ public class RobotPlayer {
 					newLocation = currentLocation.add(newDirection);
 				}
 
-				Direction targetDirection = bugNav(newLocation);
-				if (targetDirection != Direction.NONE) {
-					rc.move(targetDirection);
-				}
+//				Direction targetDirection = bugNav(newLocation);
+//				if (targetDirection != Direction.NONE) {
+//					rc.move(targetDirection);
+//				}
+				
+				moveTowardDestination(newLocation, true);
 			}
 		}
 	}
@@ -897,6 +913,45 @@ public class RobotPlayer {
 		return Direction.values()[(int) rand.nextDouble() * 8];
 	}
 
+	private static boolean moveTowardDestination(MapLocation dest, boolean ignoreSafety) throws GameActionException {
+		// TODO: Should we consider including a "crowdedness" heuristic? If so, how
+		// do we incorporate our current implementation?
+		
+		Direction straight = rc.getLocation().directionTo(dest);
+		MapLocation currentLocation = rc.getLocation();
+		
+		if(rc.isCoreReady()){
+			int straightIndex = directionToInt(straight);
+			
+			int[] offsets = new int[8];
+			offsets[0] = 0;
+			offsets[7] = 4;
+
+			offsets[1] = (rand.nextDouble() > 0.5) ? 1 : -1;
+			offsets[2] = -offsets[1];
+			
+			offsets[3] = (rand.nextDouble() > 0.5) ? 2 : -2;
+			offsets[4] = -offsets[3];
+			
+			offsets[5] = (rand.nextDouble() > 0.5) ? 3 : -3;
+			offsets[6] = -offsets[5];
+			
+			for(int offset : offsets){
+				Direction possDirection = directions[(straightIndex + offset + 8) % 8];
+				
+				if(rc.canMove(possDirection)){
+					MapLocation possSquare = currentLocation.add(possDirection);
+					
+					if(ignoreSafety || isSafe(possSquare)){
+						rc.move(possDirection);
+						return true;
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
 	private static Direction bugNav(MapLocation target)
 			throws GameActionException {
 		// TODO: Make it possible for robots to enter non-safe squares when they
@@ -951,6 +1006,48 @@ public class RobotPlayer {
 		return bestDirection;
 	}
 
+	// This method will attempt to move in Direction d (or as close to it as
+	// possible)
+	private static void tryMove(Direction d) throws GameActionException {
+		if (!rc.isCoreReady()) {
+			return;
+		}
+		int offsetIndex = 0;
+		int[] offsets = { 0, 1, -1, 2, -2 };
+		int dirint = directionToInt(d);
+		boolean blocked = false;
+		while (offsetIndex < 5
+				&& (!rc.canMove(directions[(dirint + offsets[offsetIndex] + 8) % 8]) || blocked)) {
+			offsetIndex++;
+		}
+		if (offsetIndex < 5) {
+			rc.move(directions[(dirint + offsets[offsetIndex] + 8) % 8]);
+		}
+	}
+
+	private static int directionToInt(Direction d) {
+		switch (d) {
+		case NORTH:
+			return 0;
+		case NORTH_EAST:
+			return 1;
+		case EAST:
+			return 2;
+		case SOUTH_EAST:
+			return 3;
+		case SOUTH:
+			return 4;
+		case SOUTH_WEST:
+			return 5;
+		case WEST:
+			return 6;
+		case NORTH_WEST:
+			return 7;
+		default:
+			return -1;
+		}
+	}
+	
 	private static void locateBestOre() throws GameActionException {
 		if (rc.isCoreReady()) {
 			MapLocation currentLocation = rc.getLocation();
@@ -985,11 +1082,12 @@ public class RobotPlayer {
 			}
 
 			if (bestDestination != null) {
-				Direction bestDirection = bugNav(bestDestination);
-
-				if (bestDirection != Direction.NONE) {
-					rc.move(bestDirection);
-				}
+//				Direction bestDirection = bugNav(bestDestination);
+//
+//				if (bestDirection != Direction.NONE) {
+//					rc.move(bestDirection);
+//				}
+				moveTowardDestination(bestDestination, true);
 			} else {
 				// moveAround();
 				// flyOnBoundary();
@@ -1203,48 +1301,6 @@ public class RobotPlayer {
 		}
 
 		return false;
-	}
-
-	// This method will attempt to move in Direction d (or as close to it as
-	// possible)
-	private static void tryMove(Direction d) throws GameActionException {
-		if (!rc.isCoreReady()) {
-			return;
-		}
-		int offsetIndex = 0;
-		int[] offsets = { 0, 1, -1, 2, -2 };
-		int dirint = directionToInt(d);
-		boolean blocked = false;
-		while (offsetIndex < 5
-				&& (!rc.canMove(directions[(dirint + offsets[offsetIndex] + 8) % 8]) || blocked)) {
-			offsetIndex++;
-		}
-		if (offsetIndex < 5) {
-			rc.move(directions[(dirint + offsets[offsetIndex] + 8) % 8]);
-		}
-	}
-
-	private static int directionToInt(Direction d) {
-		switch (d) {
-		case NORTH:
-			return 0;
-		case NORTH_EAST:
-			return 1;
-		case EAST:
-			return 2;
-		case SOUTH_EAST:
-			return 3;
-		case SOUTH:
-			return 4;
-		case SOUTH_WEST:
-			return 5;
-		case WEST:
-			return 6;
-		case NORTH_WEST:
-			return 7;
-		default:
-			return -1;
-		}
 	}
 
 	private static void broadcastSwarmInfo(RobotType[] types, int action,
