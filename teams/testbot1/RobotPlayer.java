@@ -129,9 +129,8 @@ public class RobotPlayer {
 								 * This will help to distinguish each robot
 								 * otherwise, each robot will behave exactly the
 								 * same.
-
 								 */
-	
+
 	private static Team Friend;
 	private static Team Enemy;
 	private static RobotController rc;
@@ -219,7 +218,7 @@ public class RobotPlayer {
 							|| (roundNum > 1800 && (currentNumFriendlySoldiers > 30
 									|| currentNumFriendlyBashers > 30
 									|| currentNumFriendlyTanks > 15 || currentNumFriendlyMiners > 30))) {
-						
+
 						towers = rc.senseEnemyTowerLocations();
 						MapLocation location = enemyHQ; // Default
 						if (towers.length > 2) { // Leave at most 2 towers
@@ -342,7 +341,7 @@ public class RobotPlayer {
 					 *********************************************************/
 
 					// Limit the number of miner factories
-					if(measureCrowdedness(rc.getLocation(), 4) < 10){
+					if (measureCrowdedness(rc.getLocation(), 4) < 10) {
 						if (roundNum < 500
 								&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
 							buildUnit(RobotType.MINERFACTORY);
@@ -356,13 +355,15 @@ public class RobotPlayer {
 								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
 							boolean success = buildUnit(RobotType.TECHNOLOGYINSTITUTE);
 							if (success) {
-								rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
+								rc.broadcast(
+										NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
 							}
 						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
 							boolean success = buildUnit(RobotType.TRAININGFIELD);
 							if (success) {
-								rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
+								rc.broadcast(
+										NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
 							}
 						} else if (0.05 <= fate && fate < 0.06) {
 							buildUnit(RobotType.HANDWASHSTATION);
@@ -386,7 +387,7 @@ public class RobotPlayer {
 							buildUnit(RobotType.BARRACKS);
 						}
 					}
-				
+
 					mineAndMove();
 
 					break;
@@ -656,68 +657,73 @@ public class RobotPlayer {
 		}
 	}
 
-/* ======================================================================================== */
-	
-	public static class SearchNode{
+	/*
+	 * ==========================================================================
+	 * ==============
+	 */
+
+	public static class SearchNode {
 		private MapLocation nodeLoc;
 		private SearchNode nodeParent;
-		
-		public SearchNode(MapLocation loc, SearchNode parent){
+
+		public SearchNode(MapLocation loc, SearchNode parent) {
 			nodeLoc = loc;
 			nodeParent = parent;
 		}
-		
-		public MapLocation getLoc(){
+
+		public MapLocation getLoc() {
 			return nodeLoc;
 		}
-		
-		public SearchNode getParent(){
+
+		public SearchNode getParent() {
 			return nodeParent;
 		}
-		
-		public LinkedList<MapLocation> getPath(){
+
+		public LinkedList<MapLocation> getPath() {
 			LinkedList<MapLocation> nodePath = new LinkedList<MapLocation>();
 			nodePath.add(0, this.getLoc());
 
 			SearchNode currentNode = this;
-			
-			while(currentNode.getParent() != null){
+
+			while (currentNode.getParent() != null) {
 				currentNode = currentNode.getParent();
 				nodePath.add(0, currentNode.getLoc());
 			}
-			
+
 			return nodePath;
-		}		
+		}
 	}
-		
-	private static LinkedList<MapLocation> search(MapLocation dest, boolean DFS){
+
+	private static LinkedList<MapLocation> search(MapLocation dest, boolean DFS) {
 		MapLocation currentLocation = rc.getLocation();
-		
-		if(!reachedGoal(currentLocation, dest)){
+
+		if (!reachedGoal(currentLocation, dest)) {
 			LinkedList<SearchNode> agenda = new LinkedList<SearchNode>();
 			LinkedList<MapLocation> visited = new LinkedList<MapLocation>();
-			
+
 			agenda.add(new SearchNode(currentLocation, null));
 			visited.add(currentLocation);
-			
+
 			SearchNode currentNode;
-			
-			while(agenda.size() != 0){
-				if(DFS){
+
+			while (agenda.size() != 0) {
+				if (DFS) {
 					currentNode = agenda.removeLast();
-				}else{
+				} else {
 					currentNode = agenda.removeFirst();
 				}
-				
-				LinkedList<MapLocation> nodeLocations = getChildren(currentNode.getLoc());
-				
-				for(MapLocation nodeLocation : nodeLocations){
-					SearchNode childNode = new SearchNode(nodeLocation, currentNode);
-					
-					if(reachedGoal(nodeLocation, dest)){
+
+				LinkedList<MapLocation> nodeLocations = getChildren(currentNode
+						.getLoc());
+
+				for (MapLocation nodeLocation : nodeLocations) {
+					SearchNode childNode = new SearchNode(nodeLocation,
+							currentNode);
+
+					if (reachedGoal(nodeLocation, dest)) {
 						return childNode.getPath();
-					}else{
-						if(!visited.contains(nodeLocation)){
+					} else {
+						if (!visited.contains(nodeLocation)) {
 							visited.add(nodeLocation);
 							agenda.add(childNode);
 						}
@@ -725,45 +731,50 @@ public class RobotPlayer {
 				}
 			}
 		}
-		
+
 		return null;
 	}
-	
-	private static boolean reachedGoal(MapLocation loc, MapLocation dest){
+
+	private static boolean reachedGoal(MapLocation loc, MapLocation dest) {
 		return (loc.x == dest.x) && (loc.y == dest.y);
 	}
-	
-	private static LinkedList<MapLocation> getChildren(MapLocation loc){
+
+	private static LinkedList<MapLocation> getChildren(MapLocation loc) {
 		LinkedList<MapLocation> possibleChildren = new LinkedList<MapLocation>();
-		
-		for(Direction possDirection : Direction.values()){
+
+		for (Direction possDirection : Direction.values()) {
 			MapLocation possSquare = loc.add(possDirection);
 			TerrainTile possSquareTerrain = rc.senseTerrainTile(possSquare);
-			
-			if(possSquareTerrain == TerrainTile.NORMAL){
+
+			if (possSquareTerrain == TerrainTile.NORMAL) {
 				possibleChildren.add(possSquare);
 			}
 		}
-		
+
 		return possibleChildren;
 	}
-	
-/* ======================================================================================== */	
-	
+
+	/*
+	 * ==========================================================================
+	 * ==============
+	 */
+
 	private static int measureCrowdedness(MapLocation loc, int radiusSquared) {
-	    // TODO: make more sophisticated
-	    int numBadTiles = 0;
-	    
-	    if (radiusSquared <= 9) {
-	        for (MapLocation location : loc.getAllMapLocationsWithinRadiusSq(loc, radiusSquared)) {
-	            if (rc.senseTerrainTile(location) != TerrainTile.NORMAL) {
-	                ++numBadTiles;
-	            }
-	        }
-	    }
-	    return rc.senseNearbyRobots(loc, radiusSquared, Friend).length + numBadTiles;
+		// TODO: make more sophisticated
+		int numBadTiles = 0;
+
+		if (radiusSquared <= 9) {
+			for (MapLocation location : loc.getAllMapLocationsWithinRadiusSq(
+					loc, radiusSquared)) {
+				if (rc.senseTerrainTile(location) != TerrainTile.NORMAL) {
+					++numBadTiles;
+				}
+			}
+		}
+		return rc.senseNearbyRobots(loc, radiusSquared, Friend).length
+				+ numBadTiles;
 	}
-	
+
 	private static void flyOnBoundary() throws GameActionException {
 		defendHQ();
 		moveAround();
@@ -929,25 +940,27 @@ public class RobotPlayer {
 
 		int minCrowdedness = 9001; // Over 9000!
 		Direction bestDirection = Direction.NONE;
-		
+
 		for (Direction possDirection : possDirs) {
 			MapLocation possSquare = currentLoc.add(possDirection);
 			if (isSafe(possSquare) && rc.canMove(possDirection)) {
-//				int possCrowdedness = measureCrowdedness(currentLoc, 9);
-//				if(possCrowdedness < minCrowdedness){
-//					minCrowdedness = possCrowdedness;
-//					bestDirection = possDirection;
-//				}else if(possCrowdedness == minCrowdedness && bestDirection != Direction.NONE){
-//					bestDirection = (rand.nextDouble() > 0.5) ? bestDirection : possDirection;
-//				}
-//			}
-//		}
-//
-//		return bestDirection;
+				// int possCrowdedness = measureCrowdedness(currentLoc, 9);
+				// if(possCrowdedness < minCrowdedness){
+				// minCrowdedness = possCrowdedness;
+				// bestDirection = possDirection;
+				// }else if(possCrowdedness == minCrowdedness && bestDirection
+				// != Direction.NONE){
+				// bestDirection = (rand.nextDouble() > 0.5) ? bestDirection :
+				// possDirection;
+				// }
+				// }
+				// }
+				//
+				// return bestDirection;
 				return possDirection;
 			}
 		}
-		
+
 		return bestDirection;
 	}
 
@@ -1161,11 +1174,11 @@ public class RobotPlayer {
 	}
 
 	private static void transferSupplies() throws GameActionException {
-		// TODO: Do we want to have a global ordering on robots? So that 
+		// TODO: Do we want to have a global ordering on robots? So that
 		// robots may decide to "sacrifice" themselves for the sake of a
 		// stronger, more able robot?
-		
-		if(!rc.getType().needsSupply()){
+
+		if (!rc.getType().needsSupply()) {
 			RobotInfo[] nearbyAllies = rc.senseNearbyRobots(rc.getLocation(),
 					GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, Friend);
 			double lowestSupply = rc.getSupplyLevel();
@@ -1174,11 +1187,15 @@ public class RobotPlayer {
 			MapLocation suppliesToThisLocation = null;
 
 			for (RobotInfo ri : nearbyAllies) {
-				if ((ri.type == RobotType.BEAVER || ri.type == RobotType.COMPUTER ||
-						ri.type == RobotType.SOLDIER || ri.type == RobotType.BASHER ||
-						ri.type == RobotType.MINER || ri.type == RobotType.DRONE ||
-						ri.type == RobotType.TANK || ri.type == RobotType.COMMANDER ||
-						ri.type == RobotType.LAUNCHER) && ri.supplyLevel < lowestSupply) {
+				if ((ri.type == RobotType.BEAVER
+						|| ri.type == RobotType.COMPUTER
+						|| ri.type == RobotType.SOLDIER
+						|| ri.type == RobotType.BASHER
+						|| ri.type == RobotType.MINER
+						|| ri.type == RobotType.DRONE
+						|| ri.type == RobotType.TANK
+						|| ri.type == RobotType.COMMANDER || ri.type == RobotType.LAUNCHER)
+						&& ri.supplyLevel < lowestSupply) {
 					lowestSupply = ri.supplyLevel;
 					transferAmount = (rc.getSupplyLevel() - lowestSupply) / 2;
 					suppliesToThisLocation = ri.location;
@@ -1186,7 +1203,8 @@ public class RobotPlayer {
 			}
 
 			if (suppliesToThisLocation != null) {
-				rc.transferSupplies((int) transferAmount, suppliesToThisLocation);
+				rc.transferSupplies((int) transferAmount,
+						suppliesToThisLocation);
 			}
 		}
 	}
@@ -1404,9 +1422,13 @@ public class RobotPlayer {
 		int friendlyChunkSize = (int) Math.floor(friendlyRobots.length / 4);
 		int enemyChunkSize = (int) Math.floor(enemyRobots.length / 4);
 		int friendlyLoopStart = friendlyChunkSize * roundNumMod;
-		int friendlyLoopEnd = friendlyChunkSize * (roundNumMod + 1);
+		// Make sure to read the whole array
+		int friendlyLoopEnd = roundNumMod == 4 ? friendlyRobots.length
+				: friendlyChunkSize * (roundNumMod + 1);
 		int enemyLoopStart = enemyChunkSize * roundNumMod;
-		int enemyLoopEnd = enemyChunkSize * (roundNumMod + 1);
+		// Make sure to read the whole array
+		int enemyLoopEnd = roundNumMod == 4 ? enemyRobots.length
+				: enemyChunkSize * (roundNumMod + 1);
 
 		/**********************************************************************
 		 * WARNING: Exhibits intentional FALLTHROUGH since the same loop is used
