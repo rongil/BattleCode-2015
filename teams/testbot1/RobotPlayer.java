@@ -1,9 +1,8 @@
-// Offense Idea: Swarm
-
 package testbot1;
 
 import java.util.HashMap;
 import java.util.Random;
+import java.util.LinkedList;
 
 import battlecode.common.*;
 
@@ -220,6 +219,7 @@ public class RobotPlayer {
 							|| (roundNum > 1800 && (currentNumFriendlySoldiers > 30
 									|| currentNumFriendlyBashers > 30
 									|| currentNumFriendlyTanks > 15 || currentNumFriendlyMiners > 30))) {
+						
 						towers = rc.senseEnemyTowerLocations();
 						MapLocation location = enemyHQ; // Default
 						if (towers.length > 2) { // Leave at most 2 towers
@@ -342,7 +342,7 @@ public class RobotPlayer {
 					 *********************************************************/
 
 					// Limit the number of miner factories
-					if(measureCrowdedNess(rc.getLocation(), 4) < 10){
+					if(measureCrowdedness(rc.getLocation(), 4) < 10){
 						if (roundNum < 500
 								&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
 							buildUnit(RobotType.MINERFACTORY);
@@ -656,7 +656,101 @@ public class RobotPlayer {
 		}
 	}
 
-	private static int measureCrowdedNess(MapLocation loc, int radiusSquared) {
+/* ======================================================================================== */
+	
+	public static class SearchNode{
+		private MapLocation nodeLoc;
+		private SearchNode nodeParent;
+		
+		public SearchNode(MapLocation loc, SearchNode parent){
+			nodeLoc = loc;
+			nodeParent = parent;
+		}
+		
+		public MapLocation getLoc(){
+			return nodeLoc;
+		}
+		
+		public SearchNode getParent(){
+			return nodeParent;
+		}
+		
+		public LinkedList<MapLocation> getPath(){
+			LinkedList<MapLocation> nodePath = new LinkedList<MapLocation>();
+			nodePath.add(0, this.getLoc());
+
+			SearchNode currentNode = this;
+			
+			while(currentNode.getParent() != null){
+				currentNode = currentNode.getParent();
+				nodePath.add(0, currentNode.getLoc());
+			}
+			
+			return nodePath;
+		}		
+	}
+		
+	private static LinkedList<MapLocation> search(MapLocation dest, boolean DFS){
+		MapLocation currentLocation = rc.getLocation();
+		
+		if(!reachedGoal(currentLocation, dest)){
+			LinkedList<SearchNode> agenda = new LinkedList<SearchNode>();
+			LinkedList<MapLocation> visited = new LinkedList<MapLocation>();
+			
+			agenda.add(new SearchNode(currentLocation, null));
+			visited.add(currentLocation);
+			
+			SearchNode currentNode;
+			
+			while(agenda.size() != 0){
+				if(DFS){
+					currentNode = agenda.removeLast();
+				}else{
+					currentNode = agenda.removeFirst();
+				}
+				
+				LinkedList<MapLocation> nodeLocations = getChildren(currentNode.getLoc());
+				
+				for(MapLocation nodeLocation : nodeLocations){
+					SearchNode childNode = new SearchNode(nodeLocation, currentNode);
+					
+					if(reachedGoal(nodeLocation, dest)){
+						return childNode.getPath();
+					}else{
+						if(!visited.contains(nodeLocation)){
+							visited.add(nodeLocation);
+							agenda.add(childNode);
+						}
+					}
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	private static boolean reachedGoal(MapLocation loc, MapLocation dest){
+		return (loc.x == dest.x) && (loc.y == dest.y);
+	}
+	
+	private static LinkedList<MapLocation> getChildren(MapLocation loc){
+		LinkedList<MapLocation> possibleChildren = new LinkedList<MapLocation>();
+		
+		for(Direction possDirection : Direction.values()){
+			MapLocation possSquare = loc.add(possDirection);
+			TerrainTile possSquareTerrain = rc.senseTerrainTile(possSquare);
+			
+			if(possSquareTerrain == TerrainTile.NORMAL){
+				possibleChildren.add(possSquare);
+			}
+		}
+		
+		return possibleChildren;
+	}
+	
+/* ======================================================================================== */	
+	
+	private static int measureCrowdedness(MapLocation loc, int radiusSquared) {
 	    // TODO: make more sophisticated
 	    int numBadTiles = 0;
 	    
@@ -833,14 +927,28 @@ public class RobotPlayer {
 		possDirs[6] = (orderThree > 0.5) ? possDirs[7].rotateRight()
 				: possDirs[7].rotateLeft();
 
-		for (Direction bestDirection : possDirs) {
-			MapLocation possSquare = currentLoc.add(bestDirection);
-			if (isSafe(possSquare) && rc.canMove(bestDirection)) {
-				return bestDirection;
+		int minCrowdedness = 9001; // Over 9000!
+		Direction bestDirection = Direction.NONE;
+		
+		for (Direction possDirection : possDirs) {
+			MapLocation possSquare = currentLoc.add(possDirection);
+			if (isSafe(possSquare) && rc.canMove(possDirection)) {
+//				int possCrowdedness = measureCrowdedness(currentLoc, 9);
+//				if(possCrowdedness < minCrowdedness){
+//					minCrowdedness = possCrowdedness;
+//					bestDirection = possDirection;
+//				}else if(possCrowdedness == minCrowdedness && bestDirection != Direction.NONE){
+//					bestDirection = (rand.nextDouble() > 0.5) ? bestDirection : possDirection;
+//				}
+//			}
+//		}
+//
+//		return bestDirection;
+				return possDirection;
 			}
 		}
-
-		return Direction.NONE;
+		
+		return bestDirection;
 	}
 
 	private static void locateBestOre() throws GameActionException {
@@ -1053,23 +1161,25 @@ public class RobotPlayer {
 	}
 
 	private static void transferSupplies() throws GameActionException {
-		RobotInfo[] nearbyAllies = rc.senseNearbyRobots(rc.getLocation(),
-				GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, rc.getTeam());
-		double lowestSupply = rc.getSupplyLevel();
-		double transferAmount = 0;
+		if(!rc.getType().needsSupply()){
+			RobotInfo[] nearbyAllies = rc.senseNearbyRobots(rc.getLocation(),
+					GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, Friend);
+			double lowestSupply = rc.getSupplyLevel();
+			double transferAmount = 0;
 
-		MapLocation suppliesToThisLocation = null;
+			MapLocation suppliesToThisLocation = null;
 
-		for (RobotInfo ri : nearbyAllies) {
-			if (ri.supplyLevel < lowestSupply) {
-				lowestSupply = ri.supplyLevel;
-				transferAmount = (rc.getSupplyLevel() - ri.supplyLevel) / 2;
-				suppliesToThisLocation = ri.location;
+			for (RobotInfo ri : nearbyAllies) {
+				if (ri.supplyLevel < lowestSupply) {
+					lowestSupply = ri.supplyLevel;
+					transferAmount = (rc.getSupplyLevel() - lowestSupply) / 2;
+					suppliesToThisLocation = ri.location;
+				}
 			}
-		}
 
-		if (suppliesToThisLocation != null) {
-			rc.transferSupplies((int) transferAmount, suppliesToThisLocation);
+			if (suppliesToThisLocation != null) {
+				rc.transferSupplies((int) transferAmount, suppliesToThisLocation);
+			}
 		}
 	}
 
@@ -1280,8 +1390,8 @@ public class RobotPlayer {
 		int roundNumMod = roundNum % 20;
 		if (roundNumMod == 0 || friendlyRobots == null || enemyRobots == null) {
 			// Collect all robots into separate RobotInfo arrays.
-			friendlyRobots = rc.senseNearbyRobots(999999, rc.getTeam());
-			enemyRobots = rc.senseNearbyRobots(999999, rc.getTeam().opponent());
+			friendlyRobots = rc.senseNearbyRobots(999999, Friend);
+			enemyRobots = rc.senseNearbyRobots(999999, Enemy);
 		}
 		int friendlyChunkSize = (int) Math.floor(friendlyRobots.length / 4);
 		int enemyChunkSize = (int) Math.floor(enemyRobots.length / 4);
