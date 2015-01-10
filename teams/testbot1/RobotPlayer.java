@@ -12,114 +12,6 @@ import battlecode.common.*;
  */
 public class RobotPlayer {
 
-	/**************************************************************************
-	 * BROADCAST_CHANNELS
-	 * ------------------------------------------------------------------------
-	 * NOTE: Building/Units order follows directly from online documentation.
-	 * ------------------------------------------------------------------------
-	 * 0-9: Friendly Buildings
-	 * ------------------------------------------------------------------------
-	 * 10-19: Friendly Units
-	 * ------------------------------------------------------------------------
-	 * 20-29: Enemy Buildings
-	 * ------------------------------------------------------------------------
-	 * 30-39: Enemy Units
-	 * ------------------------------------------------------------------------
-	 * 100-999: Coordinate Planning + Rallying Points
-	 * ------------------------------------------------------------------------
-	 * 1000-1999: Offense/Defense Signals (e.g. Swarm)
-	 * ------------------------------------------------------------------------
-	 * 2000-2999: Priority Mappings
-	 *************************************************************************/
-
-	// Friendly Buildings Channels
-	private static final int NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL = 1;
-	private static final int NUM_FRIENDLY_MINERFACTORY_CHANNEL = 2;
-	private static final int NUM_FRIENDLY_TECHINSTITUTE_CHANNEL = 3;
-	private static final int NUM_FRIENDLY_BARRACKS_CHANNEL = 4;
-	private static final int NUM_FRIENDLY_HELIPAD_CHANNEL = 5;
-	private static final int NUM_FRIENDLY_TRAININGFIELD_CHANNEL = 6;
-	private static final int NUM_FRIENDLY_TANKFACTORY_CHANNEL = 7;
-	private static final int NUM_FRIENDLY_AEROSPACELAB_CHANNEL = 8;
-	private static final int NUM_FRIENDLY_HANDWASHSTATION_CHANNEL = 9;
-	// Friendly Units Channels
-	private static final int NUM_FRIENDLY_BEAVERS_CHANNEL = 10;
-	private static final int NUM_FRIENDLY_MINERS_CHANNEL = 11;
-	private static final int NUM_FRIENDLY_COMPUTERS_CHANNEL = 12;
-	private static final int NUM_FRIENDLY_SOLDIERS_CHANNEL = 13;
-	private static final int NUM_FRIENDLY_BASHERS_CHANNEL = 14;
-	private static final int NUM_FRIENDLY_DRONES_CHANNEL = 15;
-	private static final int NUM_FRIENDLY_TANKS_CHANNEL = 16;
-	private static final int NUM_FRIENDLY_COMMANDERS_CHANNEL = 17;
-	private static final int NUM_FRIENDLY_LAUNCHERS_CHANNEL = 18;
-	private static final int NUM_FRIENDLY_MISSILES_CHANNEL = 19;
-	// Enemy Buildings Channels
-	private static final int NUM_ENEMY_SUPPLYDEPOT_CHANNEL = 21;
-	private static final int NUM_ENEMY_MINERFACTORY_CHANNEL = 22;
-	private static final int NUM_ENEMY_TECHINSTITUTE_CHANNEL = 23;
-	private static final int NUM_ENEMY_BARRACKS_CHANNEL = 24;
-	private static final int NUM_ENEMY_HELIPAD_CHANNEL = 25;
-	private static final int NUM_ENEMY_TRAININGFIELD_CHANNEL = 26;
-	private static final int NUM_ENEMY_TANKFACTORY_CHANNEL = 27;
-	private static final int NUM_ENEMY_AEROSPACELAB_CHANNEL = 28;
-	private static final int NUM_ENEMY_HANDWASHSTATION_CHANNEL = 29;
-	// Enemy Units Channels
-	private static final int NUM_ENEMY_BEAVERS_CHANNEL = 30;
-	private static final int NUM_ENEMY_MINERS_CHANNEL = 31;
-	private static final int NUM_ENEMY_COMPUTERS_CHANNEL = 32;
-	private static final int NUM_ENEMY_SOLDIERS_CHANNEL = 33;
-	private static final int NUM_ENEMY_BASHERS_CHANNEL = 34;
-	private static final int NUM_ENEMY_DRONES_CHANNEL = 35;
-	private static final int NUM_ENEMY_TANKS_CHANNEL = 36;
-	private static final int NUM_ENEMY_COMMANDERS_CHANNEL = 37;
-	private static final int NUM_ENEMY_LAUNCHERS_CHANNEL = 38;
-	private static final int NUM_ENEMY_MISSILES_CHANNEL = 39;
-
-	// Coordinate Planning + Rallying Points
-	private static final int HQ_RADIUS_CHANNEL = 100;
-	// TODO: Use a single channel and some int manipulation to reduce number of
-	// channels for location broadcasting
-	private static final int GENERAL_SWARM_LOCATION_X_CHANNEL = 200;
-	private static final int GENERAL_SWARM_LOCATION_Y_CHANNEL = 210;
-	private static final int BEAVER_SWARM_LOCATION_X_CHANNEL = 201;
-	private static final int BEAVER_SWARM_LOCATION_Y_CHANNEL = 211;
-	private static final int MINER_SWARM_LOCATION_X_CHANNEL = 202;
-	private static final int MINER_SWARM_LOCATION_Y_CHANNEL = 212;
-	private static final int COMPUTER_SWARM_LOCATION_X_CHANNEL = 203;
-	private static final int COMPUTER_SWARM_LOCATION_Y_CHANNEL = 213;
-	private static final int SOLDIER_SWARM_LOCATION_X_CHANNEL = 204;
-	private static final int SOLDIER_SWARM_LOCATION_Y_CHANNEL = 214;
-	private static final int BASHER_SWARM_LOCATION_X_CHANNEL = 205;
-	private static final int BASHER_SWARM_LOCATION_Y_CHANNEL = 215;
-	private static final int DRONE_SWARM_LOCATION_X_CHANNEL = 206;
-	private static final int DRONE_SWARM_LOCATION_Y_CHANNEL = 216;
-	private static final int TANK_SWARM_LOCATION_X_CHANNEL = 207;
-	private static final int TANK_SWARM_LOCATION_Y_CHANNEL = 217;
-	private static final int COMMANDER_SWARM_LOCATION_X_CHANNEL = 208;
-	private static final int COMMANDER_SWARM_LOCATION_Y_CHANNEL = 218;
-	private static final int MISSILE_SWARM_LOCATION_X_CHANNEL = 209;
-	private static final int MISSILE_SWARM_LOCATION_Y_CHANNEL = 219;
-
-	// Offensive + Defensive Signals
-	private static final int GENERAL_SWARM_CHANNEL = 1000;
-	private static final int BEAVER_SWARM_CHANNEL = 1001;
-	private static final int MINER_SWARM_CHANNEL = 1002;
-	private static final int COMPUTER_SWARM_CHANNEL = 1003;
-	private static final int SOLDIER_SWARM_CHANNEL = 1004;
-	private static final int BASHER_SWARM_CHANNEL = 1005;
-	private static final int DRONE_SWARM_CHANNEL = 1006;
-	private static final int TANK_SWARM_CHANNEL = 1007;
-	private static final int COMMANDER_SWARM_CHANNEL = 1008;
-	private static final int MISSILE_SWARM_CHANNEL = 1009;
-
-	// ------------------------------------------------------------------------
-	// Action Constants
-	// ------------------------------------------------------------------------
-	private static final int NO_ACTION = 0;
-	private static final int GO_TO_LOCATION = 1;
-
-	// ^^^^^^^^^^^^^^^^^^ BROADCAST CONSTANTS END HERE ^^^^^^^^^^^^^^^^^^^^^^^^
-
 	private static Direction facing;
 	private static Direction[] directions = { Direction.NORTH,
 			Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
@@ -143,6 +35,7 @@ public class RobotPlayer {
 
 	private static MapLocation myHQ;
 	private static MapLocation enemyHQ;
+	private static MapLocation mapCenter;
 
 	public static void run(RobotController myRC) {
 
@@ -151,6 +44,8 @@ public class RobotPlayer {
 		Enemy = Friend.opponent();
 		myHQ = rc.senseHQLocation();
 		enemyHQ = rc.senseEnemyHQLocation();
+		mapCenter = new MapLocation(Math.abs(myHQ.x - enemyHQ.x) / 2,
+				Math.abs(myHQ.y - enemyHQ.y) / 2);
 
 		boolean skipFirstRound = true;
 
@@ -180,13 +75,17 @@ public class RobotPlayer {
 				switch (type) {
 				case HQ:
 					/**********************************************************
-					 * Update unit counts every so often! Distributes the
-					 * counting over a few consecutive rounds.
+					 * HQ Calculations over various rounds
+					 * ========================================================
+					 * Unit Counting -------------------------------> 5 Rounds
+					 * Tower Strength -------------------------------> 1 Round
 					 *********************************************************/
-					if (roundNum % 5 < 5) { // NOTE: This can be adjusted to
-											// give slots to other computations,
-											// such as optimal path finding.
+					if (roundNum % 6 < 5) {
+						// Update unit counts every so often!
 						updateUnitCounts();
+					} else if (roundNum % 6 == 5) {
+						// Check tower strength!
+						analyzeTowerStrength();
 					}
 
 					/**********************************************************
@@ -207,10 +106,10 @@ public class RobotPlayer {
 							.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL);
 					int currentNumFriendlyTanks = rc
 							.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL);
-					int currentNumFriendlyDrones = rc
-							.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
-					int currentNumFriendlyMissiles = rc
-							.readBroadcast(NUM_FRIENDLY_MISSILES_CHANNEL);
+					// int currentNumFriendlyDrones =
+					// rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
+					// int currentNumFriendlyMissiles = rc
+					// .readBroadcast(NUM_FRIENDLY_MISSILES_CHANNEL);
 					int currentNumFriendlyMiners = rc
 							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
 					MapLocation[] towers = rc.senseEnemyTowerLocations();
@@ -280,16 +179,16 @@ public class RobotPlayer {
 								.readBroadcast(BASHER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(BASHER_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 
 					} else {
@@ -308,16 +207,16 @@ public class RobotPlayer {
 								.readBroadcast(BEAVER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(BEAVER_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					}
 
@@ -404,16 +303,16 @@ public class RobotPlayer {
 								.readBroadcast(COMMANDER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(COMMANDER_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
@@ -452,16 +351,16 @@ public class RobotPlayer {
 								.readBroadcast(DRONE_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(DRONE_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
@@ -473,12 +372,14 @@ public class RobotPlayer {
 							} else {
 								int towerNumber = rand
 										.nextInt(towerLocations.length);
-//								Direction towerDirection = bugNav(towerLocations[towerNumber]);
-//								if (towerDirection != Direction.NONE) {
-//									rc.move(bugNav(towerLocations[towerNumber]));
-//								}
-								
-								moveTowardDestination(towerLocations[towerNumber], true);
+								// Direction towerDirection =
+								// bugNav(towerLocations[towerNumber]);
+								// if (towerDirection != Direction.NONE) {
+								// rc.move(bugNav(towerLocations[towerNumber]));
+								// }
+
+								moveTowardDestination(
+										towerLocations[towerNumber], true);
 							}
 						}
 					}
@@ -502,16 +403,16 @@ public class RobotPlayer {
 								.readBroadcast(MINER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(MINER_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						mineAndMove();
@@ -539,16 +440,16 @@ public class RobotPlayer {
 								.readBroadcast(MISSILE_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(MISSILE_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						rc.explode();
@@ -564,16 +465,16 @@ public class RobotPlayer {
 								.readBroadcast(SOLDIER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(SOLDIER_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						/*
@@ -595,16 +496,16 @@ public class RobotPlayer {
 					if (tankSwarm == GO_TO_LOCATION) {
 						int x = rc.readBroadcast(TANK_SWARM_LOCATION_X_CHANNEL);
 						int y = rc.readBroadcast(TANK_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else if (allRobotSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(GENERAL_SWARM_LOCATION_Y_CHANNEL);
-//						tryMove(rc.getLocation().directionTo(
-//								new MapLocation(x, y)));
+						// tryMove(rc.getLocation().directionTo(
+						// new MapLocation(x, y)));
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
@@ -826,12 +727,12 @@ public class RobotPlayer {
 				// currentLocation.add(currentDirection);
 				// Direction targetDirection = bugNav(targetLocation);
 
-//				Direction targetDirection = bugNav(myHQ);
-//				if (targetDirection != Direction.NONE) {
-//					rc.move(targetDirection);
-//				}
+				// Direction targetDirection = bugNav(myHQ);
+				// if (targetDirection != Direction.NONE) {
+				// rc.move(targetDirection);
+				// }
 				moveTowardDestination(myHQ, true);
-				
+
 			} else if (currentLocation.distanceSquaredTo(enemyHQ) > 1.1 * currentLocation
 					.distanceSquaredTo(myHQ)) {
 				// double turnLittle = rand.nextDouble();
@@ -848,12 +749,12 @@ public class RobotPlayer {
 				// currentLocation.add(currentDirection);
 				// Direction targetDirection = bugNav(targetLocation);
 
-//				Direction targetDirection = bugNav(enemyHQ);
-//				if (targetDirection != Direction.NONE) {
-//					rc.move(targetDirection);
-//				}
-				
-				moveTowardDestination(enemyHQ ,true);
+				// Direction targetDirection = bugNav(enemyHQ);
+				// if (targetDirection != Direction.NONE) {
+				// rc.move(targetDirection);
+				// }
+
+				moveTowardDestination(enemyHQ, true);
 			} else {
 				double turnVar = rand.nextDouble();
 				MapLocation newLocation;
@@ -868,11 +769,11 @@ public class RobotPlayer {
 					newLocation = currentLocation.add(newDirection);
 				}
 
-//				Direction targetDirection = bugNav(newLocation);
-//				if (targetDirection != Direction.NONE) {
-//					rc.move(targetDirection);
-//				}
-				
+				// Direction targetDirection = bugNav(newLocation);
+				// if (targetDirection != Direction.NONE) {
+				// rc.move(targetDirection);
+				// }
+
 				moveTowardDestination(newLocation, true);
 			}
 		}
@@ -924,45 +825,47 @@ public class RobotPlayer {
 		return Direction.values()[(int) rand.nextDouble() * 8];
 	}
 
-	private static boolean moveTowardDestination(MapLocation dest, boolean ignoreSafety) throws GameActionException {
-		// TODO: Should we consider including a "crowdedness" heuristic? If so, how
-		// do we incorporate our current implementation?
-		
+	private static boolean moveTowardDestination(MapLocation dest,
+			boolean ignoreSafety) throws GameActionException {
+		// TODO: Should we consider including a "crowdedness" heuristic? If so,
+		// how do we incorporate our current implementation?
+
 		Direction straight = rc.getLocation().directionTo(dest);
 		MapLocation currentLocation = rc.getLocation();
-		
-		if(rc.isCoreReady()){
+
+		if (rc.isCoreReady()) {
 			int straightIndex = directionToInt(straight);
-			
+
 			int[] offsets = new int[8];
 			offsets[0] = 0;
 			offsets[7] = 4;
 
 			offsets[1] = (rand.nextDouble() > 0.5) ? 1 : -1;
 			offsets[2] = -offsets[1];
-			
+
 			offsets[3] = (rand.nextDouble() > 0.5) ? 2 : -2;
 			offsets[4] = -offsets[3];
-			
+
 			offsets[5] = (rand.nextDouble() > 0.5) ? 3 : -3;
 			offsets[6] = -offsets[5];
-			
-			for(int offset : offsets){
+
+			for (int offset : offsets) {
 				Direction possDirection = directions[(straightIndex + offset + 8) % 8];
-				
-				if(rc.canMove(possDirection)){
+
+				if (rc.canMove(possDirection)) {
 					MapLocation possSquare = currentLocation.add(possDirection);
-					
-					if(ignoreSafety || isSafe(possSquare)){
+
+					if (ignoreSafety || isSafe(possSquare)) {
 						rc.move(possDirection);
 						return true;
 					}
 				}
 			}
 		}
-		
+
 		return false;
 	}
+
 	private static Direction bugNav(MapLocation target)
 			throws GameActionException {
 		// TODO: Make it possible for robots to enter non-safe squares when they
@@ -1060,7 +963,7 @@ public class RobotPlayer {
 			return -1;
 		}
 	}
-	
+
 	private static void locateBestOre() throws GameActionException {
 		if (rc.isCoreReady()) {
 			MapLocation currentLocation = rc.getLocation();
@@ -1095,11 +998,11 @@ public class RobotPlayer {
 			}
 
 			if (bestDestination != null) {
-//				Direction bestDirection = bugNav(bestDestination);
-//
-//				if (bestDirection != Direction.NONE) {
-//					rc.move(bestDirection);
-//				}
+				// Direction bestDirection = bugNav(bestDestination);
+				//
+				// if (bestDirection != Direction.NONE) {
+				// rc.move(bestDirection);
+				// }
 				moveTowardDestination(bestDestination, true);
 			} else {
 				// moveAround();
@@ -1418,6 +1321,8 @@ public class RobotPlayer {
 
 	}
 
+	// ************************ START OF UNIT COUNTING ************************
+
 	/**************************************************************************
 	 * NOTE: These variables are kept down here since they are solely used when
 	 * updating quantity values. They need to be maintained outside the method
@@ -1731,4 +1636,141 @@ public class RobotPlayer {
 		}
 
 	}
+
+	// ^^^^^^^^^^^^^^^^^^^^^^^^^^ END OF UNIT COUNTING ^^^^^^^^^^^^^^^^^^^^^^^^
+
+	// ************************** START OF MAP ANALYSIS ***********************
+	private static void analyzeTowerStrength() throws GameActionException {
+		MapLocation[] enemyTowers = rc.senseEnemyTowerLocations();
+		int towerStrength = 0;
+
+		// One or no towers -> very weak. Keep at 0.
+		// Otherwise measure strength based on closeness.
+		if (enemyTowers.length > 1) {
+			for (int i = 1; i < enemyTowers.length; ++i) {
+				towerStrength = 1;
+				towerStrength *= (int) 100
+						/ (enemyTowers[0].distanceSquaredTo(enemyTowers[i]));
+			}
+		}
+
+		rc.broadcast(TOWER_STRENGTH_CHANNEL, towerStrength);
+	}
+
+	// ^^^^^^^^^^^^^^^^^^^^^^^^^^ END OF MAP ANALYSIS ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+	/**************************************************************************
+	 * BROADCAST CHANNELS
+	 * ========================================================================
+	 * NOTE 1: Constant are located here for less cluttering.
+	 * ------------------------------------------------------------------------
+	 * NOTE 2: Building/Units order follows directly from online documentation.
+	 * ========================================================================
+	 * 0-9: Friendly Buildings
+	 * ------------------------------------------------------------------------
+	 * 10-19: Friendly Units
+	 * ------------------------------------------------------------------------
+	 * 20-29: Enemy Buildings
+	 * ------------------------------------------------------------------------
+	 * 30-39: Enemy Units
+	 * ------------------------------------------------------------------------
+	 * 100-999: Coordinate Planning + Rallying Points
+	 * ------------------------------------------------------------------------
+	 * 1000-1999: Offense/Defense Signals (e.g. Swarm)
+	 * ------------------------------------------------------------------------
+	 * 2000-2999: Map Analysis
+	 *************************************************************************/
+
+	// Friendly Buildings Channels
+	private static final int NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL = 1;
+	private static final int NUM_FRIENDLY_MINERFACTORY_CHANNEL = 2;
+	private static final int NUM_FRIENDLY_TECHINSTITUTE_CHANNEL = 3;
+	private static final int NUM_FRIENDLY_BARRACKS_CHANNEL = 4;
+	private static final int NUM_FRIENDLY_HELIPAD_CHANNEL = 5;
+	private static final int NUM_FRIENDLY_TRAININGFIELD_CHANNEL = 6;
+	private static final int NUM_FRIENDLY_TANKFACTORY_CHANNEL = 7;
+	private static final int NUM_FRIENDLY_AEROSPACELAB_CHANNEL = 8;
+	private static final int NUM_FRIENDLY_HANDWASHSTATION_CHANNEL = 9;
+	// Friendly Units Channels
+	private static final int NUM_FRIENDLY_BEAVERS_CHANNEL = 10;
+	private static final int NUM_FRIENDLY_MINERS_CHANNEL = 11;
+	private static final int NUM_FRIENDLY_COMPUTERS_CHANNEL = 12;
+	private static final int NUM_FRIENDLY_SOLDIERS_CHANNEL = 13;
+	private static final int NUM_FRIENDLY_BASHERS_CHANNEL = 14;
+	private static final int NUM_FRIENDLY_DRONES_CHANNEL = 15;
+	private static final int NUM_FRIENDLY_TANKS_CHANNEL = 16;
+	private static final int NUM_FRIENDLY_COMMANDERS_CHANNEL = 17;
+	private static final int NUM_FRIENDLY_LAUNCHERS_CHANNEL = 18;
+	private static final int NUM_FRIENDLY_MISSILES_CHANNEL = 19;
+	// Enemy Buildings Channels
+	private static final int NUM_ENEMY_SUPPLYDEPOT_CHANNEL = 21;
+	private static final int NUM_ENEMY_MINERFACTORY_CHANNEL = 22;
+	private static final int NUM_ENEMY_TECHINSTITUTE_CHANNEL = 23;
+	private static final int NUM_ENEMY_BARRACKS_CHANNEL = 24;
+	private static final int NUM_ENEMY_HELIPAD_CHANNEL = 25;
+	private static final int NUM_ENEMY_TRAININGFIELD_CHANNEL = 26;
+	private static final int NUM_ENEMY_TANKFACTORY_CHANNEL = 27;
+	private static final int NUM_ENEMY_AEROSPACELAB_CHANNEL = 28;
+	private static final int NUM_ENEMY_HANDWASHSTATION_CHANNEL = 29;
+	// Enemy Units Channels
+	private static final int NUM_ENEMY_BEAVERS_CHANNEL = 30;
+	private static final int NUM_ENEMY_MINERS_CHANNEL = 31;
+	private static final int NUM_ENEMY_COMPUTERS_CHANNEL = 32;
+	private static final int NUM_ENEMY_SOLDIERS_CHANNEL = 33;
+	private static final int NUM_ENEMY_BASHERS_CHANNEL = 34;
+	private static final int NUM_ENEMY_DRONES_CHANNEL = 35;
+	private static final int NUM_ENEMY_TANKS_CHANNEL = 36;
+	private static final int NUM_ENEMY_COMMANDERS_CHANNEL = 37;
+	private static final int NUM_ENEMY_LAUNCHERS_CHANNEL = 38;
+	private static final int NUM_ENEMY_MISSILES_CHANNEL = 39;
+
+	// Coordinate Planning + Rallying Points
+	private static final int HQ_RADIUS_CHANNEL = 100;
+	// TODO: Use a single channel and some int manipulation to reduce number of
+	// channels for location broadcasting
+	private static final int GENERAL_SWARM_LOCATION_X_CHANNEL = 200;
+	private static final int GENERAL_SWARM_LOCATION_Y_CHANNEL = 210;
+	private static final int BEAVER_SWARM_LOCATION_X_CHANNEL = 201;
+	private static final int BEAVER_SWARM_LOCATION_Y_CHANNEL = 211;
+	private static final int MINER_SWARM_LOCATION_X_CHANNEL = 202;
+	private static final int MINER_SWARM_LOCATION_Y_CHANNEL = 212;
+	private static final int COMPUTER_SWARM_LOCATION_X_CHANNEL = 203;
+	private static final int COMPUTER_SWARM_LOCATION_Y_CHANNEL = 213;
+	private static final int SOLDIER_SWARM_LOCATION_X_CHANNEL = 204;
+	private static final int SOLDIER_SWARM_LOCATION_Y_CHANNEL = 214;
+	private static final int BASHER_SWARM_LOCATION_X_CHANNEL = 205;
+	private static final int BASHER_SWARM_LOCATION_Y_CHANNEL = 215;
+	private static final int DRONE_SWARM_LOCATION_X_CHANNEL = 206;
+	private static final int DRONE_SWARM_LOCATION_Y_CHANNEL = 216;
+	private static final int TANK_SWARM_LOCATION_X_CHANNEL = 207;
+	private static final int TANK_SWARM_LOCATION_Y_CHANNEL = 217;
+	private static final int COMMANDER_SWARM_LOCATION_X_CHANNEL = 208;
+	private static final int COMMANDER_SWARM_LOCATION_Y_CHANNEL = 218;
+	private static final int MISSILE_SWARM_LOCATION_X_CHANNEL = 209;
+	private static final int MISSILE_SWARM_LOCATION_Y_CHANNEL = 219;
+
+	// Offensive + Defensive Signals
+	private static final int GENERAL_SWARM_CHANNEL = 1000;
+	private static final int BEAVER_SWARM_CHANNEL = 1001;
+	private static final int MINER_SWARM_CHANNEL = 1002;
+	private static final int COMPUTER_SWARM_CHANNEL = 1003;
+	private static final int SOLDIER_SWARM_CHANNEL = 1004;
+	private static final int BASHER_SWARM_CHANNEL = 1005;
+	private static final int DRONE_SWARM_CHANNEL = 1006;
+	private static final int TANK_SWARM_CHANNEL = 1007;
+	private static final int COMMANDER_SWARM_CHANNEL = 1008;
+	private static final int MISSILE_SWARM_CHANNEL = 1009;
+
+	// Map Analysis
+	private static final int TOWER_STRENGTH_CHANNEL = 2000;
+	private static final int MAP_MOBILITY_CHANNEL = 2001;
+
+	// ------------------------------------------------------------------------
+	// Action Constants
+	// ------------------------------------------------------------------------
+	private static final int NO_ACTION = 0;
+	private static final int GO_TO_LOCATION = 1;
+
+	// ^^^^^^^^^^^^^^^^^^ BROADCAST CONSTANTS END HERE ^^^^^^^^^^^^^^^^^^^^^^^^
+
 }
