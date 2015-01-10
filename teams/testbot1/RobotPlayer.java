@@ -1161,6 +1161,10 @@ public class RobotPlayer {
 	}
 
 	private static void transferSupplies() throws GameActionException {
+		// TODO: Do we want to have a global ordering on robots? So that 
+		// robots may decide to "sacrifice" themselves for the sake of a
+		// stronger, more able robot?
+		
 		if(!rc.getType().needsSupply()){
 			RobotInfo[] nearbyAllies = rc.senseNearbyRobots(rc.getLocation(),
 					GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, Friend);
@@ -1170,7 +1174,11 @@ public class RobotPlayer {
 			MapLocation suppliesToThisLocation = null;
 
 			for (RobotInfo ri : nearbyAllies) {
-				if (ri.supplyLevel < lowestSupply) {
+				if ((ri.type == RobotType.BEAVER || ri.type == RobotType.COMPUTER ||
+						ri.type == RobotType.SOLDIER || ri.type == RobotType.BASHER ||
+						ri.type == RobotType.MINER || ri.type == RobotType.DRONE ||
+						ri.type == RobotType.TANK || ri.type == RobotType.COMMANDER ||
+						ri.type == RobotType.LAUNCHER) && ri.supplyLevel < lowestSupply) {
 					lowestSupply = ri.supplyLevel;
 					transferAmount = (rc.getSupplyLevel() - lowestSupply) / 2;
 					suppliesToThisLocation = ri.location;
