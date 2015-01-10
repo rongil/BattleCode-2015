@@ -302,8 +302,7 @@ public class RobotPlayer {
 								.readBroadcast(COMPUTER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(COMPUTER_SWARM_LOCATION_Y_CHANNEL);
-						tryMove(rc.getLocation().directionTo(
-								new MapLocation(x, y)));
+						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
 					}
@@ -327,12 +326,6 @@ public class RobotPlayer {
 							} else {
 								int towerNumber = rand
 										.nextInt(towerLocations.length);
-								// Direction towerDirection =
-								// bugNav(towerLocations[towerNumber]);
-								// if (towerDirection != Direction.NONE) {
-								// rc.move(bugNav(towerLocations[towerNumber]));
-								// }
-
 								moveTowardDestination(
 										towerLocations[towerNumber], true);
 							}
@@ -636,15 +629,7 @@ public class RobotPlayer {
 				// }else if(turnLittle > 0.33 & turnLittle < 0.66){
 				// currentDirection = currentDirection.rotateRight();
 				// }
-				//
-				// MapLocation targetLocation =
-				// currentLocation.add(currentDirection);
-				// Direction targetDirection = bugNav(targetLocation);
 
-				// Direction targetDirection = bugNav(myHQ);
-				// if (targetDirection != Direction.NONE) {
-				// rc.move(targetDirection);
-				// }
 				moveTowardDestination(myHQ, true);
 
 			} else if (distanceToMyHQ < .2 * distanceToEnemyHQ) {
@@ -662,11 +647,6 @@ public class RobotPlayer {
 				// currentLocation.add(currentDirection);
 				// Direction targetDirection = bugNav(targetLocation);
 
-				// Direction targetDirection = bugNav(enemyHQ);
-				// if (targetDirection != Direction.NONE) {
-				// rc.move(targetDirection);
-				// }
-
 				moveTowardDestination(enemyHQ, true);
 			} else {
 				double turnVar = rand.nextDouble();
@@ -681,11 +661,6 @@ public class RobotPlayer {
 							.rotateLeft().rotateLeft();
 					newLocation = currentLocation.add(newDirection);
 				}
-
-				// Direction targetDirection = bugNav(newLocation);
-				// if (targetDirection != Direction.NONE) {
-				// rc.move(targetDirection);
-				// }
 
 				moveTowardDestination(newLocation, true);
 			}
@@ -781,81 +756,6 @@ public class RobotPlayer {
 		return false;
 	}
 
-	private static Direction bugNav(MapLocation target)
-			throws GameActionException {
-		// TODO: Make it possible for robots to enter non-safe squares when they
-		// have strength in numbers
-
-		Direction straight = rc.getLocation().directionTo(target);
-		MapLocation currentLoc = rc.getLocation();
-
-		Direction[] possDirs = new Direction[8];
-		possDirs[0] = straight;
-		possDirs[7] = straight.opposite();
-
-		double orderOne = rand.nextDouble();
-		double orderTwo = rand.nextDouble();
-		double orderThree = rand.nextDouble();
-
-		possDirs[1] = (orderOne > 0.5) ? straight.rotateLeft() : straight
-				.rotateRight();
-		possDirs[2] = (orderOne > 0.5) ? straight.rotateRight() : straight
-				.rotateLeft();
-
-		possDirs[3] = (orderTwo > 0.5) ? straight.rotateLeft().rotateLeft()
-				: straight.rotateRight().rotateRight();
-		possDirs[4] = possDirs[3].opposite();
-
-		possDirs[5] = (orderThree > 0.5) ? possDirs[7].rotateLeft()
-				: possDirs[7].rotateRight();
-		possDirs[6] = (orderThree > 0.5) ? possDirs[7].rotateRight()
-				: possDirs[7].rotateLeft();
-
-		int minCrowdedness = 9001; // Over 9000!
-		Direction bestDirection = Direction.NONE;
-
-		for (Direction possDirection : possDirs) {
-			MapLocation possSquare = currentLoc.add(possDirection);
-			if (isSafe(possSquare) && rc.canMove(possDirection)) {
-				// int possCrowdedness = measureCrowdedness(currentLoc, 9);
-				// if(possCrowdedness < minCrowdedness){
-				// minCrowdedness = possCrowdedness;
-				// bestDirection = possDirection;
-				// }else if(possCrowdedness == minCrowdedness && bestDirection
-				// != Direction.NONE){
-				// bestDirection = (rand.nextDouble() > 0.5) ? bestDirection :
-				// possDirection;
-				// }
-				// }
-				// }
-				//
-				// return bestDirection;
-				return possDirection;
-			}
-		}
-
-		return bestDirection;
-	}
-
-	// This method will attempt to move in Direction d (or as close to it as
-	// possible)
-	private static void tryMove(Direction d) throws GameActionException {
-		if (!rc.isCoreReady()) {
-			return;
-		}
-		int offsetIndex = 0;
-		int[] offsets = { 0, 1, -1, 2, -2 };
-		int dirint = directionToInt(d);
-		boolean blocked = false;
-		while (offsetIndex < 5
-				&& (!rc.canMove(directions[(dirint + offsets[offsetIndex] + 8) % 8]) || blocked)) {
-			offsetIndex++;
-		}
-		if (offsetIndex < 5) {
-			rc.move(directions[(dirint + offsets[offsetIndex] + 8) % 8]);
-		}
-	}
-
 	private static int directionToInt(Direction d) {
 		switch (d) {
 		case NORTH:
@@ -913,11 +813,6 @@ public class RobotPlayer {
 			}
 
 			if (bestDestination != null) {
-				// Direction bestDirection = bugNav(bestDestination);
-				//
-				// if (bestDirection != Direction.NONE) {
-				// rc.move(bestDirection);
-				// }
 				moveTowardDestination(bestDestination, true);
 			} else {
 				// moveAround();
