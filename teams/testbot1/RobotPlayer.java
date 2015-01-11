@@ -210,9 +210,9 @@ public class RobotPlayer {
 					} else {
 						// BASHERs attack automatically, so let's just move
 						// around mostly randomly.
-						// moveAround();
+						moveAround();
 						// flyOnBoundary();
-						mobilize();
+						// mobilize();
 					}
 					break;
 				case BEAVER:
@@ -249,71 +249,79 @@ public class RobotPlayer {
 					 *********************************************************/
 
 					// Limit the number of miner factories
-					if (measureCrowdedness(rc.getLocation(), 4) < 10) {
-						if (roundNum < 500
-								&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
+					if(roundNum < 300){
+						if(rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1){
 							buildUnit(RobotType.MINERFACTORY);
-						} else if (roundNum < 600) {
-							if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
-								buildUnit(RobotType.BARRACKS);
-							} else {
-								buildUnit(RobotType.TANKFACTORY);
-							}
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
-							boolean success = buildUnit(RobotType.TECHNOLOGYINSTITUTE);
-							if (success) {
-								rc.broadcast(
-										NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
-							}
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
-							boolean success = buildUnit(RobotType.TRAININGFIELD);
-							if (success) {
-								rc.broadcast(
-										NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
-							}
-						} else if (0.05 <= fate && fate < 0.06) {
-							buildUnit(RobotType.HANDWASHSTATION);
-						} else if (0.1 <= fate && fate < 0.2) {
-							if (rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
-								buildUnit(RobotType.SUPPLYDEPOT);
-							}
-						} else if (roundNum < 1500
-								&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
-							buildUnit(RobotType.MINERFACTORY);
-						} else if (0.2 <= fate && fate < 0.45) {
-							if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 3) {
-								buildUnit(RobotType.TANKFACTORY);
-							}
-						} else if (0.45 <= fate && fate < 0.55) {
+						}else if(rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 3){
 							buildUnit(RobotType.HELIPAD);
-						} else if (0.65 <= fate && fate < 0.8) {
-							buildUnit(RobotType.AEROSPACELAB);
-						} else if (0.8 <= fate
-								|| rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 5) {
-							buildUnit(RobotType.BARRACKS);
+						}
+					}else{
+						if (measureCrowdedness(rc.getLocation(), 4) < 10) {
+							if (roundNum < 500
+									&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
+								buildUnit(RobotType.MINERFACTORY);
+							} else if (roundNum < 600) {
+								if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
+									buildUnit(RobotType.BARRACKS);
+								} else {
+									buildUnit(RobotType.TANKFACTORY);
+								}
+							} else if (rc
+									.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
+								boolean success = buildUnit(RobotType.TECHNOLOGYINSTITUTE);
+								if (success) {
+									rc.broadcast(
+											NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
+								}
+							} else if (rc
+									.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
+								boolean success = buildUnit(RobotType.TRAININGFIELD);
+								if (success) {
+									rc.broadcast(
+											NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
+								}
+							} else if (0.05 <= fate && fate < 0.06) {
+								buildUnit(RobotType.HANDWASHSTATION);
+							} else if (0.1 <= fate && fate < 0.2) {
+								if (rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
+									buildUnit(RobotType.SUPPLYDEPOT);
+								}
+							} else if (roundNum < 1500
+									&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
+								buildUnit(RobotType.MINERFACTORY);
+							} else if (0.2 <= fate && fate < 0.45) {
+								if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 3) {
+									buildUnit(RobotType.TANKFACTORY);
+								}
+							} else if (0.45 <= fate && fate < 0.55) {
+								buildUnit(RobotType.HELIPAD);
+							} else if (0.65 <= fate && fate < 0.8) {
+								buildUnit(RobotType.AEROSPACELAB);
+							} else if (0.8 <= fate
+									|| rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 5) {
+								buildUnit(RobotType.BARRACKS);
+							}
 						}
 					}
-
+					
 					mineAndMove();
-
 					break;
-				case COMMANDER:
-					attackEnemyZero();
-					int commanderSwarm = rc
-							.readBroadcast(COMMANDER_SWARM_CHANNEL);
-					if (commanderSwarm == GO_TO_LOCATION) {
-						int x = rc
-								.readBroadcast(COMMANDER_SWARM_LOCATION_X_CHANNEL);
-						int y = rc
-								.readBroadcast(COMMANDER_SWARM_LOCATION_Y_CHANNEL);
-						moveTowardDestination(new MapLocation(x, y), false);
-					} else {
-						// moveAround();
-						// flyOnBoundary();
-						mobilize();
-					}
+					
+					case COMMANDER:
+						attackEnemyZero();
+						int commanderSwarm = rc
+								.readBroadcast(COMMANDER_SWARM_CHANNEL);
+						if (commanderSwarm == GO_TO_LOCATION) {
+							int x = rc
+									.readBroadcast(COMMANDER_SWARM_LOCATION_X_CHANNEL);
+							int y = rc
+									.readBroadcast(COMMANDER_SWARM_LOCATION_Y_CHANNEL);
+							moveTowardDestination(new MapLocation(x, y), false);
+						} else {
+							moveAround();
+							// flyOnBoundary();
+							// mobilize();
+						}
 					break;
 				case COMPUTER:
 					int computerSwarm = rc
@@ -325,8 +333,8 @@ public class RobotPlayer {
 								.readBroadcast(COMPUTER_SWARM_LOCATION_Y_CHANNEL);
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
-						// moveAround();
-						mobilize();
+						moveAround();
+						// mobilize();
 					}
 					break;
 				case DRONE:
@@ -339,8 +347,8 @@ public class RobotPlayer {
 								.readBroadcast(DRONE_SWARM_LOCATION_Y_CHANNEL);
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
-						// moveAround();
-						mobilize();
+						moveAround();
+						// mobilize();
 //						MapLocation[] towerLocations = rc.senseTowerLocations();
 //						if (rc.isCoreReady()) {
 //							if (rand.nextDouble() > 0.1
@@ -421,9 +429,9 @@ public class RobotPlayer {
 						 * so they will have to move within attacking range of
 						 * the towers, which is not possible under moveAround()
 						 */
-						// moveAround();
+						moveAround();
 						// flyOnBoundary();
-						mobilize();
+						// mobilize();
 					}
 					break;
 				case SUPPLYDEPOT:
@@ -436,9 +444,9 @@ public class RobotPlayer {
 						int y = rc.readBroadcast(TANK_SWARM_LOCATION_Y_CHANNEL);
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
-						// moveAround();
+						moveAround();
 						// flyOnBoundary();
-						mobilize();
+						// mobilize();
 					}
 					break;
 				case TANKFACTORY:
@@ -899,11 +907,12 @@ public class RobotPlayer {
 				rc.mine();
 			}
 		} else { // otherwise, look for ore
-			if(mobilized)
-				locateBestOre();
-			else{
-				mobilize();
-			}
+//			if(mobilized)
+//				locateBestOre();
+//			else{
+//				mobilize();
+//			}
+			locateBestOre();
 		}
 	}
 
