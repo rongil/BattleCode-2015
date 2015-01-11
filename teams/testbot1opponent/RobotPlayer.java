@@ -1,4 +1,4 @@
-package testbot1;
+package testbot1opponent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,6 +57,7 @@ public class RobotPlayer {
 	private static List<MapLocation> droneAttackCircleLocations;
 	private static int currentDroneDirectionIndex = 0;
 	private static int droneCircleRound = 0;
+	private static boolean droneDefender;
 
 	// ************************************************************************
 
@@ -101,6 +102,12 @@ public class RobotPlayer {
 
 		// For drones only!
 		if (rc.getType() == RobotType.DRONE) {
+			if (Clock.getRoundNum() < 400) {
+				droneDefender = true;
+			} else {
+				droneDefender = rand.nextDouble() < .8 ? true : false;
+			}
+
 			if (assignment == null) {
 				// TODO: balance out the attack and defense with probabilities
 				MapLocation[] myTowers = rc.senseTowerLocations();
@@ -109,7 +116,7 @@ public class RobotPlayer {
 
 				double towerLength = (double) myTowers.length;
 
-				if (targetProb >= towerLength / (towerLength + 1.0)) {
+				if (targetProb >= 0) {// towerLength / (towerLength + 1.0)) {
 					assignment = myHQ;
 					AttackRadiusSquared = RobotType.HQ.attackRadiusSquared;
 				} else {
@@ -118,7 +125,7 @@ public class RobotPlayer {
 					AttackRadiusSquared = RobotType.TOWER.attackRadiusSquared;
 				}
 
-				int friendlyMagnitude = (int) (1.1 * Math
+				int friendlyMagnitude = (int) (1.2 * Math
 						.sqrt(AttackRadiusSquared)); // Floored
 				int enemyMagnitude = (int) Math.sqrt(AttackRadiusSquared); // Floored
 				droneShieldLocations = new ArrayList<MapLocation>();
@@ -146,6 +153,20 @@ public class RobotPlayer {
 					}
 				}
 			}
+
+			int droneIndex = rc.readBroadcast(60000);
+			int firstBroadcast = rc.readBroadcast(60001);
+			if (firstBroadcast == 0 && droneIndex == 0) {
+				currentDroneDirectionIndex = (droneShieldLocations.indexOf(myHQ
+						.directionTo(enemyHQ)) + 7) % 8;
+				droneIndex = currentDroneDirectionIndex;
+                rc.broadcast(60001, 1);
+			} else {
+				currentDroneDirectionIndex = droneIndex;
+			}
+
+			rc.broadcast(60000, (droneIndex + 1) % 8);
+
 		}
 
 		// Warning: If the run method ends, the robot dies!
@@ -516,10 +537,12 @@ public class RobotPlayer {
 								.readBroadcast(DRONE_SWARM_LOCATION_Y_CHANNEL);
 						moveTowardDestination(new MapLocation(x, y), true,
 								false);
-					} else {
+					} else if (droneDefender) {
 						// TODO: Balance attack and defense
 						// Go in for the kill when there are sufficiently many
 						// near the enemy territory
+						droneCircle(true);
+					} else {
 						droneCircle(false);
 					}
 					break;
@@ -906,9 +929,12 @@ public class RobotPlayer {
 		// of drones for defensive purposes
 
 		if (shielding) {
-			moveTowardDestination(
-					droneShieldLocations.get(currentDroneDirectionIndex), true,
-					false);
+			if (rc.getLocation().distanceSquaredTo(
+					droneShieldLocations.get(currentDroneDirectionIndex)) > 2) {
+				moveTowardDestination(
+						droneShieldLocations.get(currentDroneDirectionIndex),
+						true, false);
+			}
 		} else {
 			moveTowardDestination(
 					droneAttackCircleLocations.get(currentDroneDirectionIndex),
@@ -916,8 +942,8 @@ public class RobotPlayer {
 		}
 		droneCircleRound = (droneCircleRound + 1) % 4;
 		if (droneCircleRound == 0) {
-			currentDroneDirectionIndex = (currentDroneDirectionIndex + 1)
-					% droneShieldLocations.size();
+			// currentDroneDirectionIndex = (currentDroneDirectionIndex + 1)
+			// % droneShieldLocations.size();
 		}
 
 	}
@@ -1179,9 +1205,12 @@ public class RobotPlayer {
 			RobotInfo[] enemyRobots = rc.senseNearbyRobots(
 					roboType.sensorRadiusSquared, Enemy);
 			for (RobotInfo r : enemyRobots) {
-				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
-						&& !false) { // Walks into range of
-													// same-type enemies
+				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared) { // Walks
+																						// into
+																						// range
+																						// of
+																						// same-type
+																						// enemies
 					return false;
 				}
 			}
