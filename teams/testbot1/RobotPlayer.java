@@ -106,7 +106,9 @@ public class RobotPlayer {
 				double targetProb = rand.nextDouble();
 				int AttackRadiusSquared;
 				
-				if(targetProb >= myTowers.length / (myTowers.length + 1)){
+				double towerLength = (double) myTowers.length;
+				
+				if(targetProb >= towerLength / (towerLength + 1.0)){
 					assignment = myHQ; 
 					AttackRadiusSquared = RobotType.HQ.attackRadiusSquared;
 				}else{
@@ -127,7 +129,7 @@ public class RobotPlayer {
 					droneAttackCircleLocations
 							.add(enemyHQ.add(dir, enemyMagnitude));
 				}
-			}		
+			}	
 		}
 
 		// Warning: If the run method ends, the robot dies!
