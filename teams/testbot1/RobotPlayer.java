@@ -102,7 +102,7 @@ public class RobotPlayer {
 		// For drones only!
 		if (rc.getType() == RobotType.DRONE) {
 			if (assignment == null) {
-			// TODO: balance out the attack and defense with probabilities
+				// TODO: balance out the attack and defense with probabilities
 				MapLocation[] myTowers = rc.senseTowerLocations();
 				double targetProb = rand.nextDouble();
 				int AttackRadiusSquared;
@@ -126,20 +126,22 @@ public class RobotPlayer {
 
 				Direction dir = directions[rand.nextInt(8)];
 				boolean goLeft = rand.nextDouble() > 0.5;
-//				for (Direction dir : directions) {
-//					droneShieldLocations.add(assignment.add(dir,
-//							friendlyMagnitude));
-//					droneAttackCircleLocations.add(enemyHQ.add(dir,
-//							enemyMagnitude));
-//				}
-				
-				for (int index = 0; index < 8; index++){
-					droneShieldLocations.add(assignment.add(dir, friendlyMagnitude));
-					droneAttackCircleLocations.add(enemyHQ.add(dir, enemyMagnitude));
-					
-					if(goLeft){
+				// for (Direction dir : directions) {
+				// droneShieldLocations.add(assignment.add(dir,
+				// friendlyMagnitude));
+				// droneAttackCircleLocations.add(enemyHQ.add(dir,
+				// enemyMagnitude));
+				// }
+
+				for (int index = 0; index < 8; index++) {
+					droneShieldLocations.add(assignment.add(dir,
+							friendlyMagnitude));
+					droneAttackCircleLocations.add(enemyHQ.add(dir,
+							enemyMagnitude));
+
+					if (goLeft) {
 						dir = dir.rotateLeft();
-					}else{
+					} else {
 						dir = dir.rotateRight();
 					}
 				}
@@ -159,7 +161,7 @@ public class RobotPlayer {
 				// Random number from 0 to 1 for probabilistic decisions
 				// TODO: calculate fate based on board terrain and tower factors
 				double fate = rand.nextDouble();
-				
+
 				// Get the round number
 				roundNum = Clock.getRoundNum();
 				// Get robot type
@@ -265,7 +267,7 @@ public class RobotPlayer {
 					// Limited beaver spawn
 					int beaverCount = rc
 							.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL);
-					if (beaverCount < 10) {
+					if (beaverCount < 3) {
 						if (beaverCount == 0 || roundNum >= 300) {
 							createUnit(RobotType.BEAVER, false);
 						}
@@ -274,6 +276,8 @@ public class RobotPlayer {
 					if (!doneAnalyzing) {
 						analyzeMapMobility();
 					}
+
+					break;
 				case AEROSPACELAB:
 					createUnit(RobotType.LAUNCHER, false);
 					break;
@@ -315,12 +319,15 @@ public class RobotPlayer {
 						moveTowardDestination(new MapLocation(x, y), false,
 								false);
 					}
-					
-					/* Drones are very useful in the beginning due to their speed
-					   and relatively high attacking ability; mobilizing them quickly
-					   will enable quick lock-down on enemies who are slow to mobilize,
-					   leading to an almost assured win on tie-breaks */
-					
+
+					/*
+					 * Drones are very useful in the beginning due to their
+					 * speed and relatively high attacking ability; mobilizing
+					 * them quickly will enable quick lock-down on enemies who
+					 * are slow to mobilize, leading to an almost assured win on
+					 * tie-breaks
+					 */
+
 					if (roundNum < 300) {
 						if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 							createUnit(RobotType.MINERFACTORY, true);
@@ -329,100 +336,122 @@ public class RobotPlayer {
 							createUnit(RobotType.HELIPAD, true);
 						}
 					} else {
-						/* Miner factories are crucial for the spawning of miners, which
-						   are more efficient at mining ore than beavers. Ore is needed
-						   for the further construction of other artillery like tanks and
-						   launchers for missiles */
-						
-						if (roundNum < 500 && rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
-								createUnit(RobotType.MINERFACTORY, true);
-						
-						/* Tanks are also very effective weapons because of their attacking
-						   range and power. However, they take a lot of work to create, so
-						   their development needs to be started early so as to amass a
-						   sufficient number for later in the game */
-								
+						/*
+						 * Miner factories are crucial for the spawning of
+						 * miners, which are more efficient at mining ore than
+						 * beavers. Ore is needed for the further construction
+						 * of other artillery like tanks and launchers for
+						 * missiles
+						 */
+
+						if (roundNum < 500
+								&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
+							createUnit(RobotType.MINERFACTORY, true);
+
+							/*
+							 * Tanks are also very effective weapons because of
+							 * their attacking range and power. However, they
+							 * take a lot of work to create, so their
+							 * development needs to be started early so as to
+							 * amass a sufficient number for later in the game
+							 */
+
 						} else if (roundNum < 600) {
 							if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 2) {
 								createUnit(RobotType.BARRACKS, true);
 							} else {
 								createUnit(RobotType.TANKFACTORY, true);
 							}
-						
-						/* Commanders are ground-attackers that are much more effective
-						   than a soldier or a basher; however, they become progressively
-						   more expensive to build, so not too many resources should be
-						   invested into their development */
-							
-						} else if (rc.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
+
+							/*
+							 * Commanders are ground-attackers that are much
+							 * more effective than a soldier or a basher;
+							 * however, they become progressively more expensive
+							 * to build, so not too many resources should be
+							 * invested into their development
+							 */
+
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
 							if (createUnit(RobotType.TECHNOLOGYINSTITUTE, true)) {
-								rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
+								rc.broadcast(
+										NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
 							}
-							
-						} else if (rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
+
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
 							if (createUnit(RobotType.TRAININGFIELD, true)) {
-								rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
+								rc.broadcast(
+										NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
 							}
-						
-						/* At this later point in the game, we will have hopefully achieved the
-						   following constructions:
-						   
-						   1) Build several helipads --> production of many drones
-						   2) Build a couple miner factories --> spawning of many miners
-						   3) Build a couple of barracks --> spawning of soldiers and bashers
-						   4) Build at least one tank factory --> spawning of some tanks
-						   5) Build a technology institute and a training field --> the training
-						      of a commander 
-						 
-						   At this stage of the game, given that we have this level of mobilization,
-						   other factors become important:
-						   
-						   1) Further development of artillery
-						  
-						      At this point, we will probably have many drones, soldiers, and
-						      bashers. Thus, we need to focus on developing other artillery such
-						      as tanks, missiles, and drones, albeit less so than befre
-						     
-						   2) Improvement on tie-breaker criterion
-						   
-						   	  Two of the tie-breakers relate to how much material has been
-						   	  amassed during the game. The fourth one is the number of handwash
-						   	  stations, while the fifth one is the amount of ore the army has
-						   	  PLUS the ore costs of all surviving robots. Step 1 above helps
-						   	  with this because each of these has an ore cost, and artillery
-						   	  like tank factories are particularly expensive.
-						   
-						   In light of these priorities, several robots will not be considered
-						   during this game such as technology institutes and training fields
-						   because having multiple these is not very beneficial. We thus assign
-						   the following probabilities or upper bounds on the creation of the
-						   remaining structures:
-						   
-						   1) P(SUPPLYDEPOT) = 0.15
-						   ---------------------------------------
-						   2) P(BARRACKS) = 0.2
-						   ----------------------------------------
-						   3) P(HELIPAD) = 0.15
-						   ----------------------------------------
-						   4) P(AEROSPACELAB) = 0.15
-						   ----------------------------------------
-						   5) P(HANDWASHSTATION) = 0.05 
-						   ----------------------------------------
-						   6) P(MINERFACTORY) = Non-probabilistic
-						   ----------------------------------------
-						   7) P(TANKFACTORY) = 0.3
-						
-						*/
-						
-						// TODO: cleanup and redefine these probabilities
-							
+
+							/*
+							 * At this later point in the game, we will have
+							 * hopefully achieved the following constructions:
+							 * 
+							 * 1) Build several helipads --> production of many
+							 * drones 2) Build a couple miner factories -->
+							 * spawning of many miners 3) Build a couple of
+							 * barracks --> spawning of soldiers and bashers 4)
+							 * Build at least one tank factory --> spawning of
+							 * some tanks 5) Build a technology institute and a
+							 * training field --> the training of a commander
+							 * 
+							 * At this stage of the game, given that we have
+							 * this level of mobilization, other factors become
+							 * important:
+							 * 
+							 * 1) Further development of artillery
+							 * 
+							 * At this point, we will probably have many drones,
+							 * soldiers, and bashers. Thus, we need to focus on
+							 * developing other artillery such as tanks,
+							 * missiles, and drones, albeit less so than befre
+							 * 
+							 * 2) Improvement on tie-breaker criterion
+							 * 
+							 * Two of the tie-breakers relate to how much
+							 * material has been amassed during the game. The
+							 * fourth one is the number of handwash stations,
+							 * while the fifth one is the amount of ore the army
+							 * has PLUS the ore costs of all surviving robots.
+							 * Step 1 above helps with this because each of
+							 * these has an ore cost, and artillery like tank
+							 * factories are particularly expensive.
+							 * 
+							 * In light of these priorities, several robots will
+							 * not be considered during this game such as
+							 * technology institutes and training fields because
+							 * having multiple these is not very beneficial. We
+							 * thus assign the following probabilities or upper
+							 * bounds on the creation of the remaining
+							 * structures:
+							 * 
+							 * 1) P(SUPPLYDEPOT) = 0.15
+							 * --------------------------------------- 2)
+							 * P(BARRACKS) = 0.2
+							 * ---------------------------------------- 3)
+							 * P(HELIPAD) = 0.15
+							 * ---------------------------------------- 4)
+							 * P(AEROSPACELAB) = 0.15
+							 * ---------------------------------------- 5)
+							 * P(HANDWASHSTATION) = 0.05
+							 * ---------------------------------------- 6)
+							 * P(MINERFACTORY) = Non-probabilistic
+							 * ---------------------------------------- 7)
+							 * P(TANKFACTORY) = 0.3
+							 */
+
+							// TODO: cleanup and redefine these probabilities
+
 						} else if (0.05 <= fate && fate < 0.06) {
 							createUnit(RobotType.HANDWASHSTATION, true);
 						} else if (0.1 <= fate && fate < 0.2) {
 							if (rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
 								createUnit(RobotType.SUPPLYDEPOT, true);
 							}
-						} else if (roundNum < 1500 && rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
+						} else if (roundNum < 1500
+								&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
 							createUnit(RobotType.MINERFACTORY, true);
 						} else if (0.2 <= fate && fate < 0.45) {
 							if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 3) {
@@ -432,7 +461,8 @@ public class RobotPlayer {
 							createUnit(RobotType.HELIPAD, true);
 						} else if (0.65 <= fate && fate < 0.8) {
 							createUnit(RobotType.AEROSPACELAB, true);
-						} else if (0.8 <= fate || rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 5) {
+						} else if (0.8 <= fate
+								|| rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 5) {
 							createUnit(RobotType.BARRACKS, true);
 						}
 					}
@@ -473,9 +503,10 @@ public class RobotPlayer {
 					}
 					break;
 				case DRONE:
-					// TODO: Prevent circling drones from swarming, as they serve 
-					//       as crucial lockdown on enemy and often get killed when
-					//       attempting to swarm
+					// TODO: Prevent circling drones from swarming, as they
+					// serve
+					// as crucial lockdown on enemy and often get killed when
+					// attempting to swarm
 					attackEnemyZero();
 					int droneSwarm = rc.readBroadcast(DRONE_SWARM_CHANNEL);
 					if (droneSwarm == GO_TO_LOCATION) {
@@ -487,8 +518,8 @@ public class RobotPlayer {
 								false);
 					} else {
 						// TODO: Balance attack and defense
-						//       Go in for the kill when there are sufficiently many
-						//       near the enemy territory
+						// Go in for the kill when there are sufficiently many
+						// near the enemy territory
 						droneCircle(false);
 					}
 					break;
@@ -521,9 +552,9 @@ public class RobotPlayer {
 					int minerCount = rc
 							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
 					double miningFate = rand.nextDouble();
-					if (minerCount < 10 || (
-							roundNum < 1500 && 
-							miningFate <= Math.pow(Math.E, -minerCount * 0.07))) {
+					if (minerCount < 10
+							|| (roundNum < 1500 && miningFate <= Math.pow(
+									Math.E, -minerCount * 0.07))) {
 						createUnit(RobotType.MINER, false);
 					}
 					break;
@@ -537,7 +568,8 @@ public class RobotPlayer {
 						moveTowardDestination(new MapLocation(x, y), true,
 								false);
 					} else {
-						if (friendEnemyRatio(null, RobotType.MISSILE.attackRadiusSquared, null) <= 1){
+						if (friendEnemyRatio(null,
+								RobotType.MISSILE.attackRadiusSquared, null) <= 1) {
 							rc.explode();
 						}
 					}
@@ -588,21 +620,24 @@ public class RobotPlayer {
 				case TOWER:
 					attackEnemyZero(); // basic attacking method
 					break;
-				
+
 				case TRAININGFIELD:
-					/* Limit the number of commanders that will be produced in
-					   the game (assuming any die) since their cost increases. */
-					
-					int numCommanders = rc.readBroadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL);
-					
-					if (!rc.hasCommander() && numCommanders < 3){
+					/*
+					 * Limit the number of commanders that will be produced in
+					 * the game (assuming any die) since their cost increases.
+					 */
+
+					int numCommanders = rc
+							.readBroadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL);
+
+					if (!rc.hasCommander() && numCommanders < 3) {
 						if (createUnit(RobotType.COMMANDER, false)) {
 							rc.broadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL, 1);
 						}
 					}
-					
+
 					break;
-					
+
 				default:
 					break;
 				}
@@ -640,7 +675,9 @@ public class RobotPlayer {
 		}
 	}
 
-	/* ========================================================================== */
+	/*
+	 * ==========================================================================
+	 */
 
 	public static class SearchNode {
 		private MapLocation nodeLoc;
@@ -734,47 +771,50 @@ public class RobotPlayer {
 		return possibleChildren;
 	}
 
-	/* ========================================================================== */
+	/*
+	 * ==========================================================================
+	 */
 
-	private static double friendEnemyRatio(MapLocation loc, int radiusSquared, Team friendTeam){
+	private static double friendEnemyRatio(MapLocation loc, int radiusSquared,
+			Team friendTeam) {
 		RobotInfo[] surroundingRobots;
-		
-		if(loc != null){
+
+		if (loc != null) {
 			surroundingRobots = rc.senseNearbyRobots(loc, radiusSquared, null);
-		}else{
+		} else {
 			surroundingRobots = rc.senseNearbyRobots(radiusSquared);
 		}
-		
+
 		double enemyCount = 0.0, friendCount = 0.0;
-		
-		if(friendTeam == null){
+
+		if (friendTeam == null) {
 			friendTeam = rc.getTeam();
 		}
-		
-		for(RobotInfo roboInfo : surroundingRobots){
-			if(roboInfo.team == friendTeam){
+
+		for (RobotInfo roboInfo : surroundingRobots) {
+			if (roboInfo.team == friendTeam) {
 				friendCount++;
-			}else{
+			} else {
 				enemyCount++;
 			}
 		}
-		
-		if(friendCount == 0){
+
+		if (friendCount == 0) {
 			return 0;
-		}else if(enemyCount == 0 && friendCount != 0){
+		} else if (enemyCount == 0 && friendCount != 0) {
 			return Integer.MAX_VALUE;
-		}else{
+		} else {
 			return friendCount / enemyCount;
 		}
 	}
-	
+
 	private static int measureCrowdedness(MapLocation loc, int radiusSquared) {
 		// TODO: make more sophisticated
 		int numBadTiles = 0;
 
 		if (radiusSquared <= 9) {
-			for (MapLocation location : loc.getAllMapLocationsWithinRadiusSq(
-					loc, radiusSquared)) {
+			for (MapLocation location : MapLocation
+					.getAllMapLocationsWithinRadiusSq(loc, radiusSquared)) {
 				if (rc.senseTerrainTile(location) != TerrainTile.NORMAL) {
 					++numBadTiles;
 				}
@@ -862,9 +902,9 @@ public class RobotPlayer {
 	private static void droneCircle(boolean shielding)
 			throws GameActionException { // FTW!
 
-	// TODO: Develop a droneLine() method that can generate a "wall"
-	// of drones for defensive purposes
-		
+		// TODO: Develop a droneLine() method that can generate a "wall"
+		// of drones for defensive purposes
+
 		if (shielding) {
 			moveTowardDestination(
 					droneShieldLocations.get(currentDroneDirectionIndex), true,
@@ -906,71 +946,74 @@ public class RobotPlayer {
 		rc.broadcast(HQ_RADIUS_CHANNEL, radiusSquared);
 	}
 
-	private static boolean createUnit(RobotType roboType, boolean build) throws GameActionException{
-		if(rc.isCoreReady() && rc.getTeamOre() > roboType.oreCost){
-			MapLocation currentLocation = rc.getLocation(); 
+	private static boolean createUnit(RobotType roboType, boolean build)
+			throws GameActionException {
+		if (rc.isCoreReady() && rc.getTeamOre() >= roboType.oreCost) {
+			MapLocation currentLocation = rc.getLocation();
 			Direction testDir = getRandomDirection();
 			boolean goLeft = rand.nextDouble() > 0.5;
-			
-			for(int turnCount = 0; turnCount < 8; turnCount++){
+
+			for (int turnCount = 0; turnCount < 8; turnCount++) {
 				MapLocation testLoc = currentLocation.add(testDir);
-				
-				if(build){
-					if(rc.canBuild(testDir, roboType) && isSafe(testLoc, false)){
+
+				if (build) {
+					if (rc.canBuild(testDir, roboType)
+							&& isSafe(testLoc, false)) {
 						rc.build(testDir, roboType);
 						return true;
 					}
-				}else{ // spawning
-					if(rc.canSpawn(testDir, roboType) && isSafe(testLoc, false)){
+				} else { // spawning
+					if (rc.canSpawn(testDir, roboType)
+							&& isSafe(testLoc, false)) {
 						rc.spawn(testDir, roboType);
 						return true;
 					}
 				}
-				
-				if(goLeft){
+
+				if (goLeft) {
 					testDir = testDir.rotateLeft();
-				}else{
+				} else {
 					testDir = testDir.rotateRight();
 				}
 			}
 		}
-		
+
 		return false;
 	}
-	
-//	private static boolean buildUnit(RobotType roboType)
-//			throws GameActionException {
-//		if (rc.getTeamOre() > roboType.oreCost) {
-//			Direction buildDir = getRandomDirection();
-//
-//			if (rc.isCoreReady() && rc.canBuild(buildDir, roboType)) {
-//				rc.build(buildDir, roboType);
-//				return true;
-//			}
-//		}
-//
-//		return false;
-//	}
-//	
-//	private static boolean spawnUnit(RobotType roboType)
-//			throws GameActionException {
-//		Direction testDir = getRandomDirection();
-//
-//		for (int turnCount = 0; turnCount < 8; turnCount++) {
-//			if (rc.isCoreReady() && rc.canSpawn(testDir, roboType)) {
-//				MapLocation spawnLoc = rc.getLocation().add(testDir);
-//
-//				if (isSafe(spawnLoc, false)) {
-//					rc.spawn(testDir, roboType);
-//					return true;
-//				}
-//			} else {
-//				testDir = testDir.rotateLeft();
-//			}
-//		}
-//
-//		return false;
-//	}
+
+	// private static boolean buildUnit(RobotType roboType)
+	// throws GameActionException {
+	// if (rc.getTeamOre() > roboType.oreCost) {
+	// Direction buildDir = getRandomDirection();
+	//
+	// if (rc.isCoreReady() && rc.canBuild(buildDir, roboType)) {
+	// rc.build(buildDir, roboType);
+	// return true;
+	// }
+	// }
+	//
+	// return false;
+	// }
+	//
+	// private static boolean spawnUnit(RobotType roboType)
+	// throws GameActionException {
+	// Direction testDir = getRandomDirection();
+	//
+	// for (int turnCount = 0; turnCount < 8; turnCount++) {
+	// if (rc.isCoreReady() && rc.canSpawn(testDir, roboType)) {
+	// MapLocation spawnLoc = rc.getLocation().add(testDir);
+	//
+	// if (isSafe(spawnLoc, false)) {
+	// rc.spawn(testDir, roboType);
+	// return true;
+	// }
+	// } else {
+	// testDir = testDir.rotateLeft();
+	// }
+	// }
+	//
+	// return false;
+	// }
 
 	private static Direction getRandomDirection() {
 		return Direction.values()[(int) rand.nextDouble() * 8];
@@ -1067,16 +1110,17 @@ public class RobotPlayer {
 				if (totalOreCount > bestOreCount) {
 					bestOreCount = totalOreCount;
 					bestDestination = squareFour;
-				} else if (totalOreCount == bestOreCount && bestDestination != null) {
+				} else if (totalOreCount == bestOreCount
+						&& bestDestination != null) {
 					bestDestination = (rand.nextDouble() > 0.5) ? bestDestination
 							: squareFour;
 				}
 			}
-			
+
 			if (bestDestination != null) {
 				moveTowardDestination(bestDestination, false, false);
 			} else {
-					moveAround();
+				moveAround();
 			}
 		}
 	}
@@ -1131,10 +1175,12 @@ public class RobotPlayer {
 
 		// Check if any enemies are in range
 		if (!onlyHQAndTowers) {
+			RobotType ourType = rc.getType();
 			RobotInfo[] enemyRobots = rc.senseNearbyRobots(
 					roboType.sensorRadiusSquared, Enemy);
 			for (RobotInfo r : enemyRobots) {
-				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared) {
+				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
+						&& !(r.type == ourType)) { // Walks into range of same-type enemies
 					return false;
 				}
 			}
@@ -1289,7 +1335,7 @@ public class RobotPlayer {
 
 	private static void broadcastSwarmInfo(RobotType[] types, int action,
 			MapLocation location) throws GameActionException {
-		
+
 		// Broadcast location only if a new one was provided
 		if (location != null) {
 			int x = location.x;
