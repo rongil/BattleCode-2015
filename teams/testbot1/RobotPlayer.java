@@ -35,8 +35,29 @@ public class RobotPlayer {
 
 	private static MapLocation myHQ;
 	private static MapLocation enemyHQ;
-	private static MapLocation mapCenter;
-
+	
+	private static MapLocation checkpoint = null;
+	private static boolean mobilized = false;
+	
+	private static void mobilize() throws GameActionException{
+		if(!mobilized){
+			MapLocation currentLocation = rc.getLocation();
+			
+			if(checkpoint == null){
+				checkpoint = (rand.nextDouble() > 0.5) ? new MapLocation(-12899, 13140) : new MapLocation(-12928, 13149); 
+				moveTowardDestination(checkpoint, true);
+				
+			}else if(currentLocation.distanceSquaredTo(checkpoint) < 10){
+				mobilized = true;
+				moveAround();
+			}else{
+				moveTowardDestination(checkpoint, true);
+			}
+		}else{
+			moveAround();
+		}
+	}
+	
 	public static void run(RobotController myRC) {
 
 		rc = myRC;
@@ -44,8 +65,6 @@ public class RobotPlayer {
 		Enemy = Friend.opponent();
 		myHQ = rc.senseHQLocation();
 		enemyHQ = rc.senseEnemyHQLocation();
-		mapCenter = new MapLocation(Math.abs(myHQ.x - enemyHQ.x) / 2,
-				Math.abs(myHQ.y - enemyHQ.y) / 2);
 
 		boolean skipFirstRound = true;
 
@@ -192,7 +211,8 @@ public class RobotPlayer {
 						// BASHERs attack automatically, so let's just move
 						// around mostly randomly.
 						// moveAround();
-						flyOnBoundary();
+						// flyOnBoundary();
+						mobilize();
 					}
 					break;
 				case BEAVER:
@@ -291,7 +311,8 @@ public class RobotPlayer {
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
-						flyOnBoundary();
+						// flyOnBoundary();
+						mobilize();
 					}
 					break;
 				case COMPUTER:
@@ -305,6 +326,7 @@ public class RobotPlayer {
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
+						mobilize();
 					}
 					break;
 				case DRONE:
@@ -318,18 +340,19 @@ public class RobotPlayer {
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
-						MapLocation[] towerLocations = rc.senseTowerLocations();
-						if (rc.isCoreReady()) {
-							if (rand.nextDouble() > 0.1
-									|| towerLocations.length == 0) {
-								flyOnBoundary();
-							} else {
-								int towerNumber = rand
-										.nextInt(towerLocations.length);
-								moveTowardDestination(
-										towerLocations[towerNumber], true);
-							}
-						}
+						mobilize();
+//						MapLocation[] towerLocations = rc.senseTowerLocations();
+//						if (rc.isCoreReady()) {
+//							if (rand.nextDouble() > 0.1
+//									|| towerLocations.length == 0) {
+//								flyOnBoundary();
+//							} else {
+//								int towerNumber = rand
+//										.nextInt(towerLocations.length);
+//								moveTowardDestination(
+//										towerLocations[towerNumber], true);
+//							}
+//						}
 					}
 					break;
 				case HANDWASHSTATION:
@@ -399,7 +422,8 @@ public class RobotPlayer {
 						 * the towers, which is not possible under moveAround()
 						 */
 						// moveAround();
-						flyOnBoundary();
+						// flyOnBoundary();
+						mobilize();
 					}
 					break;
 				case SUPPLYDEPOT:
@@ -413,7 +437,8 @@ public class RobotPlayer {
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
 						// moveAround();
-						flyOnBoundary();
+						// flyOnBoundary();
+						mobilize();
 					}
 					break;
 				case TANKFACTORY:
@@ -474,10 +499,7 @@ public class RobotPlayer {
 		}
 	}
 
-	/*
-	 * ==========================================================================
-	 * ==============
-	 */
+/* ======================================================================================== */
 
 	public static class SearchNode {
 		private MapLocation nodeLoc;
@@ -571,10 +593,7 @@ public class RobotPlayer {
 		return possibleChildren;
 	}
 
-	/*
-	 * ==========================================================================
-	 * ==============
-	 */
+/* ======================================================================================== */
 
 	private static int measureCrowdedness(MapLocation loc, int radiusSquared) {
 		// TODO: make more sophisticated
@@ -801,23 +820,24 @@ public class RobotPlayer {
 				double totalOreCount = rc.senseOre(squareOne)
 						+ rc.senseOre(squareTwo) + rc.senseOre(squareThree)
 						+ rc.senseOre(squareFour);
-
-				if (totalOreCount > bestOreCount) {
+						
+				if (totalOreCount > bestOreCount || bestDestination == null) {
 					bestOreCount = totalOreCount;
+					bestDestination = squareOne;
 					bestDestination = squareFour;
 				} else if (totalOreCount == bestOreCount
 						&& bestDestination != null) {
 					bestDestination = (rand.nextDouble() > 0.5) ? bestDestination
 							: squareFour;
 				}
-			}
 
-			if (bestDestination != null) {
-				moveTowardDestination(bestDestination, true);
-			} else {
-				// moveAround();
-				// flyOnBoundary();
-				defendHQ();
+				if (bestDestination != null) {
+					moveTowardDestination(bestDestination, true);
+				} else {
+					moveAround();
+//					flyOnBoundary();
+//					defendHQ();
+				}
 			}
 		}
 	}
@@ -879,7 +899,11 @@ public class RobotPlayer {
 				rc.mine();
 			}
 		} else { // otherwise, look for ore
-			locateBestOre();
+			if(mobilized)
+				locateBestOre();
+			else{
+				mobilize();
+			}
 		}
 	}
 
