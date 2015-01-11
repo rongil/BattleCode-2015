@@ -113,7 +113,6 @@ public class RobotPlayer {
 					AttackRadiusSquared = RobotType.HQ.attackRadiusSquared;
 				} else {
 					int towerIndex = (int) targetProb * (myTowers.length + 1);
-					System.out.println("Assigned Tower " + towerIndex);
 					assignment = myTowers[towerIndex];
 					AttackRadiusSquared = RobotType.TOWER.attackRadiusSquared;
 				}
