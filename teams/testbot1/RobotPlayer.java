@@ -279,7 +279,7 @@ public class RobotPlayer {
 								.readBroadcast(BASHER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(BASHER_SWARM_LOCATION_Y_CHANNEL);
-						moveTowardDestination(new MapLocation(x, y), false,
+						moveTowardDestination(new MapLocation(x, y), true,
 								false);
 					} else {
 						// BASHERs attack automatically, so let's just move
@@ -394,7 +394,7 @@ public class RobotPlayer {
 								.readBroadcast(COMMANDER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(COMMANDER_SWARM_LOCATION_Y_CHANNEL);
-						moveTowardDestination(new MapLocation(x, y), false,
+						moveTowardDestination(new MapLocation(x, y), true,
 								false);
 					} else {
 						moveAround();
@@ -425,10 +425,10 @@ public class RobotPlayer {
 								.readBroadcast(DRONE_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(DRONE_SWARM_LOCATION_Y_CHANNEL);
-						moveTowardDestination(new MapLocation(x, y), false,
+						moveTowardDestination(new MapLocation(x, y), true,
 								false);
 					} else {
-						droneCircle(true);
+						droneCircle(false);
 						// moveAround();
 						// mobilize();
 						// MapLocation[] towerLocations =
@@ -465,7 +465,7 @@ public class RobotPlayer {
 								.readBroadcast(MINER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(MINER_SWARM_LOCATION_Y_CHANNEL);
-						moveTowardDestination(new MapLocation(x, y), false,
+						moveTowardDestination(new MapLocation(x, y), true,
 								false);
 					} else {
 						mineAndMove();
@@ -491,7 +491,7 @@ public class RobotPlayer {
 								.readBroadcast(MISSILE_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(MISSILE_SWARM_LOCATION_Y_CHANNEL);
-						moveTowardDestination(new MapLocation(x, y), false,
+						moveTowardDestination(new MapLocation(x, y), true,
 								false);
 					} else {
 						rc.explode();
@@ -505,7 +505,7 @@ public class RobotPlayer {
 								.readBroadcast(SOLDIER_SWARM_LOCATION_X_CHANNEL);
 						int y = rc
 								.readBroadcast(SOLDIER_SWARM_LOCATION_Y_CHANNEL);
-						moveTowardDestination(new MapLocation(x, y), false,
+						moveTowardDestination(new MapLocation(x, y), true,
 								false);
 					} else {
 						/*
@@ -527,7 +527,7 @@ public class RobotPlayer {
 					if (tankSwarm == GO_TO_LOCATION) {
 						int x = rc.readBroadcast(TANK_SWARM_LOCATION_X_CHANNEL);
 						int y = rc.readBroadcast(TANK_SWARM_LOCATION_Y_CHANNEL);
-						moveTowardDestination(new MapLocation(x, y), false,
+						moveTowardDestination(new MapLocation(x, y), true,
 								false);
 					} else {
 						moveAround();
@@ -795,7 +795,7 @@ public class RobotPlayer {
 		} else {
 			moveTowardDestination(
 					droneAttackCircleLocations.get(currentDroneDirectionIndex),
-					false, true);
+					false, false);
 		}
 		droneCircleRound = (droneCircleRound + 1) % 4;
 		if (droneCircleRound == 0) {
