@@ -98,26 +98,26 @@ public class RobotPlayer {
 
 		rand = new Random(rc.getID());
 		facing = getRandomDirection(); // Randomize starting direction
-		
+
 		// For drones only!
 		if (rc.getType() == RobotType.DRONE) {
-			if(assignment == null){
+			if (assignment == null) {
 				MapLocation[] myTowers = rc.senseTowerLocations();
 				double targetProb = rand.nextDouble();
 				int AttackRadiusSquared;
-				
+
 				double towerLength = (double) myTowers.length;
-				
-				if(targetProb >= towerLength / (towerLength + 1.0)){
-					assignment = myHQ; 
+
+				if (targetProb >= towerLength / (towerLength + 1.0)) {
+					assignment = myHQ;
 					AttackRadiusSquared = RobotType.HQ.attackRadiusSquared;
-				}else{
+				} else {
 					int towerIndex = (int) targetProb * (myTowers.length + 1);
 					System.out.println("Assigned Tower " + towerIndex);
 					assignment = myTowers[towerIndex];
 					AttackRadiusSquared = RobotType.TOWER.attackRadiusSquared;
 				}
-				
+
 				int friendlyMagnitude = (int) (1.1 * Math
 						.sqrt(AttackRadiusSquared)); // Floored
 				int enemyMagnitude = (int) Math.sqrt(AttackRadiusSquared); // Floored
@@ -125,15 +125,16 @@ public class RobotPlayer {
 				droneAttackCircleLocations = new ArrayList<MapLocation>();
 
 				for (Direction dir : directions) {
-					droneShieldLocations.add(assignment.add(dir, friendlyMagnitude));
-					droneAttackCircleLocations
-							.add(enemyHQ.add(dir, enemyMagnitude));
+					droneShieldLocations.add(assignment.add(dir,
+							friendlyMagnitude));
+					droneAttackCircleLocations.add(enemyHQ.add(dir,
+							enemyMagnitude));
 				}
-			}	
+			}
 		}
 
 		// Warning: If the run method ends, the robot dies!
-		
+
 		while (true) {
 			try {
 				// Avoid too much computation if initializing anything.
@@ -187,12 +188,15 @@ public class RobotPlayer {
 							.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL);
 					int currentNumFriendlyMiners = rc
 							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
+					int currentNumFriendlyDrones = rc
+							.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
 					MapLocation[] towers = rc.senseEnemyTowerLocations();
-					if ((friendlyRobots.length - enemyRobots.length >= 300 && rc
+					if ((friendlyRobots.length - enemyRobots.length >= 200 && rc
 							.readBroadcast(TOWER_STRENGTH_CHANNEL) <= 2)
 							|| (roundNum > 1800 && (currentNumFriendlySoldiers > 30
 									|| currentNumFriendlyBashers > 30
-									|| currentNumFriendlyTanks > 15 || currentNumFriendlyMiners > 30))) {
+									|| currentNumFriendlyTanks > 15
+									|| currentNumFriendlyMiners > 30 || currentNumFriendlyDrones > 15))) {
 
 						towers = rc.senseEnemyTowerLocations();
 						MapLocation location = enemyHQ; // Default to enemy HQ
