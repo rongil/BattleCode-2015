@@ -38,6 +38,7 @@ public class RobotPlayer {
 	private static MapLocation myHQ;
 	private static MapLocation enemyHQ;
 
+	private static MapLocation assignment = null;
 	private static MapLocation checkpoint = null;
 	private static boolean mobilized = false;
 
@@ -81,6 +82,11 @@ public class RobotPlayer {
 
 		// For drones only!
 		if (rc.getType() == RobotType.DRONE) {
+			if(assignment == null){
+				MapLocation[] myTowers = rc.senseTowerLocations();
+				double 
+			}
+			
 			int hqAttackRadiusSquared = RobotType.HQ.attackRadiusSquared;
 			int friendlyMagnitude = (int) (1.1 * Math
 					.sqrt(hqAttackRadiusSquared)); // Floored
