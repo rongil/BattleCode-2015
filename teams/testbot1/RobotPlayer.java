@@ -112,8 +112,7 @@ public class RobotPlayer {
 					assignment = myHQ; 
 					AttackRadiusSquared = RobotType.HQ.attackRadiusSquared;
 				}else{
-					int towerIndex = (int) targetProb * (myTowers.length + 1);
-					System.out.println("Assigned Tower " + towerIndex);
+					int towerIndex = (int) (targetProb * (myTowers.length + 1));
 					assignment = myTowers[towerIndex];
 					AttackRadiusSquared = RobotType.TOWER.attackRadiusSquared;
 				}
@@ -424,7 +423,7 @@ public class RobotPlayer {
 						moveTowardDestination(new MapLocation(x, y), false,
 								false);
 					} else {
-						droneCircle(true);
+						droneCircle(false);
 						// moveAround();
 						// mobilize();
 						// MapLocation[] towerLocations =
@@ -791,7 +790,7 @@ public class RobotPlayer {
 		} else {
 			moveTowardDestination(
 					droneAttackCircleLocations.get(currentDroneDirectionIndex),
-					false, true);
+					false, false);
 		}
 		droneCircleRound = (droneCircleRound + 1) % 4;
 		if (droneCircleRound == 0) {
