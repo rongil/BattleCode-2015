@@ -1180,7 +1180,7 @@ public class RobotPlayer {
 					roboType.sensorRadiusSquared, Enemy);
 			for (RobotInfo r : enemyRobots) {
 				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
-						&& !(r.type == ourType)) { // Walks into range of
+						&& true){//!(r.type == ourType)) { // Walks into range of
 													// same-type enemies
 					return false;
 				}
