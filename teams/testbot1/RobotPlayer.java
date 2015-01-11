@@ -183,8 +183,11 @@ public class RobotPlayer {
 					attackEnemyZero();
 
 					// Limited beaver spawn
-					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 10) {
-						spawnUnit(RobotType.BEAVER);
+					int beaverCount = rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL); 
+					if (beaverCount < 10) {
+						if(beaverCount == 0 || roundNum >= 300){
+							spawnUnit(RobotType.BEAVER);
+						}
 					}
 				case AEROSPACELAB:
 					spawnUnit(RobotType.LAUNCHER);
