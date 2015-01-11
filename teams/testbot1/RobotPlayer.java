@@ -1,8 +1,10 @@
 package testbot1;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Random;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 
 import battlecode.common.*;
 
@@ -35,7 +37,7 @@ public class RobotPlayer {
 
 	private static MapLocation myHQ;
 	private static MapLocation enemyHQ;
-	
+
 	private static MapLocation checkpoint = null;
 	private static boolean mobilized = false;
 	
@@ -48,25 +50,35 @@ public class RobotPlayer {
 	private static boolean doneAnalyzing = false;
 	private static double normRatio;
 	
-	private static void mobilize() throws GameActionException{
-		if(!mobilized){
+	/**************************************************************************
+	 * For drones only!
+	 *************************************************************************/
+	private static List<MapLocation> droneShieldLocations;
+	private static int currentDroneDirectionIndex = 0;
+	private static int droneShieldRound = 0;
+
+	// ************************************************************************
+
+	private static void mobilize() throws GameActionException {
+		if (!mobilized) {
 			MapLocation currentLocation = rc.getLocation();
-			
-			if(checkpoint == null){
-				checkpoint = (rand.nextDouble() > 0.5) ? new MapLocation(-12899, 13140) : new MapLocation(-12928, 13149); 
+
+			if (checkpoint == null) {
+				checkpoint = (rand.nextDouble() > 0.5) ? new MapLocation(
+						-12899, 13140) : new MapLocation(-12928, 13149);
 				moveTowardDestination(checkpoint, true);
-				
-			}else if(currentLocation.distanceSquaredTo(checkpoint) < 10){
+
+			} else if (currentLocation.distanceSquaredTo(checkpoint) < 10) {
 				mobilized = true;
 				moveAround();
-			}else{
+			} else {
 				moveTowardDestination(checkpoint, true);
 			}
-		}else{
+		} else {
 			moveAround();
 		}
 	}
-	
+
 	public static void run(RobotController myRC) {
 
 		rc = myRC;
@@ -78,7 +90,18 @@ public class RobotPlayer {
 		getMapDimensions();
 		xpos = xmin;
 		ypos = ymin;
-		
+
+		// For drones only!
+		if (rc.getType() == RobotType.DRONE) {
+			int hqAttackRadiusSquared = RobotType.HQ.attackRadiusSquared;
+			int magnitude = (int) (1.1 * Math.sqrt(hqAttackRadiusSquared)); // Floored
+			droneShieldLocations = new ArrayList<MapLocation>();
+
+			for (Direction dir : directions) {
+				droneShieldLocations.add(myHQ.add(dir, magnitude));
+			}
+		}
+
 		boolean skipFirstRound = true;
 
 		skipFirstRound = initializeAttackPriorityMap();
@@ -110,11 +133,12 @@ public class RobotPlayer {
 					 * Unit Counting -------------------------------> 5 Rounds
 					 * Tower Strength -------------------------------> 1 Round
 					 *********************************************************/
-					
+
 					if (roundNum % 6 < 5) {
 						// Update unit counts every so often!
 						updateUnitCounts();
-					} else if (roundNum % 6 == 5) {
+					}
+					if (roundNum % 5 == 4) {
 						// Check tower strength!
 						analyzeTowerStrength();
 					}
@@ -197,9 +221,10 @@ public class RobotPlayer {
 					attackEnemyZero();
 
 					// Limited beaver spawn
-					int beaverCount = rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL); 
+					int beaverCount = rc
+							.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL);
 					if (beaverCount < 10) {
-						if(beaverCount == 0 || roundNum >= 300){
+						if (beaverCount == 0 || roundNum >= 300) {
 							spawnUnit(RobotType.BEAVER);
 						}
 					}
@@ -271,13 +296,14 @@ public class RobotPlayer {
 					 *********************************************************/
 
 					// Limit the number of miner factories
-					if(roundNum < 300){
-						if(rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1){
+					if (roundNum < 300) {
+						if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 							buildUnit(RobotType.MINERFACTORY);
-						}else if(rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 3){
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 3) {
 							buildUnit(RobotType.HELIPAD);
 						}
-					}else{
+					} else {
 						if (measureCrowdedness(rc.getLocation(), 4) < 10) {
 							if (roundNum < 500
 									&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
@@ -293,14 +319,16 @@ public class RobotPlayer {
 								boolean success = buildUnit(RobotType.TECHNOLOGYINSTITUTE);
 								if (success) {
 									rc.broadcast(
-											NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
+											NUM_FRIENDLY_TRAININGFIELD_CHANNEL,
+											1);
 								}
 							} else if (rc
 									.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
 								boolean success = buildUnit(RobotType.TRAININGFIELD);
 								if (success) {
 									rc.broadcast(
-											NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
+											NUM_FRIENDLY_TRAININGFIELD_CHANNEL,
+											1);
 								}
 							} else if (0.05 <= fate && fate < 0.06) {
 								buildUnit(RobotType.HANDWASHSTATION);
@@ -325,29 +353,29 @@ public class RobotPlayer {
 							}
 						}
 					}
-					
+
 					mineAndMove();
 					break;
-					
-					case COMMANDER:
-						attackEnemyZero();
-						int commanderSwarm = rc
-								.readBroadcast(COMMANDER_SWARM_CHANNEL);
-						if (commanderSwarm == GO_TO_LOCATION) {
-							int x = rc
-									.readBroadcast(COMMANDER_SWARM_LOCATION_X_CHANNEL);
-							int y = rc
-									.readBroadcast(COMMANDER_SWARM_LOCATION_Y_CHANNEL);
-							moveTowardDestination(new MapLocation(x, y), false);
-						} else {
-							moveAround();
-							// flyOnBoundary();
-							// mobilize();
-						}
+
+				case COMMANDER:
+					attackEnemyZero();
+					int commanderSwarm = rc
+							.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					if (commanderSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(COMMANDER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(COMMANDER_SWARM_LOCATION_Y_CHANNEL);
+						moveTowardDestination(new MapLocation(x, y), false);
+					} else {
+						moveAround();
+						// flyOnBoundary();
+						// mobilize();
+					}
 					break;
 				case COMPUTER:
 					int computerSwarm = rc
-							.readBroadcast(COMMANDER_SWARM_CHANNEL);
+							.readBroadcast(COMPUTER_SWARM_CHANNEL);
 					if (computerSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(COMPUTER_SWARM_LOCATION_X_CHANNEL);
@@ -361,7 +389,7 @@ public class RobotPlayer {
 					break;
 				case DRONE:
 					attackEnemyZero();
-					int droneSwarm = rc.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					int droneSwarm = rc.readBroadcast(DRONE_SWARM_CHANNEL);
 					if (droneSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(DRONE_SWARM_LOCATION_X_CHANNEL);
@@ -369,20 +397,22 @@ public class RobotPlayer {
 								.readBroadcast(DRONE_SWARM_LOCATION_Y_CHANNEL);
 						moveTowardDestination(new MapLocation(x, y), false);
 					} else {
-						moveAround();
+						droneShield();
+						// moveAround();
 						// mobilize();
-//						MapLocation[] towerLocations = rc.senseTowerLocations();
-//						if (rc.isCoreReady()) {
-//							if (rand.nextDouble() > 0.1
-//									|| towerLocations.length == 0) {
-//								flyOnBoundary();
-//							} else {
-//								int towerNumber = rand
-//										.nextInt(towerLocations.length);
-//								moveTowardDestination(
-//										towerLocations[towerNumber], true);
-//							}
-//						}
+						// MapLocation[] towerLocations =
+						// rc.senseTowerLocations();
+						// if (rc.isCoreReady()) {
+						// if (rand.nextDouble() > 0.1
+						// || towerLocations.length == 0) {
+						// flyOnBoundary();
+						// } else {
+						// int towerNumber = rand
+						// .nextInt(towerLocations.length);
+						// moveTowardDestination(
+						// towerLocations[towerNumber], true);
+						// }
+						// }
 					}
 					break;
 				case HANDWASHSTATION:
@@ -392,12 +422,13 @@ public class RobotPlayer {
 					spawnUnit(RobotType.DRONE);
 					break;
 				case LAUNCHER:
-					// TODO: Fix missile launching
+					// TODO: Fix missile launching and movement
+					moveAround();
 					rc.launchMissile(getRandomDirection());
 					break;
 				case MINER:
 					attackEnemyZero();
-					int minerSwarm = rc.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					int minerSwarm = rc.readBroadcast(MINER_SWARM_CHANNEL);
 					if (minerSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(MINER_SWARM_LOCATION_X_CHANNEL);
@@ -422,8 +453,7 @@ public class RobotPlayer {
 
 					break;
 				case MISSILE:
-					int missileSwarm = rc
-							.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					int missileSwarm = rc.readBroadcast(MISSILE_SWARM_CHANNEL);
 					if (missileSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(MISSILE_SWARM_LOCATION_X_CHANNEL);
@@ -436,8 +466,7 @@ public class RobotPlayer {
 					break;
 				case SOLDIER:
 					attackEnemyZero(); // Soldiers attack, not mine.
-					int soldierSwarm = rc
-							.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					int soldierSwarm = rc.readBroadcast(SOLDIER_SWARM_CHANNEL);
 					if (soldierSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(SOLDIER_SWARM_LOCATION_X_CHANNEL);
@@ -460,7 +489,7 @@ public class RobotPlayer {
 					break;
 				case TANK:
 					attackEnemyZero();
-					int tankSwarm = rc.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					int tankSwarm = rc.readBroadcast(TANK_SWARM_CHANNEL);
 					if (tankSwarm == GO_TO_LOCATION) {
 						int x = rc.readBroadcast(TANK_SWARM_LOCATION_X_CHANNEL);
 						int y = rc.readBroadcast(TANK_SWARM_LOCATION_Y_CHANNEL);
@@ -529,7 +558,10 @@ public class RobotPlayer {
 		}
 	}
 
-/* ======================================================================================== */
+	/*
+	 * ==========================================================================
+	 * ==============
+	 */
 
 	public static class SearchNode {
 		private MapLocation nodeLoc;
@@ -623,7 +655,10 @@ public class RobotPlayer {
 		return possibleChildren;
 	}
 
-/* ======================================================================================== */
+	/*
+	 * ==========================================================================
+	 * ==============
+	 */
 
 	private static int measureCrowdedness(MapLocation loc, int radiusSquared) {
 		// TODO: make more sophisticated
@@ -713,6 +748,16 @@ public class RobotPlayer {
 
 				moveTowardDestination(newLocation, true);
 			}
+		}
+	}
+
+	private static void droneShield() throws GameActionException { // FTW!
+		moveTowardDestination(
+				droneShieldLocations.get(currentDroneDirectionIndex), true);
+		droneShieldRound = (droneShieldRound + 1) % 4;
+		if (droneShieldRound == 0) {
+			currentDroneDirectionIndex = (currentDroneDirectionIndex + 1)
+					% droneShieldLocations.size();
 		}
 	}
 
@@ -850,7 +895,7 @@ public class RobotPlayer {
 				double totalOreCount = rc.senseOre(squareOne)
 						+ rc.senseOre(squareTwo) + rc.senseOre(squareThree)
 						+ rc.senseOre(squareFour);
-						
+
 				if (totalOreCount > bestOreCount || bestDestination == null) {
 					bestOreCount = totalOreCount;
 					bestDestination = squareOne;
@@ -865,8 +910,8 @@ public class RobotPlayer {
 					moveTowardDestination(bestDestination, true);
 				} else {
 					moveAround();
-//					flyOnBoundary();
-//					defendHQ();
+					// flyOnBoundary();
+					// defendHQ();
 				}
 			}
 		}
@@ -929,11 +974,11 @@ public class RobotPlayer {
 				rc.mine();
 			}
 		} else { // otherwise, look for ore
-//			if(mobilized)
-//				locateBestOre();
-//			else{
-//				mobilize();
-//			}
+			// if(mobilized)
+			// locateBestOre();
+			// else{
+			// mobilize();
+			// }
 			locateBestOre();
 		}
 	}
@@ -1612,6 +1657,8 @@ public class RobotPlayer {
 	 * NOTE 1: Constant are located here for less cluttering.
 	 * ------------------------------------------------------------------------
 	 * NOTE 2: Building/Units order follows directly from online documentation.
+	 * ------------------------------------------------------------------------
+	 * NOTE 3: Search does not have constants for the channels it uses.
 	 * ========================================================================
 	 * 0-9: Friendly Buildings
 	 * ------------------------------------------------------------------------
@@ -1626,6 +1673,8 @@ public class RobotPlayer {
 	 * 1000-1999: Offense/Defense Signals (e.g. Swarm)
 	 * ------------------------------------------------------------------------
 	 * 2000-2999: Map Analysis
+	 * ------------------------------------------------------------------------
+	 * 10000-29999: Search
 	 *************************************************************************/
 
 	// Friendly Buildings Channels
