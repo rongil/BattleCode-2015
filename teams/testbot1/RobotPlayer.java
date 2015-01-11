@@ -126,12 +126,6 @@ public class RobotPlayer {
 
 				Direction dir = directions[rand.nextInt(8)];
 				boolean goLeft = rand.nextDouble() > 0.5;
-				// for (Direction dir : directions) {
-				// droneShieldLocations.add(assignment.add(dir,
-				// friendlyMagnitude));
-				// droneAttackCircleLocations.add(enemyHQ.add(dir,
-				// enemyMagnitude));
-				// }
 
 				for (int index = 0; index < 8; index++) {
 					droneShieldLocations.add(assignment.add(dir,
@@ -301,8 +295,9 @@ public class RobotPlayer {
 						moveTowardDestination(new MapLocation(x, y), true,
 								false);
 					} else {
-						// BASHERs attack automatically, so let's just move
-						// around mostly randomly.
+						/* BASHERs attack automatically, so we don't need to
+						   call the attackEnemyZero() method */
+						// TODO: Move around purposely and target enemies
 						moveAround();
 						// flyOnBoundary();
 						// mobilize();
@@ -503,10 +498,9 @@ public class RobotPlayer {
 					}
 					break;
 				case DRONE:
-					// TODO: Prevent circling drones from swarming, as they
-					// serve
-					// as crucial lockdown on enemy and often get killed when
-					// attempting to swarm
+					/* TODO: Prevent circling drones from swarming, as they
+					   serve as crucial lockdown on enemy and often get killed
+					   when attempting to swarm */
 					attackEnemyZero();
 					int droneSwarm = rc.readBroadcast(DRONE_SWARM_CHANNEL);
 					if (droneSwarm == GO_TO_LOCATION) {
@@ -517,9 +511,9 @@ public class RobotPlayer {
 						moveTowardDestination(new MapLocation(x, y), true,
 								false);
 					} else {
-						// TODO: Balance attack and defense
-						// Go in for the kill when there are sufficiently many
-						// near the enemy territory
+						/* TODO: Balance attack and defense
+						   Go in for the kill when there are sufficiently many
+						   near the enemy territory */
 						droneCircle(false);
 					}
 					break;
@@ -642,8 +636,9 @@ public class RobotPlayer {
 					break;
 				}
 
-				// Missiles have 500 bytecode limit (the cost of JUST calling
-				// transfer supplies).
+				/* Missiles have 500 bytecode limit (the cost of JUST calling
+				   transfer supplies). */
+				
 				if (type != RobotType.MISSILE) {
 					/*
 					 * If robots go low on supplies, they will become less
