@@ -427,19 +427,19 @@ public class RobotPlayer {
 							 * bounds on the creation of the remaining
 							 * structures:
 							 * 
-							 * 1) P(SUPPLYDEPOT) = 0.15
-							 * --------------------------------------- 2)
-							 * P(BARRACKS) = 0.2
-							 * ---------------------------------------- 3)
-							 * P(HELIPAD) = 0.15
-							 * ---------------------------------------- 4)
-							 * P(AEROSPACELAB) = 0.15
-							 * ---------------------------------------- 5)
-							 * P(HANDWASHSTATION) = 0.05
-							 * ---------------------------------------- 6)
-							 * P(MINERFACTORY) = Non-probabilistic
-							 * ---------------------------------------- 7)
-							 * P(TANKFACTORY) = 0.3
+							 * 1) P(SUPPLYDEPOT) = 0.1
+							 * ------------------------------------------------
+							 * 2) P(BARRACKS) = 0.2
+							 * ------------------------------------------------
+							 * 3) P(HELIPAD) = 0.15
+							 * ------------------------------------------------
+							 * 4) P(AEROSPACELAB) = 0.15
+							 * ------------------------------------------------
+							 * 5) P(HANDWASHSTATION) = 0.05
+							 * ------------------------------------------------
+							 * 6) P(MINERFACTORY) = Non-probabilistic
+							 * ------------------------------------------------
+							 * 7) P(TANKFACTORY) = 0.3
 							 */
 
 							// TODO: cleanup and redefine these probabilities
@@ -1180,7 +1180,8 @@ public class RobotPlayer {
 					roboType.sensorRadiusSquared, Enemy);
 			for (RobotInfo r : enemyRobots) {
 				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
-						&& !(r.type == ourType)) { // Walks into range of same-type enemies
+						&& !(r.type == ourType)) { // Walks into range of
+													// same-type enemies
 					return false;
 				}
 			}
