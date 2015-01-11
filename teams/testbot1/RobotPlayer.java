@@ -948,7 +948,11 @@ public class RobotPlayer {
 
 	private static boolean createUnit(RobotType roboType, boolean build)
 			throws GameActionException {
-		if (rc.isCoreReady() && rc.getTeamOre() >= roboType.oreCost) {
+		if (rc.isCoreReady() && rc.getTeamOre() > roboType.oreCost) {
+			if(roboType == RobotType.MINER){
+				System.out.println("Round " + Clock.getRoundNum() + ": " + rc.getTeamOre());
+			}
+			
 			MapLocation currentLocation = rc.getLocation();
 			Direction testDir = getRandomDirection();
 			boolean goLeft = rand.nextDouble() > 0.5;
@@ -1010,10 +1014,11 @@ public class RobotPlayer {
 	// } else {
 	// testDir = testDir.rotateLeft();
 	// }
-	// }
-	//
+	// }	 
+	//		
 	// return false;
 	// }
+		 
 
 	private static Direction getRandomDirection() {
 		return Direction.values()[(int) rand.nextDouble() * 8];
