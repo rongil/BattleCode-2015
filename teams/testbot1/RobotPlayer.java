@@ -80,36 +80,46 @@ public class RobotPlayer {
 		myHQ = rc.senseHQLocation();
 		enemyHQ = rc.senseEnemyHQLocation();
 
-		// For drones only!
-		if (rc.getType() == RobotType.DRONE) {
-			if(assignment == null){
-				MapLocation[] myTowers = rc.senseTowerLocations();
-				double 
-			}
-			
-			int hqAttackRadiusSquared = RobotType.HQ.attackRadiusSquared;
-			int friendlyMagnitude = (int) (1.1 * Math
-					.sqrt(hqAttackRadiusSquared)); // Floored
-			int enemyMagnitude = (int) Math.sqrt(hqAttackRadiusSquared); // Floored
-			droneShieldLocations = new ArrayList<MapLocation>();
-			droneAttackCircleLocations = new ArrayList<MapLocation>();
-
-			for (Direction dir : directions) {
-				droneShieldLocations.add(myHQ.add(dir, friendlyMagnitude));
-				droneAttackCircleLocations
-						.add(enemyHQ.add(dir, enemyMagnitude));
-			}
-
-		}
-
 		boolean skipFirstRound = true;
 
 		skipFirstRound = initializeAttackPriorityMap();
 
 		rand = new Random(rc.getID());
 		facing = getRandomDirection(); // Randomize starting direction
+		
+		// For drones only!
+		if (rc.getType() == RobotType.DRONE) {
+			if(assignment == null){
+				MapLocation[] myTowers = rc.senseTowerLocations();
+				double targetProb = rand.nextDouble();
+				int AttackRadiusSquared;
+				
+				if(targetProb >= myTowers.length / (myTowers.length + 1)){
+					assignment = myHQ; 
+					AttackRadiusSquared = RobotType.HQ.attackRadiusSquared;
+				}else{
+					int towerIndex = (int) targetProb * (myTowers.length + 1);
+					System.out.println("Assigned Tower " + towerIndex);
+					assignment = myTowers[towerIndex];
+					AttackRadiusSquared = RobotType.TOWER.attackRadiusSquared;
+				}
+				
+				int friendlyMagnitude = (int) (1.1 * Math
+						.sqrt(AttackRadiusSquared)); // Floored
+				int enemyMagnitude = (int) Math.sqrt(AttackRadiusSquared); // Floored
+				droneShieldLocations = new ArrayList<MapLocation>();
+				droneAttackCircleLocations = new ArrayList<MapLocation>();
+
+				for (Direction dir : directions) {
+					droneShieldLocations.add(assignment.add(dir, friendlyMagnitude));
+					droneAttackCircleLocations
+							.add(enemyHQ.add(dir, enemyMagnitude));
+				}
+			}		
+		}
 
 		// Warning: If the run method ends, the robot dies!
+		
 		while (true) {
 			try {
 				// Avoid too much computation if initializing anything.
