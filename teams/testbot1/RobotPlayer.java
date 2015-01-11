@@ -41,6 +41,14 @@ public class RobotPlayer {
 	private static MapLocation assignment = null;
 	private static MapLocation checkpoint = null;
 	private static boolean mobilized = false;
+	private static int xmin, xmax, ymin, ymax;
+	private static int xpos, ypos;
+
+	private static int totalNormal, totalVoid, totalProcessed;
+	private static int towerStrength;
+
+	private static boolean doneAnalyzing = false;
+	private static double normRatio;
 
 	/**************************************************************************
 	 * For drones only!
@@ -79,6 +87,10 @@ public class RobotPlayer {
 		Enemy = Friend.opponent();
 		myHQ = rc.senseHQLocation();
 		enemyHQ = rc.senseEnemyHQLocation();
+
+		getMapDimensions();
+		xpos = xmin;
+		ypos = ymin;
 
 		boolean skipFirstRound = true;
 
@@ -236,6 +248,10 @@ public class RobotPlayer {
 						if (beaverCount == 0 || roundNum >= 300) {
 							spawnUnit(RobotType.BEAVER);
 						}
+					}
+
+					if (!doneAnalyzing) {
+						analyzeMapMobility();
 					}
 				case AEROSPACELAB:
 					spawnUnit(RobotType.LAUNCHER);
@@ -1582,20 +1598,107 @@ public class RobotPlayer {
 
 	// ************************** START OF MAP ANALYSIS ***********************
 	private static void analyzeTowerStrength() throws GameActionException {
-		MapLocation[] enemyTowers = rc.senseEnemyTowerLocations();
+		MapLocation[] myTowers = rc.senseTowerLocations(); /*
+															 * because the board
+															 * is symmetrical,
+															 * we can use our
+															 * own towers for
+															 * analysis, which
+															 * is cheaper
+															 */
 		int towerStrength = 0;
 
 		// One or no towers -> very weak. Keep at 0.
 		// Otherwise measure strength based on closeness.
-		if (enemyTowers.length > 1) {
-			for (int i = 1; i < enemyTowers.length; ++i) {
-				towerStrength = 1;
-				towerStrength *= (int) 100
-						/ (enemyTowers[0].distanceSquaredTo(enemyTowers[i]));
+		for (int i = 0; i < myTowers.length; ++i) {
+			if (myTowers[i].distanceSquaredTo(myHQ) < 48) {
+				towerStrength += 2; /*
+									 * HQ can inflict thrice the damage but has
+									 * double the delay compared to a tower
+									 */
+			}
+			for (int j = i; j < myTowers.length; ++j) {
+				if (myTowers[i].distanceSquaredTo(myTowers[j]) < 48) {
+					towerStrength += 1;
+				}
 			}
 		}
 
 		rc.broadcast(TOWER_STRENGTH_CHANNEL, towerStrength);
+	}
+
+	private static void getMapDimensions() {
+		MapLocation[] myTowers = rc.senseTowerLocations();
+		MapLocation[] enemyTowers = rc.senseEnemyTowerLocations();
+
+		xmin = Integer.MAX_VALUE;
+		xmax = Integer.MIN_VALUE;
+		ymin = Integer.MAX_VALUE;
+		ymax = Integer.MIN_VALUE;
+
+		for (MapLocation loc : myTowers) {
+			xmin = (xmin > loc.x) ? loc.x : xmin;
+			xmax = (xmax > loc.x) ? xmax : loc.x;
+
+			ymin = (ymin > loc.y) ? loc.y : xmin;
+			ymax = (ymax > loc.y) ? xmax : loc.y;
+		}
+
+		for (MapLocation loc : enemyTowers) {
+			xmin = (xmin > loc.x) ? loc.x : xmin;
+			xmax = (xmax > loc.x) ? xmax : loc.x;
+
+			ymin = (ymin > loc.y) ? loc.y : xmin;
+			ymax = (ymax > loc.y) ? xmax : loc.y;
+		}
+
+		xmin = (xmin > myHQ.x) ? myHQ.x : xmin;
+		xmin = (xmin > enemyHQ.x) ? enemyHQ.x : xmin;
+
+		xmax = (xmax > myHQ.x) ? xmax : myHQ.x;
+		xmax = (xmax > enemyHQ.x) ? xmax : enemyHQ.x;
+
+		ymin = (ymin > myHQ.y) ? myHQ.y : ymin;
+		ymin = (ymin > enemyHQ.y) ? enemyHQ.y : ymin;
+
+		ymax = (ymax > myHQ.y) ? ymax : myHQ.y;
+		ymax = (ymax > enemyHQ.y) ? ymax : enemyHQ.y;
+	}
+
+	private static void analyzeMapMobility() throws GameActionException {
+		while (ypos < ymax + 1) {
+			TerrainTile terrain = rc.senseTerrainTile(new MapLocation(xpos,
+					ypos));
+
+			switch (terrain) {
+
+			case NORMAL:
+				totalNormal++;
+				break;
+
+			case VOID:
+				totalVoid++;
+				break;
+
+			default:
+				totalProcessed++;
+			}
+
+			xpos++;
+			totalProcessed++;
+
+			if (xpos >= xmax + 1) {
+				ypos++;
+				xpos = xmin;
+			}
+
+			if (Clock.getBytecodesLeft() < 100) {
+				return;
+			}
+
+			normRatio = (double) totalNormal / totalProcessed;
+			doneAnalyzing = true;
+		}
 	}
 
 	// ^^^^^^^^^^^^^^^^^^^^^^^^^^ END OF MAP ANALYSIS ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1706,6 +1809,10 @@ public class RobotPlayer {
 	// Map Analysis
 	private static final int TOWER_STRENGTH_CHANNEL = 2000;
 	private static final int MAP_MOBILITY_CHANNEL = 2001;
+
+	public static void main(String[] args) {
+		totalProcessed++;
+	}
 
 	// ------------------------------------------------------------------------
 	// Action Constants
