@@ -1498,7 +1498,6 @@ public class RobotPlayer {
 		}
 
 		rc.broadcast(TOWER_STRENGTH_CHANNEL, towerStrength);
-		System.out.println(towerStrength);
 	}
 
 	// ^^^^^^^^^^^^^^^^^^^^^^^^^^ END OF MAP ANALYSIS ^^^^^^^^^^^^^^^^^^^^^^^^^
