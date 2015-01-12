@@ -58,6 +58,7 @@ public class RobotPlayer {
 	private static int currentDroneDirectionIndex = 0;
 	private static int droneCircleRound = 0;
 	private static boolean droneDefender;
+	private static int halfwayDistance;
 
 	// ************************************************************************
 
@@ -102,32 +103,33 @@ public class RobotPlayer {
 
 		// For drones only!
 		if (rc.getType() == RobotType.DRONE) {
+			halfwayDistance = myHQ.distanceSquaredTo(enemyHQ) / 2;
 			if (Clock.getRoundNum() < 400) {
 				droneDefender = true;
 			} else {
-				droneDefender = rand.nextDouble() < .8 ? true : false;
+				// Can be adjusted if we wanted attacking drones.
+				droneDefender = rand.nextDouble() < 1 ? true : false;
 			}
 
 			if (assignment == null) {
 				// TODO: balance out the attack and defense with probabilities
 				MapLocation[] myTowers = rc.senseTowerLocations();
 				double targetProb = rand.nextDouble();
-				int AttackRadiusSquared;
+				int SensorRadiusSquared;
 
 				double towerLength = (double) myTowers.length;
 
 				if (targetProb >= 0) {// towerLength / (towerLength + 1.0)) {
 					assignment = myHQ;
-					AttackRadiusSquared = RobotType.HQ.attackRadiusSquared;
+					SensorRadiusSquared = RobotType.HQ.sensorRadiusSquared;
 				} else {
 					int towerIndex = (int) targetProb * (myTowers.length + 1);
 					assignment = myTowers[towerIndex];
-					AttackRadiusSquared = RobotType.TOWER.attackRadiusSquared;
+					SensorRadiusSquared = RobotType.TOWER.sensorRadiusSquared;
 				}
 
-				int friendlyMagnitude = (int) (1.2 * Math
-						.sqrt(AttackRadiusSquared)); // Floored
-				int enemyMagnitude = (int) Math.sqrt(AttackRadiusSquared); // Floored
+				int friendlyMagnitude = (int) (Math.sqrt(SensorRadiusSquared)); // Floored
+				int enemyMagnitude = (int) Math.sqrt(SensorRadiusSquared); // Floored
 				droneShieldLocations = new ArrayList<MapLocation>();
 				droneAttackCircleLocations = new ArrayList<MapLocation>();
 
@@ -153,19 +155,6 @@ public class RobotPlayer {
 					}
 				}
 			}
-
-			int droneIndex = rc.readBroadcast(60000);
-			int firstBroadcast = rc.readBroadcast(60001);
-			if (firstBroadcast == 0 && droneIndex == 0) {
-				currentDroneDirectionIndex = (droneShieldLocations.indexOf(myHQ
-						.directionTo(enemyHQ)) + 7) % 8;
-				droneIndex = currentDroneDirectionIndex;
-                rc.broadcast(60001, 1);
-			} else {
-				currentDroneDirectionIndex = droneIndex;
-			}
-
-			rc.broadcast(60000, (droneIndex + 1) % 8);
 
 		}
 
@@ -448,7 +437,7 @@ public class RobotPlayer {
 							 * bounds on the creation of the remaining
 							 * structures:
 							 * 
-							 * 1) P(SUPPLYDEPOT) = 0.1
+							 * 1) P(SUPPLYDEPOT) = 0.14
 							 * ------------------------------------------------
 							 * 2) P(BARRACKS) = 0.2
 							 * ------------------------------------------------
@@ -467,7 +456,7 @@ public class RobotPlayer {
 
 						} else if (0.05 <= fate && fate < 0.06) {
 							createUnit(RobotType.HANDWASHSTATION, true);
-						} else if (0.1 <= fate && fate < 0.2) {
+						} else if (0.06 <= fate && fate < 0.2) {
 							if (rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
 								createUnit(RobotType.SUPPLYDEPOT, true);
 							}
@@ -929,12 +918,25 @@ public class RobotPlayer {
 		// of drones for defensive purposes
 
 		if (shielding) {
-			if (rc.getLocation().distanceSquaredTo(
-					droneShieldLocations.get(currentDroneDirectionIndex)) > 2) {
+			boolean clear = true;
+			if (rc.getSupplyLevel() > 50) {
+				RobotInfo[] incomingEnemies = rc.senseNearbyRobots(myHQ,
+						halfwayDistance, Enemy);
+				for (RobotInfo robot : incomingEnemies) {
+					if (robot.type == RobotType.DRONE) {
+						moveTowardDestination(robot.location, false, true);
+						clear = false;
+						break;
+					}
+				}
+			}
+
+			if (clear) {
 				moveTowardDestination(
 						droneShieldLocations.get(currentDroneDirectionIndex),
 						true, false);
 			}
+
 		} else {
 			moveTowardDestination(
 					droneAttackCircleLocations.get(currentDroneDirectionIndex),
@@ -942,8 +944,8 @@ public class RobotPlayer {
 		}
 		droneCircleRound = (droneCircleRound + 1) % 4;
 		if (droneCircleRound == 0) {
-			// currentDroneDirectionIndex = (currentDroneDirectionIndex + 1)
-			// % droneShieldLocations.size();
+			currentDroneDirectionIndex = (currentDroneDirectionIndex + 1)
+					% droneShieldLocations.size();
 		}
 
 	}
@@ -1201,16 +1203,10 @@ public class RobotPlayer {
 
 		// Check if any enemies are in range
 		if (!onlyHQAndTowers) {
-			RobotType ourType = rc.getType();
 			RobotInfo[] enemyRobots = rc.senseNearbyRobots(
 					roboType.sensorRadiusSquared, Enemy);
 			for (RobotInfo r : enemyRobots) {
-				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared) { // Walks
-																						// into
-																						// range
-																						// of
-																						// same-type
-																						// enemies
+				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared) {
 					return false;
 				}
 			}
