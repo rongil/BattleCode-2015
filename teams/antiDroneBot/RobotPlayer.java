@@ -294,7 +294,7 @@ public class RobotPlayer {
 					createUnit(RobotType.LAUNCHER, false);
 					break;
 				case BARRACKS:
-					if (roundNum >= 600) {
+					if (roundNum >= 3000) {
 						if (fate < .95) {
 							createUnit(RobotType.SOLDIER, false);
 						} else {
@@ -340,7 +340,7 @@ public class RobotPlayer {
 					 * tie-breaks
 					 */
 
-					if (roundNum < 300) {
+					if (roundNum < 400) {
 						if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 							createUnit(RobotType.MINERFACTORY, true);
 						} else if (rc
@@ -368,8 +368,8 @@ public class RobotPlayer {
 							 * amass a sufficient number for later in the game
 							 */
 
-						} else if (roundNum < 600) {
-							if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 2) {
+						} else if (roundNum < 1000) {
+							if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
 								createUnit(RobotType.BARRACKS, true);
 							} else {
 								createUnit(RobotType.TANKFACTORY, true);
@@ -383,19 +383,9 @@ public class RobotPlayer {
 							 * invested into their development
 							 */
 
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
-							if (createUnit(RobotType.TECHNOLOGYINSTITUTE, true)) {
-								rc.broadcast(
-										NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
-							}
-
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
-							if (createUnit(RobotType.TRAININGFIELD, true)) {
-								rc.broadcast(
-										NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
-							}
+							// Insert commander spawning here...
+							// Currently being ignored due to overhead of Tech
+							// Institute and not enough return.
 
 							/*
 							 * At this later point in the game, we will have
@@ -473,8 +463,8 @@ public class RobotPlayer {
 							createUnit(RobotType.HELIPAD, true);
 						} else if (0.65 <= fate && fate < 0.8) {
 							createUnit(RobotType.AEROSPACELAB, true);
-						} else if (0.8 <= fate
-								|| rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 5) {
+						} else if (1.8 <= fate
+								&& rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 5) {
 							createUnit(RobotType.BARRACKS, true);
 						}
 					}
@@ -541,7 +531,10 @@ public class RobotPlayer {
 					// Wash hands.
 					break;
 				case HELIPAD:
-					createUnit(RobotType.DRONE, false);
+					if (rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL)
+							- rc.readBroadcast(NUM_ENEMY_DRONES_CHANNEL) < 25) {
+						createUnit(RobotType.DRONE, false);
+					}
 					break;
 				case LAUNCHER:
 					// TODO: Fix missile launching and movement
@@ -621,7 +614,8 @@ public class RobotPlayer {
 						moveTowardDestination(new MapLocation(x, y), true,
 								false, false);
 					} else {
-						moveAround();
+						droneCircle(true);
+						// moveAround();
 						// flyOnBoundary();
 						// mobilize();
 					}
@@ -952,7 +946,8 @@ public class RobotPlayer {
 						halfwayDistance, Enemy);
 
 				for (RobotInfo robot : incomingEnemies) {
-					if (robot.type == RobotType.DRONE) {
+					if (robot.type == RobotType.DRONE
+							|| robot.type == RobotType.LAUNCHER) {
 						moveTowardDestination(robot.location, false, true, true);
 						clear = false;
 						break;
@@ -1040,11 +1035,7 @@ public class RobotPlayer {
 					}
 				}
 
-				if (goLeft) {
-					testDir = testDir.rotateLeft();
-				} else {
-					testDir = testDir.rotateRight();
-				}
+				testDir = goLeft ? testDir.rotateLeft() : testDir.rotateRight();
 			}
 		}
 
