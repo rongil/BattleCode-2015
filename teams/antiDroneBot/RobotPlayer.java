@@ -922,6 +922,7 @@ public class RobotPlayer {
 			if (rc.getSupplyLevel() > 50) {
 				RobotInfo[] incomingEnemies = rc.senseNearbyRobots(myHQ,
 						halfwayDistance, Enemy);
+				
 				for (RobotInfo robot : incomingEnemies) {
 					if (robot.type == RobotType.DRONE) {
 						moveTowardDestination(robot.location, false, true);

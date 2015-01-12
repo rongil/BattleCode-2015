@@ -142,6 +142,26 @@ public class RobotPlayer {
 			}
 		}
 
+		if (rc.getType() == RobotType.SOLDIER || rc.getType() == RobotType.BASHER){
+			assignment = myHQ;
+			
+			int friendlyMagnitude = (int) (1.5 * Math.sqrt(RobotType.HQ.attackRadiusSquared));
+			droneShieldLocations = new ArrayList<MapLocation>();
+			
+			Direction dir = directions[rand.nextInt(8)];
+			boolean goLeft = rand.nextDouble() > 0.5;
+
+			for (int index = 0; index < 8; index++) {
+				droneShieldLocations.add(assignment.add(dir, friendlyMagnitude));
+			}
+			
+			if (goLeft) {
+				dir = dir.rotateLeft();
+			} else {
+				dir = dir.rotateRight();
+			}
+		}
+		
 		// Warning: If the run method ends, the robot dies!
 
 		while (true) {
@@ -276,13 +296,23 @@ public class RobotPlayer {
 					createUnit(RobotType.LAUNCHER, false);
 					break;
 				case BARRACKS:
-					if (roundNum >= 600) {
-						if (fate < .9) {
+//					if (roundNum >= 600) {
+//						if (fate < .9) {
+//							createUnit(RobotType.SOLDIER, false);
+//						} else {
+//							createUnit(RobotType.BASHER, false);
+//						}
+//					}
+					if(rc.readBroadcast(NUM_FRIENDLY_BASHERS_CHANNEL) +
+							rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) < 35
+							|| rand.nextDouble() < 0.05){
+						if(rand.nextDouble() < 0.9){
 							createUnit(RobotType.SOLDIER, false);
-						} else {
+						}else{
 							createUnit(RobotType.BASHER, false);
 						}
 					}
+					
 					break;
 				case BASHER:
 					attackEnemyZero();
@@ -298,9 +328,10 @@ public class RobotPlayer {
 						/* BASHERs attack automatically, so we don't need to
 						   call the attackEnemyZero() method */
 						// TODO: Move around purposely and target enemies
-						moveAround();
+						// moveAround();
 						// flyOnBoundary();
 						// mobilize();
+						droneCircle(true);
 					}
 					break;
 				case BEAVER:
@@ -422,43 +453,55 @@ public class RobotPlayer {
 							 * bounds on the creation of the remaining
 							 * structures:
 							 * 
-							 * 1) P(SUPPLYDEPOT) = 0.1
-							 * ------------------------------------------------
-							 * 2) P(BARRACKS) = 0.2
-							 * ------------------------------------------------
-							 * 3) P(HELIPAD) = 0.15
-							 * ------------------------------------------------
-							 * 4) P(AEROSPACELAB) = 0.15
-							 * ------------------------------------------------
+							 * 1) P(SUPPLYDEPOT) = 0.1, Max(SUPPLYDEPOT) = 10
+							 * --------------------------------------------------
+							 * 2) P(BARRACKS) = 0.1, Max(BARRACKS) = 5
+							 * --------------------------------------------------
+							 * 3) P(HELIPAD) = 0.15, Max(HELIPAD) = 3
+							 * --------------------------------------------------
+							 * 4) P(AEROSPACELAB) = 0.15, Max(AEROSPACELAB) = 1
+							 * --------------------------------------------------
 							 * 5) P(HANDWASHSTATION) = 0.05
-							 * ------------------------------------------------
-							 * 6) P(MINERFACTORY) = Non-probabilistic
-							 * ------------------------------------------------
-							 * 7) P(TANKFACTORY) = 0.3
+							 * --------------------------------------------------
+							 * 6) P(MINERFACTORY) = 0.1, Max(MINERFACTORY) = 3
+							 * --------------------------------------------------
+							 * 7) P(TANKFACTORY) = 0.15, Max(TANKFACTORY) = 3
 							 */
 
 							// TODO: cleanup and redefine these probabilities
 
-						} else if (0.05 <= fate && fate < 0.06) {
+						} else if (fate <= 0.05) {
 							createUnit(RobotType.HANDWASHSTATION, true);
-						} else if (0.1 <= fate && fate < 0.2) {
+						
+						} else if (0.05 <= fate && fate < 0.15) {
 							if (rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
 								createUnit(RobotType.SUPPLYDEPOT, true);
 							}
-						} else if (roundNum < 1500
-								&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
-							createUnit(RobotType.MINERFACTORY, true);
-						} else if (0.2 <= fate && fate < 0.45) {
+							
+						} else if (0.15 <= fate && fate < 0.25) {
+							if(rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 5) {
+								createUnit(RobotType.BARRACKS, true);
+							}
+						
+						} else if (0.25 <= fate && fate < 0.35) {
+							if(rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 3) {
+								createUnit(RobotType.MINERFACTORY, true);
+							}
+							
+						} else if (0.35 <= fate && fate < 0.5) {
 							if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 3) {
 								createUnit(RobotType.TANKFACTORY, true);
 							}
-						} else if (0.45 <= fate && fate < 0.55) {
-							createUnit(RobotType.HELIPAD, true);
+							
+						} else if (0.5 <= fate && fate < 0.65) {
+							if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 3) {
+								createUnit(RobotType.HELIPAD, true);
+							}
+							
 						} else if (0.65 <= fate && fate < 0.8) {
-							createUnit(RobotType.AEROSPACELAB, true);
-						} else if (0.8 <= fate
-								|| rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 5) {
-							createUnit(RobotType.BARRACKS, true);
+							if (rc.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 1){
+								createUnit(RobotType.AEROSPACELAB, true);
+							}
 						}
 					}
 
@@ -517,17 +560,21 @@ public class RobotPlayer {
 						droneCircle(false);
 					}
 					break;
+					
 				case HANDWASHSTATION:
 					// Wash hands.
 					break;
+					
 				case HELIPAD:
 					createUnit(RobotType.DRONE, false);
 					break;
+					
 				case LAUNCHER:
 					// TODO: Fix missile launching and movement
 					moveAround();
 					rc.launchMissile(getRandomDirection());
 					break;
+					
 				case MINER:
 					attackEnemyZero();
 					int minerSwarm = rc.readBroadcast(MINER_SWARM_CHANNEL);
@@ -542,16 +589,13 @@ public class RobotPlayer {
 						mineAndMove();
 					}
 					break;
+					
 				case MINERFACTORY:
-					int minerCount = rc
-							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
-					double miningFate = rand.nextDouble();
-					if (minerCount < 10
-							|| (roundNum < 1500 && miningFate <= Math.pow(
-									Math.E, -minerCount * 0.07))) {
+					if (rc.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL) < 20) {
 						createUnit(RobotType.MINER, false);
 					}
 					break;
+					
 				case MISSILE:
 					int missileSwarm = rc.readBroadcast(MISSILE_SWARM_CHANNEL);
 					if (missileSwarm == GO_TO_LOCATION) {
@@ -585,10 +629,13 @@ public class RobotPlayer {
 						 * so they will have to move within attacking range of
 						 * the towers, which is not possible under moveAround()
 						 */
-						moveAround();
+						// moveAround();
 						// flyOnBoundary();
 						// mobilize();
+						droneCircle(true);
+						//locateBestOre();
 					}
+					
 					break;
 				case SUPPLYDEPOT:
 					break;
@@ -1081,7 +1128,8 @@ public class RobotPlayer {
 			if (bestDestination != null) {
 				moveTowardDestination(bestDestination, false, false);
 			} else {
-				moveAround();
+				//moveAround();
+				defendHQ();
 			}
 		}
 	}
