@@ -975,41 +975,7 @@ public class RobotPlayer {
 
 		return false;
 	}
-
-	// private static boolean buildUnit(RobotType roboType)
-	// throws GameActionException {
-	// if (rc.getTeamOre() > roboType.oreCost) {
-	// Direction buildDir = getRandomDirection();
-	//
-	// if (rc.isCoreReady() && rc.canBuild(buildDir, roboType)) {
-	// rc.build(buildDir, roboType);
-	// return true;
-	// }
-	// }
-	//
-	// return false;
-	// }
-	//
-	// private static boolean spawnUnit(RobotType roboType)
-	// throws GameActionException {
-	// Direction testDir = getRandomDirection();
-	//
-	// for (int turnCount = 0; turnCount < 8; turnCount++) {
-	// if (rc.isCoreReady() && rc.canSpawn(testDir, roboType)) {
-	// MapLocation spawnLoc = rc.getLocation().add(testDir);
-	//
-	// if (isSafe(spawnLoc, false)) {
-	// rc.spawn(testDir, roboType);
-	// return true;
-	// }
-	// } else {
-	// testDir = testDir.rotateLeft();
-	// }
-	// }
-	//
-	// return false;
-	// }
-
+	
 	private static Direction getRandomDirection() {
 		return Direction.values()[(int) rand.nextDouble() * 8];
 	}
