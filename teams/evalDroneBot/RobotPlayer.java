@@ -111,14 +111,19 @@ public class RobotPlayer {
 		facing = getRandomDirection(); // Randomize starting direction
 
 		// For drones only!
-		if (rc.getType() == RobotType.DRONE) {
+		if (rc.getType() == RobotType.DRONE || rc.getType() == RobotType.TANK) {
 			// Slightly less to avoid tower issues
 			halfwayDistance = (int) (0.9 * myHQ.distanceSquaredTo(enemyHQ) / 2);
 			
-			int friendDroneCount = rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
-			int enemyDroneCount = rc.readBroadcast(NUM_ENEMY_DRONES_CHANNEL);
+			if(rc.getType() == RobotType.DRONE){
+				int friendDroneCount = rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
+				int enemyDroneCount = rc.readBroadcast(NUM_ENEMY_DRONES_CHANNEL);
+				
+				droneDefender = (enemyDroneCount >= friendDroneCount);
+			}else{
+				droneDefender = true;
+			}
 			
-			droneDefender = (enemyDroneCount >= friendDroneCount);
 
 			if (assignment == null) {
 				// TODO: balance out the attack and defense with probabilities
