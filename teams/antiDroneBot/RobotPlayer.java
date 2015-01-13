@@ -534,7 +534,8 @@ public class RobotPlayer {
 					break;
 				case HELIPAD:
 					if (rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL)
-							- rc.readBroadcast(NUM_ENEMY_DRONES_CHANNEL) < 25) {
+							- rc.readBroadcast(NUM_ENEMY_DRONES_CHANNEL) - 3
+							* rc.readBroadcast(NUM_ENEMY_LAUNCHERS_CHANNEL) < 25) {
 						createUnit(RobotType.DRONE, false);
 					}
 					break;
