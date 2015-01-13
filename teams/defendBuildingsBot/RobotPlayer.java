@@ -792,7 +792,7 @@ public class RobotPlayer {
 	private static void updateUnitCounts() throws GameActionException {
 
 		// Run part of the work on each round
-		int roundNumMod = roundNum % 20;
+		int roundNumMod = roundNum % 5;
 		if (roundNumMod == 0) {
 			// Collect all robots into separate RobotInfo arrays.
 			friendlyRobots = rc.senseNearbyRobots(999999, rc.getTeam());
