@@ -111,7 +111,7 @@ public class RobotPlayer {
 		facing = getRandomDirection(); // Randomize starting direction
 
 		// For drones only!
-		if (rc.getType() == RobotType.DRONE) {
+		if (rc.getType() == RobotType.DRONE || rc.getType() == RobotType.TANK) {
 			// Slightly less to avoid tower issues
 			halfwayDistance = (int) (0.9 * myHQ.distanceSquaredTo(enemyHQ) / 2);
 			if (Clock.getRoundNum() < 400) {
@@ -257,9 +257,11 @@ public class RobotPlayer {
 						// ___AND Number of Friendly Miners ---------------> 15
 						// ___AND Number of Friendly Tanks Remaining ------> 1
 						//
-					} else if (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) < 5
+					} else if (roundNum < 1800
+							&& rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) < 5
 							&& rc.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL) < 15
-							&& rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL) < 1) {
+							&& rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL) < 1
+							&& rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) < 5) {
 						RobotType[] types = { RobotType.BASHER,
 								RobotType.COMMANDER, RobotType.DRONE,
 								RobotType.MINER, RobotType.MISSILE,
@@ -941,7 +943,7 @@ public class RobotPlayer {
 
 		if (shielding) {
 			boolean clear = true;
-			if (rc.getSupplyLevel() > 50) {
+			if (rc.getSupplyLevel() > 50 && rc.getType() == RobotType.DRONE) {
 				RobotInfo[] incomingEnemies = rc.senseNearbyRobots(myHQ,
 						halfwayDistance, Enemy);
 
