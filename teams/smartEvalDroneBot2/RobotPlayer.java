@@ -1613,7 +1613,6 @@ public class RobotPlayer {
 	private static int unitCountNumEnemyBashers;
 	private static int unitCountNumEnemyDrones;
 	private static int unitCountNumEnemyTanks;
-	private static int unitCountNumEnemyCommanders;
 	private static int unitCountNumEnemyLaunchers;
 	private static int unitCountNumEnemyMissiles;
 
@@ -1628,8 +1627,8 @@ public class RobotPlayer {
 		int roundNumMod = roundNum % 5;
 		if (roundNumMod == 0 || friendlyRobots == null || enemyRobots == null) {
 			// Collect all robots into separate RobotInfo arrays.
-			friendlyRobots = rc.senseNearbyRobots(999999, Friend);
-			enemyRobots = rc.senseNearbyRobots(999999, Enemy);
+			friendlyRobots = rc.senseNearbyRobots(Integer.MAX_VALUE, Friend);
+			enemyRobots = rc.senseNearbyRobots(Integer.MAX_VALUE, Enemy);
 		}
 		int friendlyChunkSize = (int) Math.floor(friendlyRobots.length / 4);
 		int enemyChunkSize = (int) Math.floor(enemyRobots.length / 4);
