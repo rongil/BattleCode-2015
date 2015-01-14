@@ -36,10 +36,10 @@ public class RobotPlayer {
 	private static RobotInfo[] enemyRobots;
 
 	private static MapLocation myHQ;
-	private static int myHQAttackRadius;
+	private static int myHQAttackRadiusSquared;
 	private static MapLocation[] myTowers;
 	private static MapLocation enemyHQ;
-	private static int enemyHQAttackRadius;
+	private static int enemyHQAttackRadiusSquared;
 	private static MapLocation[] enemyTowers;
 
 	private static MapLocation assignment = null;
@@ -143,7 +143,7 @@ public class RobotPlayer {
 				int friendlyMagnitude = (int) (Math
 						.sqrt(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED)); // Floored
 				int enemyMagnitude = (int) (Math.ceil(Math
-						.sqrt(enemyHQAttackRadius))); // Ceiled
+						.sqrt(enemyHQAttackRadiusSquared))); // Ceiled
 				droneShieldLocations = new ArrayList<MapLocation>();
 				droneAttackCircleLocations = new ArrayList<MapLocation>();
 
@@ -185,9 +185,9 @@ public class RobotPlayer {
 				// Get current towers and HQ range
 				myTowers = rc.senseTowerLocations();
 				enemyTowers = rc.senseEnemyTowerLocations();
-				myHQAttackRadius = myTowers.length >= 5 ? GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
+				myHQAttackRadiusSquared = myTowers.length >= 5 ? GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
 						: RobotType.HQ.attackRadiusSquared;
-				enemyHQAttackRadius = enemyTowers.length >= 5 ? GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
+				enemyHQAttackRadiusSquared = enemyTowers.length >= 5 ? GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
 						: RobotType.HQ.attackRadiusSquared;
 
 				switch (type) {
@@ -1300,8 +1300,7 @@ public class RobotPlayer {
 		}
 
 		// Check if HQ is in range
-
-		if (Math.sqrt(enemyHQ.distanceSquaredTo(loc)) <= enemyHQAttackRadius) {
+		if (enemyHQ.distanceSquaredTo(loc) <= enemyHQAttackRadiusSquared) {
 			return false;
 		}
 
@@ -1359,7 +1358,7 @@ public class RobotPlayer {
 			int attackRadiusSquared;
 			RobotType roboType = rc.getType();
 
-			attackRadiusSquared = (roboType == RobotType.HQ) ? myHQAttackRadius
+			attackRadiusSquared = (roboType == RobotType.HQ) ? myHQAttackRadiusSquared
 					: roboType.attackRadiusSquared;
 
 			RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getLocation(),
