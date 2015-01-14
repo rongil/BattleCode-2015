@@ -102,6 +102,8 @@ public class RobotPlayer {
 		Enemy = Friend.opponent();
 		myHQ = rc.senseHQLocation();
 		enemyHQ = rc.senseEnemyHQLocation();
+		myTowers = rc.senseTowerLocations();
+		enemyTowers = rc.senseEnemyTowerLocations();
 
 		getMapDimensions();
 		xpos = xmin;

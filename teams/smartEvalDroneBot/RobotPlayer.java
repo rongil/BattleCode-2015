@@ -103,6 +103,8 @@ public class RobotPlayer {
 		Enemy = Friend.opponent();
 		myHQ = rc.senseHQLocation();
 		enemyHQ = rc.senseEnemyHQLocation();
+		myTowers = rc.senseTowerLocations();
+		enemyTowers = rc.senseEnemyTowerLocations();
 
 		getMapDimensions();
 		xpos = xmin;
@@ -1153,7 +1155,7 @@ public class RobotPlayer {
 						if (lastLocation != null) {
 							if (possSquare.x == lastLocation.x
 									&& possSquare.y == lastLocation.y) {
-								System.out.println("Called!");
+								//System.out.println("Called!");
 								backupDir = possDirection;
 								backup = true;
 								continue;
