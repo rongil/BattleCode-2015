@@ -1341,29 +1341,30 @@ public class RobotPlayer {
 	 */
 	private static void attackEnemyZero() throws GameActionException {
 		if(rc.isWeaponReady()){
-			RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getLocation(),
-					rc.getType().attackRadiusSquared, rc.getTeam().opponent());
+			int attackRadiusSquared;
+			RobotType roboType = rc.getType();
 			
-			if(nearbyEnemies.length > 0 && rc.canAttackLocation(nearbyEnemies[0].location)) {
-				rc.attackLocation(nearbyEnemies[0].location);
-			}else if(rc.getType() == RobotType.HQ && rc.senseTowerLocations().length >= 5){
-				int splashRadius = 2;
-				int HQradius = RobotType.HQ.attackRadiusSquared;
-				int attackRadius = (int) Math.pow(Math.sqrt(HQradius) + Math.sqrt(splashRadius)
-						, 2) + 1;
+			if(roboType == RobotType.HQ && rc.senseTowerLocations().length >= 5){
+				attackRadiusSquared = (int) Math.pow(Math.sqrt(RobotType.HQ.attackRadiusSquared) + 
+						Math.sqrt(GameConstants.HQ_BUFFED_SPLASH_RATE), 2) + 1;
+			
+			}else{
+				attackRadiusSquared = rc.getType().attackRadiusSquared;
+			}
+			
+			RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(rc.getLocation(),
+					attackRadiusSquared, Enemy);
+			
+			if(nearbyEnemies.length > 0){
+				MapLocation enemyZeroLocation = nearbyEnemies[0].location;
 				
-				nearbyEnemies = rc.senseNearbyRobots(rc.getLocation(), attackRadius,
-						rc.getTeam().opponent());
+				if(roboType == RobotType.HQ && myHQ.distanceSquaredTo(enemyZeroLocation) > RobotType.HQ.attackRadiusSquared){
+					Direction towardsHQ = enemyZeroLocation.directionTo(myHQ);
+					enemyZeroLocation = enemyZeroLocation.add(towardsHQ);
+				}
 				
-				if(nearbyEnemies.length > 0){
-					if(myHQ.distanceSquaredTo(nearbyEnemies[0].location) > HQradius){
-						Direction toHQ = nearbyEnemies[0].location.directionTo(myHQ);
-						MapLocation targetLoc = nearbyEnemies[0].location.add(toHQ);
-						
-						if(rc.canAttackLocation(targetLoc)){
-							rc.attackLocation(targetLoc);
-						}
-					}
+				if(rc.canAttackLocation(enemyZeroLocation)){
+					rc.attackLocation(enemyZeroLocation);
 				}
 			}
 		}
