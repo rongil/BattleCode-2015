@@ -633,9 +633,9 @@ public class RobotPlayer {
 						moveTowardDestination(new MapLocation(x, y), true,
 								false, false);
 					} else {
-						droneCircle(true);
+						// droneCircle(true);
 						// moveAround();
-						// flyOnBoundary();
+						flyOnBoundary();
 						// mobilize();
 					}
 					break;
@@ -1574,46 +1574,46 @@ public class RobotPlayer {
 	 * since they are used across multiple rounds.
 	 *************************************************************************/
 	// Friendly Buildings
-	private static int numFriendlySupplyDepot;
-	private static int numFriendlyMinerFactory;
-	private static int numFriendlyTechInstitute;
-	private static int numFriendlyBarracks;
-	private static int numFriendlyHelipad;
-	private static int numFriendlyTrainingField;
-	private static int numFriendlyTankFactory;
-	private static int numFriendlyAerospaceLab;
-	private static int numFriendlyHandwashStation;
+	private static int unitCountNumFriendlySupplyDepot;
+	private static int unitCountNumFriendlyMinerFactory;
+	private static int unitCountNumFriendlyTechInstitute;
+	private static int unitCountNumFriendlyBarracks;
+	private static int unitCountNumFriendlyHelipad;
+	private static int unitCountNumFriendlyTrainingField;
+	private static int unitCountNumFriendlyTankFactory;
+	private static int unitCountNumFriendlyAerospaceLab;
+	private static int unitCountNumFriendlyHandwashStation;
 	// Friendly other units
-	private static int numFriendlyBeavers;
-	private static int numFriendlyMiners;
-	private static int numFriendlyComputers;
-	private static int numFriendlySoldiers;
-	private static int numFriendlyBashers;
-	private static int numFriendlyDrones;
-	private static int numFriendlyTanks;
-	private static int numFriendlyLaunchers;
-	private static int numFriendlyMissiles;
+	private static int unitCountNumFriendlyBeavers;
+	private static int unitCountNumFriendlyMiners;
+	private static int unitCountNumFriendlyComputers;
+	private static int unitCountNumFriendlySoldiers;
+	private static int unitCountNumFriendlyBashers;
+	private static int unitCountNumFriendlyDrones;
+	private static int unitCountNumFriendlyTanks;
+	private static int unitCountNumFriendlyLaunchers;
+	private static int unitCountNumFriendlyMissiles;
 	// Enemy Buildings
-	private static int numEnemySupplyDepot;
-	private static int numEnemyMinerFactory;
-	private static int numEnemyTechInstitute;
-	private static int numEnemyBarracks;
-	private static int numEnemyHelipad;
-	private static int numEnemyTrainingField;
-	private static int numEnemyTankFactory;
-	private static int numEnemyAerospaceLab;
-	private static int numEnemyHandwashStation;
+	private static int unitCountNumEnemySupplyDepot;
+	private static int unitCountNumEnemyMinerFactory;
+	private static int unitCountNumEnemyTechInstitute;
+	private static int unitCountNumEnemyBarracks;
+	private static int unitCountNumEnemyHelipad;
+	private static int unitCountNumEnemyTrainingField;
+	private static int unitCountNumEnemyTankFactory;
+	private static int unitCountNumEnemyAerospaceLab;
+	private static int unitCountNumEnemyHandwashStation;
 	// Enemy other units
-	private static int numEnemyBeavers;
-	private static int numEnemyMiners;
-	private static int numEnemyComputers;
-	private static int numEnemySoldiers;
-	private static int numEnemyBashers;
-	private static int numEnemyDrones;
-	private static int numEnemyTanks;
-	private static int numEnemyCommanders;
-	private static int numEnemyLaunchers;
-	private static int numEnemyMissiles;
+	private static int unitCountNumEnemyBeavers;
+	private static int unitCountNumEnemyMiners;
+	private static int unitCountNumEnemyComputers;
+	private static int unitCountNumEnemySoldiers;
+	private static int unitCountNumEnemyBashers;
+	private static int unitCountNumEnemyDrones;
+	private static int unitCountNumEnemyTanks;
+	private static int unitCountNumEnemyCommanders;
+	private static int unitCountNumEnemyLaunchers;
+	private static int unitCountNumEnemyMissiles;
 
 	/**
 	 * 
@@ -1652,46 +1652,45 @@ public class RobotPlayer {
 		case 0:
 			// Set quantity variables to 0
 			// Friendly Buildings
-			numFriendlySupplyDepot = 0;
-			numFriendlyMinerFactory = 0;
-			numFriendlyTechInstitute = 0;
-			numFriendlyBarracks = 0;
-			numFriendlyHelipad = 0;
-			numFriendlyTrainingField = 0;
-			numFriendlyTankFactory = 0;
-			numFriendlyAerospaceLab = 0;
-			numFriendlyHandwashStation = 0;
+			unitCountNumFriendlySupplyDepot = 0;
+			unitCountNumFriendlyMinerFactory = 0;
+			unitCountNumFriendlyTechInstitute = 0;
+			unitCountNumFriendlyBarracks = 0;
+			unitCountNumFriendlyHelipad = 0;
+			unitCountNumFriendlyTrainingField = 0;
+			unitCountNumFriendlyTankFactory = 0;
+			unitCountNumFriendlyAerospaceLab = 0;
+			unitCountNumFriendlyHandwashStation = 0;
 			// Friendly other units
-			numFriendlyBeavers = 0;
-			numFriendlyMiners = 0;
-			numFriendlyComputers = 0;
-			numFriendlySoldiers = 0;
-			numFriendlyBashers = 0;
-			numFriendlyDrones = 0;
-			numFriendlyTanks = 0;
-			numFriendlyLaunchers = 0;
-			numFriendlyMissiles = 0;
+			unitCountNumFriendlyBeavers = 0;
+			unitCountNumFriendlyMiners = 0;
+			unitCountNumFriendlyComputers = 0;
+			unitCountNumFriendlySoldiers = 0;
+			unitCountNumFriendlyBashers = 0;
+			unitCountNumFriendlyDrones = 0;
+			unitCountNumFriendlyTanks = 0;
+			unitCountNumFriendlyLaunchers = 0;
+			unitCountNumFriendlyMissiles = 0;
 			// Enemy Buildings
-			numEnemySupplyDepot = 0;
-			numEnemyMinerFactory = 0;
-			numEnemyTechInstitute = 0;
-			numEnemyBarracks = 0;
-			numEnemyHelipad = 0;
-			numEnemyTrainingField = 0;
-			numEnemyTankFactory = 0;
-			numEnemyAerospaceLab = 0;
-			numEnemyHandwashStation = 0;
+			unitCountNumEnemySupplyDepot = 0;
+			unitCountNumEnemyMinerFactory = 0;
+			unitCountNumEnemyTechInstitute = 0;
+			unitCountNumEnemyBarracks = 0;
+			unitCountNumEnemyHelipad = 0;
+			unitCountNumEnemyTrainingField = 0;
+			unitCountNumEnemyTankFactory = 0;
+			unitCountNumEnemyAerospaceLab = 0;
+			unitCountNumEnemyHandwashStation = 0;
 			// Enemy other units
-			numEnemyBeavers = 0;
-			numEnemyMiners = 0;
-			numEnemyComputers = 0;
-			numEnemySoldiers = 0;
-			numEnemyBashers = 0;
-			numEnemyDrones = 0;
-			numEnemyTanks = 0;
-			numEnemyCommanders = 0;
-			numEnemyLaunchers = 0;
-			numEnemyMissiles = 0;
+			unitCountNumEnemyBeavers = 0;
+			unitCountNumEnemyMiners = 0;
+			unitCountNumEnemyComputers = 0;
+			unitCountNumEnemySoldiers = 0;
+			unitCountNumEnemyBashers = 0;
+			unitCountNumEnemyDrones = 0;
+			unitCountNumEnemyTanks = 0;
+			unitCountNumEnemyLaunchers = 0;
+			unitCountNumEnemyMissiles = 0;
 		case 1:
 		case 2:
 		case 3:
@@ -1699,63 +1698,63 @@ public class RobotPlayer {
 			for (int i = friendlyLoopStart; i < friendlyLoopEnd; ++i) {
 				switch (friendlyRobots[i].type) {
 				case AEROSPACELAB:
-					++numFriendlyAerospaceLab;
+					++unitCountNumFriendlyAerospaceLab;
 					break;
 				case BARRACKS:
-					++numFriendlyBarracks;
+					++unitCountNumFriendlyBarracks;
 					break;
 				case BASHER:
-					++numFriendlyBashers;
+					++unitCountNumFriendlyBashers;
 					break;
 				case BEAVER:
-					++numFriendlyBeavers;
+					++unitCountNumFriendlyBeavers;
 					break;
 				case COMPUTER:
-					++numFriendlyComputers;
+					++unitCountNumFriendlyComputers;
 					break;
 				case DRONE:
-					++numFriendlyDrones;
+					++unitCountNumFriendlyDrones;
 					break;
 				case HANDWASHSTATION:
-					++numFriendlyHandwashStation;
+					++unitCountNumFriendlyHandwashStation;
 					break;
 				case HELIPAD:
-					++numFriendlyHelipad;
+					++unitCountNumFriendlyHelipad;
 					break;
 				case HQ:
 					// No need to count HQ!
 					break;
 				case LAUNCHER:
-					++numFriendlyLaunchers;
+					++unitCountNumFriendlyLaunchers;
 					break;
 				case MINER:
-					++numFriendlyMiners;
+					++unitCountNumFriendlyMiners;
 					break;
 				case MINERFACTORY:
-					++numFriendlyMinerFactory;
+					++unitCountNumFriendlyMinerFactory;
 					break;
 				case MISSILE:
-					++numFriendlyMissiles;
+					++unitCountNumFriendlyMissiles;
 					break;
 				case SOLDIER:
-					++numFriendlySoldiers;
+					++unitCountNumFriendlySoldiers;
 					break;
 				case SUPPLYDEPOT:
-					++numFriendlySupplyDepot;
+					++unitCountNumFriendlySupplyDepot;
 					break;
 				case TANK:
-					++numFriendlyTanks;
+					++unitCountNumFriendlyTanks;
 					break;
 				case TANKFACTORY:
-					++numFriendlyTankFactory;
+					++unitCountNumFriendlyTankFactory;
 					break;
 				case TECHNOLOGYINSTITUTE:
-					++numFriendlyTechInstitute;
+					++unitCountNumFriendlyTechInstitute;
 					break;
 				case TOWER:
 					break;
 				case TRAININGFIELD:
-					++numFriendlyTrainingField;
+					++unitCountNumFriendlyTrainingField;
 					break;
 				default:
 					break;
@@ -1766,63 +1765,60 @@ public class RobotPlayer {
 			for (int j = enemyLoopStart; j < enemyLoopEnd; ++j) {
 				switch (enemyRobots[j].type) {
 				case AEROSPACELAB:
-					++numEnemyAerospaceLab;
+					++unitCountNumEnemyAerospaceLab;
 					break;
 				case BARRACKS:
-					++numEnemyBarracks;
+					++unitCountNumEnemyBarracks;
 					break;
 				case BASHER:
-					++numEnemyBashers;
+					++unitCountNumEnemyBashers;
 					break;
 				case BEAVER:
-					++numEnemyBeavers;
-					break;
-				case COMMANDER:
-					++numEnemyCommanders;
+					++unitCountNumEnemyBeavers;
 					break;
 				case COMPUTER:
-					++numEnemyComputers;
+					++unitCountNumEnemyComputers;
 					break;
 				case DRONE:
-					++numEnemyDrones;
+					++unitCountNumEnemyDrones;
 					break;
 				case HANDWASHSTATION:
-					++numEnemyHandwashStation;
+					++unitCountNumEnemyHandwashStation;
 					break;
 				case HELIPAD:
-					++numEnemyHelipad;
+					++unitCountNumEnemyHelipad;
 					break;
 				case HQ: // No need to count HQ! break; case LAUNCHER:
-					++numEnemyLaunchers;
+					++unitCountNumEnemyLaunchers;
 					break;
 				case MINER:
-					++numEnemyMiners;
+					++unitCountNumEnemyMiners;
 					break;
 				case MINERFACTORY:
-					++numEnemyMinerFactory;
+					++unitCountNumEnemyMinerFactory;
 					break;
 				case MISSILE:
-					++numEnemyMissiles;
+					++unitCountNumEnemyMissiles;
 					break;
 				case SOLDIER:
-					++numEnemySoldiers;
+					++unitCountNumEnemySoldiers;
 					break;
 				case SUPPLYDEPOT:
-					++numEnemySupplyDepot;
+					++unitCountNumEnemySupplyDepot;
 					break;
 				case TANK:
-					++numEnemyTanks;
+					++unitCountNumEnemyTanks;
 					break;
 				case TANKFACTORY:
-					++numEnemyTankFactory;
+					++unitCountNumEnemyTankFactory;
 					break;
 				case TECHNOLOGYINSTITUTE:
-					++numEnemyTechInstitute;
+					++unitCountNumEnemyTechInstitute;
 					break;
 				case TOWER:
 					break;
 				case TRAININGFIELD:
-					++numEnemyTrainingField;
+					++unitCountNumEnemyTrainingField;
 					break;
 				default:
 					break;
@@ -1834,53 +1830,70 @@ public class RobotPlayer {
 		case 4:
 			// Friendly Buildings Broadcasts
 			rc.broadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL,
-					numFriendlySupplyDepot);
+					unitCountNumFriendlySupplyDepot);
 			rc.broadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL,
-					numFriendlyMinerFactory);
+					unitCountNumFriendlyMinerFactory);
 			rc.broadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL,
-					numFriendlyTechInstitute);
-			rc.broadcast(NUM_FRIENDLY_BARRACKS_CHANNEL, numFriendlyBarracks);
-			rc.broadcast(NUM_FRIENDLY_HELIPAD_CHANNEL, numFriendlyHelipad);
+					unitCountNumFriendlyTechInstitute);
+			rc.broadcast(NUM_FRIENDLY_BARRACKS_CHANNEL,
+					unitCountNumFriendlyBarracks);
+			rc.broadcast(NUM_FRIENDLY_HELIPAD_CHANNEL,
+					unitCountNumFriendlyHelipad);
 			rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL,
-					numFriendlyTrainingField);
+					unitCountNumFriendlyTrainingField);
 			rc.broadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL,
-					numFriendlyTankFactory);
+					unitCountNumFriendlyTankFactory);
 			rc.broadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL,
-					numFriendlyAerospaceLab);
+					unitCountNumFriendlyAerospaceLab);
 			rc.broadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL,
-					numFriendlyHandwashStation);
+					unitCountNumFriendlyHandwashStation);
 			// Friendly Units Broadcasts
-			rc.broadcast(NUM_FRIENDLY_BEAVERS_CHANNEL, numFriendlyBeavers);
-			rc.broadcast(NUM_FRIENDLY_MINERS_CHANNEL, numFriendlyMiners);
-			rc.broadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL, numFriendlyComputers);
-			rc.broadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL, numFriendlySoldiers);
-			rc.broadcast(NUM_FRIENDLY_BASHERS_CHANNEL, numFriendlyBashers);
-			rc.broadcast(NUM_FRIENDLY_DRONES_CHANNEL, numFriendlyDrones);
-			rc.broadcast(NUM_FRIENDLY_TANKS_CHANNEL, numFriendlyTanks);
-			rc.broadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL, numFriendlyLaunchers);
-			rc.broadcast(NUM_FRIENDLY_MISSILES_CHANNEL, numFriendlyMissiles);
+			rc.broadcast(NUM_FRIENDLY_BEAVERS_CHANNEL,
+					unitCountNumFriendlyBeavers);
+			rc.broadcast(NUM_FRIENDLY_MINERS_CHANNEL,
+					unitCountNumFriendlyMiners);
+			rc.broadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL,
+					unitCountNumFriendlyComputers);
+			rc.broadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL,
+					unitCountNumFriendlySoldiers);
+			rc.broadcast(NUM_FRIENDLY_BASHERS_CHANNEL,
+					unitCountNumFriendlyBashers);
+			rc.broadcast(NUM_FRIENDLY_DRONES_CHANNEL,
+					unitCountNumFriendlyDrones);
+			rc.broadcast(NUM_FRIENDLY_TANKS_CHANNEL, unitCountNumFriendlyTanks);
+			rc.broadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL,
+					unitCountNumFriendlyLaunchers);
+			rc.broadcast(NUM_FRIENDLY_MISSILES_CHANNEL,
+					unitCountNumFriendlyMissiles);
 			// Enemy Buildings Broadcasts
-			rc.broadcast(NUM_ENEMY_SUPPLYDEPOT_CHANNEL, numEnemySupplyDepot);
-			rc.broadcast(NUM_ENEMY_MINERFACTORY_CHANNEL, numEnemyMinerFactory);
-			rc.broadcast(NUM_ENEMY_TECHINSTITUTE_CHANNEL, numEnemyTechInstitute);
-			rc.broadcast(NUM_ENEMY_BARRACKS_CHANNEL, numEnemyBarracks);
-			rc.broadcast(NUM_ENEMY_HELIPAD_CHANNEL, numEnemyHelipad);
-			rc.broadcast(NUM_ENEMY_TRAININGFIELD_CHANNEL, numEnemyTrainingField);
-			rc.broadcast(NUM_ENEMY_TANKFACTORY_CHANNEL, numEnemyTankFactory);
-			rc.broadcast(NUM_ENEMY_AEROSPACELAB_CHANNEL, numEnemyAerospaceLab);
+			rc.broadcast(NUM_ENEMY_SUPPLYDEPOT_CHANNEL,
+					unitCountNumEnemySupplyDepot);
+			rc.broadcast(NUM_ENEMY_MINERFACTORY_CHANNEL,
+					unitCountNumEnemyMinerFactory);
+			rc.broadcast(NUM_ENEMY_TECHINSTITUTE_CHANNEL,
+					unitCountNumEnemyTechInstitute);
+			rc.broadcast(NUM_ENEMY_BARRACKS_CHANNEL, unitCountNumEnemyBarracks);
+			rc.broadcast(NUM_ENEMY_HELIPAD_CHANNEL, unitCountNumEnemyHelipad);
+			rc.broadcast(NUM_ENEMY_TRAININGFIELD_CHANNEL,
+					unitCountNumEnemyTrainingField);
+			rc.broadcast(NUM_ENEMY_TANKFACTORY_CHANNEL,
+					unitCountNumEnemyTankFactory);
+			rc.broadcast(NUM_ENEMY_AEROSPACELAB_CHANNEL,
+					unitCountNumEnemyAerospaceLab);
 			rc.broadcast(NUM_ENEMY_HANDWASHSTATION_CHANNEL,
-					numEnemyHandwashStation);
+					unitCountNumEnemyHandwashStation);
 			// Enemy Units Broadcasts
-			rc.broadcast(NUM_ENEMY_BEAVERS_CHANNEL, numEnemyBeavers);
-			rc.broadcast(NUM_ENEMY_MINERS_CHANNEL, numEnemyMiners);
-			rc.broadcast(NUM_ENEMY_COMPUTERS_CHANNEL, numEnemyComputers);
-			rc.broadcast(NUM_ENEMY_SOLDIERS_CHANNEL, numEnemySoldiers);
-			rc.broadcast(NUM_ENEMY_BASHERS_CHANNEL, numEnemyBashers);
-			rc.broadcast(NUM_ENEMY_DRONES_CHANNEL, numEnemyDrones);
-			rc.broadcast(NUM_ENEMY_TANKS_CHANNEL, numEnemyTanks);
-			rc.broadcast(NUM_ENEMY_COMMANDERS_CHANNEL, numEnemyCommanders);
-			rc.broadcast(NUM_ENEMY_LAUNCHERS_CHANNEL, numEnemyLaunchers);
-			rc.broadcast(NUM_ENEMY_MISSILES_CHANNEL, numEnemyMissiles);
+			rc.broadcast(NUM_ENEMY_BEAVERS_CHANNEL, unitCountNumEnemyBeavers);
+			rc.broadcast(NUM_ENEMY_MINERS_CHANNEL, unitCountNumEnemyMiners);
+			rc.broadcast(NUM_ENEMY_COMPUTERS_CHANNEL,
+					unitCountNumEnemyComputers);
+			rc.broadcast(NUM_ENEMY_SOLDIERS_CHANNEL, unitCountNumEnemySoldiers);
+			rc.broadcast(NUM_ENEMY_BASHERS_CHANNEL, unitCountNumEnemyBashers);
+			rc.broadcast(NUM_ENEMY_DRONES_CHANNEL, unitCountNumEnemyDrones);
+			rc.broadcast(NUM_ENEMY_TANKS_CHANNEL, unitCountNumEnemyTanks);
+			rc.broadcast(NUM_ENEMY_LAUNCHERS_CHANNEL,
+					unitCountNumEnemyLaunchers);
+			rc.broadcast(NUM_ENEMY_MISSILES_CHANNEL, unitCountNumEnemyMissiles);
 			break;
 		}
 
