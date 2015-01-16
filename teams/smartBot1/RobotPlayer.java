@@ -1,7 +1,6 @@
 package smartBot1;
 
 import battlecode.common.*;
-
 import java.util.Random;
 
 /**
@@ -42,7 +41,7 @@ public class RobotPlayer {
 		Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
 		Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
 		Direction.NORTH_WEST };
-
+	
 	// Missile only
 	private static int turnsRemaining;
 	
@@ -80,7 +79,7 @@ public class RobotPlayer {
 		enemyHQ = rc.senseEnemyHQLocation();
 		friendlyTowers = rc.senseTowerLocations();
 		enemyTowers = rc.senseEnemyTowerLocations();
-
+		
 		if(thisRobotType == RobotType.HQ){
 			xmin = Math.min(friendlyHQ.x, enemyHQ.x);
 			xmax = Math.max(friendlyHQ.x, enemyHQ.x);
@@ -231,13 +230,10 @@ public class RobotPlayer {
 					break;
 				
 				case MISSILE:
-					if(friendEnemyRatio(null, RobotType.MISSILE.attackRadiusSquared, Friend)
-							<= 1){
+					if(friendEnemyRatio(null, RobotType.MISSILE.attackRadiusSquared, Enemy)
+							>= 1){
 						rc.explode();
 					}
-					
-					double bestFriendEnemyRatio = 0.0;
-					Direction bestDirection = null;
 					
 					/* check if towers or HQ might be in reach; if it is the case,
 					 * then is quite likely that there is an attack on the tower or HQ
@@ -262,8 +258,30 @@ public class RobotPlayer {
 						}
 					}
 					
+					/* locate best location where there are more enemies than friend robots
+					 * and aim to explode at that location
+					 */
 					
+					double bestFriendEnemyRatio = 0.0;
+					MapLocation bestTarget = null;
 					
+					for(int movementIndex = 0; movementIndex < maxMovementCount; movementIndex++){
+						for(Direction possDir: directions){
+							MapLocation possSquare = currentLocation.add(possDir, movementIndex);
+							double possFriendEnemyRatio = friendEnemyRatio(possSquare,
+									RobotType.MISSILE.attackRadiusSquared, Enemy);
+							if(possFriendEnemyRatio >= bestFriendEnemyRatio){
+								bestTarget = possSquare;
+								bestFriendEnemyRatio = possFriendEnemyRatio;
+							}
+						}
+					}
+					
+					if(bestTarget != null){
+						moveTowardDestination(bestTarget, true, false);
+					}else{
+						defendAndMove();
+					}
 					
 					break;
 				
@@ -370,9 +388,10 @@ public class RobotPlayer {
 	/**
 	 * Attacks the first enemy in the list.
 	 * 
+	 * @return True if an attack was successfully carried out
 	 * @throws GameActionException
 	 */
-	private static void attackEnemyZero() throws GameActionException {
+	private static boolean attackEnemyZero() throws GameActionException {
 		// TODO: find the best (not the first) enemy to attack
 		if (rc.isWeaponReady()) {
 			int attackRadiusSquared;
@@ -390,7 +409,7 @@ public class RobotPlayer {
 
 				if (rc.canAttackLocation(enemyZeroLocation)) {
 					rc.attackLocation(enemyZeroLocation);
-					return;
+					return true;
 				}
 				// If there are none and the HQ has splash, then check if there
 				// are targets in splash range.
@@ -412,12 +431,14 @@ public class RobotPlayer {
 
 					if (rc.canAttackLocation(splashEnemyZeroLocation)) {
 						rc.attackLocation(splashEnemyZeroLocation);
-						return;
+						return true;
 					}
 
 				}
 			}
 		}
+		
+		return false;
 	}
 
 	/***************************************************************************
@@ -1450,11 +1471,10 @@ public class RobotPlayer {
 
 	// Map Analysis
 	private static final int TOWER_STRENGTH_CHANNEL = 2000;
-	private static final int MAP_MOBILITY_CHANNEL = 2001;
-	private static final int MAP_WIDTH_CHANNEL = 2002;
-	private static final int MAP_HEIGHT_CHANNEL = 2003;
-	private static final int MAP_VOID_SQUARES_CHANNEL = 2004;
-	private static final int MAP_NORMAL_SQUARES_CHANNEL = 2005;
+	private static final int MAP_WIDTH_CHANNEL = 2001;
+	private static final int MAP_HEIGHT_CHANNEL = 2002;
+	private static final int MAP_VOID_SQUARES_CHANNEL = 2003;
+	private static final int MAP_NORMAL_SQUARES_CHANNEL = 2004;
 	
 	// ------------------------------------------------------------------------
 	// Action Constants
