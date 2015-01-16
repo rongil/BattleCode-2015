@@ -126,6 +126,29 @@ public class RobotPlayer {
 					}
 					break;
 				case HQ:
+					/**********************************************************
+					 * HQ Calculations over various rounds
+					 * ========================================================
+					 * Unit Counting -------------------------------> 5 Rounds
+					 * Tower Strength -------------------------------> 1 Round
+					 *********************************************************/
+					if (roundNum % 5 < 5) {
+						// Update unit counts every so often!
+						updateUnitCounts();
+					}
+					if (roundNum % 5 == 4) {
+						// Check tower strength!
+						analyzeTowerStrength();
+					}
+
+					/*
+					 * We call this method before spawning beavers because we
+					 * probably will want to spawn more efficient creatures such
+					 * as miners; in addition, spawning introduces attacking
+					 * delay.
+					 */
+					attackEnemyZero();
+
 					// Maintain only a few beavers
 					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 2) {
 						createUnit(RobotType.BEAVER, false);
@@ -194,6 +217,58 @@ public class RobotPlayer {
 
 		}
 
+	}
+
+	/**
+	 * Attacks the first enemy in the list.
+	 * 
+	 * @throws GameActionException
+	 */
+	private static void attackEnemyZero() throws GameActionException {
+		if (rc.isWeaponReady()) {
+			int attackRadiusSquared;
+			MapLocation thisRobotLocation = rc.getLocation();
+
+			attackRadiusSquared = (thisRobotType == RobotType.HQ) ? friendlyHQAttackRadiusSquared
+					: thisRobotType.attackRadiusSquared;
+
+			RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(thisRobotLocation,
+					attackRadiusSquared, Enemy);
+
+			// Go for direct targets first.
+			if (nearbyEnemies.length > 0) {
+				MapLocation enemyZeroLocation = nearbyEnemies[0].location;
+
+				if (rc.canAttackLocation(enemyZeroLocation)) {
+					rc.attackLocation(enemyZeroLocation);
+					return;
+				}
+				// If there are none and the HQ has splash, then check if there
+				// are targets in splash range.
+			} else if (thisRobotType == RobotType.HQ
+					&& friendlyTowers.length >= 5) {
+				RobotInfo[] splashRangeEnemies = rc
+						.senseNearbyRobots(
+								thisRobotLocation,
+								attackRadiusSquared
+										+ GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED,
+								Enemy);
+
+				if (splashRangeEnemies.length > 0) {
+					MapLocation actualEnemyZeroLocation = splashRangeEnemies[0].location;
+					Direction towardsEnemyZero = friendlyHQ
+							.directionTo(actualEnemyZeroLocation);
+					MapLocation splashEnemyZeroLocation = friendlyHQ
+							.add(towardsEnemyZero);
+
+					if (rc.canAttackLocation(splashEnemyZeroLocation)) {
+						rc.attackLocation(splashEnemyZeroLocation);
+						return;
+					}
+
+				}
+			}
+		}
 	}
 
 	/***************************************************************************
@@ -321,6 +396,38 @@ public class RobotPlayer {
 						suppliesToThisLocation);
 			}
 		}
+	}
+
+	/**
+	 * Analyzes the strength of the towers in this particular map based on their
+	 * quantity and proximity to each other and HQ.
+	 * 
+	 * @throws GameActionException
+	 */
+	private static void analyzeTowerStrength() throws GameActionException {
+		/*
+		 * because the board is symmetrical, we can use our own towers for
+		 * analysis, which is cheaper
+		 */
+		int towerStrength = 0;
+
+		// One or no towers -> very weak. Keep at 0.
+		// Otherwise measure strength based on closeness.
+		for (int i = 0; i < friendlyTowers.length; ++i) {
+			if (friendlyTowers[i].distanceSquaredTo(friendlyHQ) < 48) {
+				towerStrength += 2; /*
+									 * HQ can inflict thrice the damage but has
+									 * double the delay compared to a tower
+									 */
+			}
+			for (int j = i; j < friendlyTowers.length; ++j) {
+				if (friendlyTowers[i].distanceSquaredTo(friendlyTowers[j]) < 48) {
+					towerStrength += 1;
+				}
+			}
+		}
+
+		rc.broadcast(TOWER_STRENGTH_CHANNEL, towerStrength);
 	}
 
 	/***************************************************************************
