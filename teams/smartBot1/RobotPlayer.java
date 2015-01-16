@@ -1,7 +1,17 @@
 package smartBot1;
 
-import battlecode.common.*;
 import java.util.Random;
+
+import battlecode.common.Clock;
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
+import battlecode.common.Team;
+import battlecode.common.TerrainTile;
 
 /**
  * Main class which defines every robot.
@@ -33,6 +43,8 @@ public class RobotPlayer {
 	private static int enemyHQAttackRadiusSquared;
 	private static MapLocation[] enemyTowers;
 
+	private static int friendlyHQCurrentDirectionIndex;
+
 	/**************************************************************************
 	 * Main method called when it is a robot's turn. Needs to be looped
 	 * indefinitely, otherwise the robot will die.
@@ -53,6 +65,8 @@ public class RobotPlayer {
 		enemyHQ = rc.senseEnemyHQLocation();
 		friendlyTowers = rc.senseTowerLocations();
 		enemyTowers = rc.senseEnemyTowerLocations();
+
+		friendlyHQCurrentDirectionIndex = 0;
 
 		rand = new Random(rc.getID());
 
@@ -85,6 +99,18 @@ public class RobotPlayer {
 				case BASHER:
 					break;
 				case BEAVER:
+					// Number of units
+					int numFriendlyMinerFactories = rc
+							.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL);
+					int numFriendlyHelipads = rc
+							.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL);
+
+					// Building Order/Preferences
+					if (roundNum < 1800 && numFriendlyMinerFactories < 2) {
+						createUnit(RobotType.MINERFACTORY, true);
+					} else if (numFriendlyHelipads < 1) {
+						createUnit(RobotType.HELIPAD, true);
+					}
 					break;
 				case COMMANDER:
 					break;
@@ -95,14 +121,31 @@ public class RobotPlayer {
 				case HANDWASHSTATION:
 					break;
 				case HELIPAD:
+					if (rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) < 20) {
+						createUnit(RobotType.DRONE, false);
+					}
 					break;
 				case HQ:
+					// Maintain only a few beavers
+					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 2) {
+						createUnit(RobotType.BEAVER, false);
+					}
 					break;
 				case LAUNCHER:
 					break;
 				case MINER:
 					break;
 				case MINERFACTORY:
+					// Get miner count
+					int minerCount = rc
+							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
+					// Exponential Decay for miner production
+					double miningFate = rand.nextDouble();
+					if (roundNum < 1500
+							&& miningFate <= Math.pow(Math.E,
+									-minerCount * 0.07)) {
+						createUnit(RobotType.MINER, false);
+					}
 					break;
 				case MISSILE:
 					break;
@@ -153,7 +196,7 @@ public class RobotPlayer {
 
 	}
 
-	/**
+	/***************************************************************************
 	 * Returns whether a location is considered safe.
 	 * 
 	 * @param loc
@@ -161,7 +204,7 @@ public class RobotPlayer {
 	 * @param onlyHQAndTowers
 	 *            - Considers only HQ and Tower range unsafe.
 	 * @return - True if the location is safe, false if it is not.
-	 */
+	 **************************************************************************/
 	private static boolean isSafe(MapLocation loc, boolean onlyHQAndTowers)
 			throws GameActionException {
 		TerrainTile locTerrain = rc.senseTerrainTile(loc);
@@ -198,11 +241,52 @@ public class RobotPlayer {
 		return true;
 	}
 
-	/**
+	/**************************************************************************
+	 * Spawns or builds a robot.
+	 * 
+	 * @param roboType
+	 *            - the type of robot being built/spawned
+	 * @param build
+	 *            - True if building, false if spawning
+	 * @return - True if building/spawning succeeded
+	 * @throws GameActionException
+	 *************************************************************************/
+	private static boolean createUnit(RobotType roboType, boolean build)
+			throws GameActionException {
+		if (rc.isCoreReady() && rc.getTeamOre() > roboType.oreCost) {
+			MapLocation currentLocation = rc.getLocation();
+			Direction testDir = Direction.values()[rand.nextInt(9)];
+			boolean goLeft = rand.nextDouble() > 0.5;
+
+			for (int turnCount = 0; turnCount < 8; turnCount++) {
+				MapLocation testLoc = currentLocation.add(testDir);
+
+				if (build) {
+					if (rc.canBuild(testDir, roboType)
+							&& isSafe(testLoc, false)) {
+						rc.build(testDir, roboType);
+						return true;
+					}
+				} else { // spawning
+					if (rc.canSpawn(testDir, roboType)
+							&& isSafe(testLoc, false)) {
+						rc.spawn(testDir, roboType);
+						return true;
+					}
+				}
+
+				testDir = goLeft ? testDir.rotateLeft() : testDir.rotateRight();
+			}
+		}
+
+		return false;
+	}
+
+	/**************************************************************************
 	 * Transfer supplies between units.
 	 * 
 	 * @throws GameActionException
-	 */
+	 *************************************************************************/
 	private static void transferSupplies() throws GameActionException {
 		// TODO: Do we want to have a global ordering on robots? So that
 		// robots may decide to "sacrifice" themselves for the sake of a
@@ -239,7 +323,7 @@ public class RobotPlayer {
 		}
 	}
 
-	/**
+	/***************************************************************************
 	 * Broadcasts information about swarming to the troops specified in types.
 	 * 
 	 * @param types
@@ -249,7 +333,7 @@ public class RobotPlayer {
 	 * @param location
 	 *            - The location to go to (if not null).
 	 * @throws GameActionException
-	 */
+	 **************************************************************************/
 	private static void broadcastSwarmInfo(RobotType[] types, int action,
 			MapLocation location) throws GameActionException {
 
@@ -396,11 +480,11 @@ public class RobotPlayer {
 	private static int unitCountNumEnemyLaunchers;
 	private static int unitCountNumEnemyMissiles;
 
-	/**
+	/***************************************************************************
 	 * Collects and broadcasts the number of all unit types.
 	 * 
 	 * @throws GameActionException
-	 */
+	 **************************************************************************/
 	@SuppressWarnings("fallthrough")
 	private static void updateUnitCounts() throws GameActionException {
 
