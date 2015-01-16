@@ -1,16 +1,7 @@
 package smartBot1;
 
+import battlecode.common.*;
 import java.util.Random;
-
-import battlecode.common.Clock;
-import battlecode.common.GameActionException;
-import battlecode.common.GameConstants;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
-import battlecode.common.Team;
-import battlecode.common.TerrainTile;
 
 /**
  * Main class which defines every robot.
