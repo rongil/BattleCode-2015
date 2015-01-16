@@ -1,17 +1,8 @@
 package smartBot1;
 
-import java.util.Random;
+import battlecode.common.*;
 
-import battlecode.common.Clock;
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.GameConstants;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
-import battlecode.common.Team;
-import battlecode.common.TerrainTile;
+import java.util.Random;
 
 /**
  * Main class which defines every robot.
@@ -44,7 +35,31 @@ public class RobotPlayer {
 	private static MapLocation[] enemyTowers;
 
 	private static int friendlyHQCurrentDirectionIndex;
+	private static int halfwayDistance;
+	
+	private static Direction facing;
+	private static Direction[] directions = { Direction.NORTH,
+		Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
+		Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
+		Direction.NORTH_WEST };
 
+	// Missile only
+	private static int turnsRemaining;
+	
+	// HQ only
+	private static int xmin;
+	private static int xmax;
+	private static int ymin;
+	private static int ymax;
+	
+	private static int xpos;
+	private static int ypos;
+	
+	private static int voidSquareCount;
+	private static int normalSquareCount;
+	
+	private static boolean done = false;
+	
 	/**************************************************************************
 	 * Main method called when it is a robot's turn. Needs to be looped
 	 * indefinitely, otherwise the robot will die.
@@ -66,10 +81,29 @@ public class RobotPlayer {
 		friendlyTowers = rc.senseTowerLocations();
 		enemyTowers = rc.senseEnemyTowerLocations();
 
+		if(thisRobotType == RobotType.HQ){
+			xmin = Math.min(friendlyHQ.x, enemyHQ.x);
+			xmax = Math.max(friendlyHQ.x, enemyHQ.x);
+			
+			ymin = Math.min(friendlyHQ.y, enemyHQ.y);
+			ymax = Math.max(friendlyHQ.y, enemyHQ.y);
+			
+			xpos = -1;
+			ypos = -1;
+		}
+		
+		if(thisRobotType == RobotType.MISSILE){
+			turnsRemaining = GameConstants.MISSILE_LIFESPAN;
+		}
+		
 		friendlyHQCurrentDirectionIndex = 0;
-
+		
+		// Slightly less to avoid tower issues
+		halfwayDistance = (int) Math.pow((0.9 / 2.0) * Math.pow(friendlyHQ.distanceSquaredTo(enemyHQ), 0.5), 2);
+		
 		rand = new Random(rc.getID());
-
+		facing = getRandomDirection(); // Randomize starting direction
+		
 		// Method can never end or the robot is destroyed.
 		while (true) {
 			try {
@@ -92,12 +126,18 @@ public class RobotPlayer {
 
 				// Choose an action based on the type of robot.
 				switch (thisRobotType) {
+				
 				case AEROSPACELAB:
 					break;
+				
 				case BARRACKS:
 					break;
+				
 				case BASHER:
+					attackEnemyZero();
+					defendAndMove();
 					break;
+					
 				case BEAVER:
 					// Number of units
 					int numFriendlyMinerFactories = rc
@@ -110,21 +150,30 @@ public class RobotPlayer {
 						createUnit(RobotType.MINERFACTORY, true);
 					} else if (numFriendlyHelipads < 1) {
 						createUnit(RobotType.HELIPAD, true);
+					} else {
+						locateBestOre();
 					}
+					
 					break;
+				
 				case COMMANDER:
 					break;
+				
 				case COMPUTER:
 					break;
+				
 				case DRONE:
 					break;
+				
 				case HANDWASHSTATION:
 					break;
+				
 				case HELIPAD:
 					if (rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) < 20) {
 						createUnit(RobotType.DRONE, false);
 					}
 					break;
+				
 				case HQ:
 					/**********************************************************
 					 * HQ Calculations over various rounds
@@ -153,11 +202,21 @@ public class RobotPlayer {
 					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 2) {
 						createUnit(RobotType.BEAVER, false);
 					}
+					
+					if(!done){
+						analyzeMap();
+					}
 					break;
+					
 				case LAUNCHER:
 					break;
+				
 				case MINER:
+					attackEnemyZero();
+					mineAndMove();
+					
 					break;
+					
 				case MINERFACTORY:
 					// Get miner count
 					int minerCount = rc
@@ -170,22 +229,69 @@ public class RobotPlayer {
 						createUnit(RobotType.MINER, false);
 					}
 					break;
+				
 				case MISSILE:
+					if(friendEnemyRatio(null, RobotType.MISSILE.attackRadiusSquared, Friend)
+							<= 1){
+						rc.explode();
+					}
+					
+					double bestFriendEnemyRatio = 0.0;
+					Direction bestDirection = null;
+					
+					/* check if towers or HQ might be in reach; if it is the case,
+					 * then is quite likely that there is an attack on the tower or HQ
+					 * given that launchers are difficult to build and missiles have
+					 * very limited life-spans
+					 */
+					
+					MapLocation currentLocation = rc.getLocation();
+					
+					int maxMovementCount = (int) (turnsRemaining / RobotType.MISSILE.movementDelay);
+					int maxRadiusSquared = (int) Math.pow(maxMovementCount + Math.pow(
+							RobotType.MISSILE.attackRadiusSquared, 0.5), 2);
+							 
+					if(currentLocation.distanceSquaredTo(enemyHQ) <= maxRadiusSquared){
+						moveTowardDestination(enemyHQ, true, false);
+					} else {
+						for(MapLocation towerLocation : enemyTowers){
+							if(currentLocation.distanceSquaredTo(towerLocation) <= maxRadiusSquared){
+								moveTowardDestination(enemyHQ, true, false);
+								break;
+							}
+						}
+					}
+					
+					
+					
+					
 					break;
+				
 				case SOLDIER:
+					attackEnemyZero();
+					defendAndMove();
 					break;
+					
 				case SUPPLYDEPOT:
 					break;
+				
 				case TANK:
+					attackEnemyZero();
+					defendAndMove();
 					break;
+					
 				case TANKFACTORY:
 					break;
+				
 				case TECHNOLOGYINSTITUTE:
 					break;
+				
 				case TOWER:
 					break;
+				
 				case TRAININGFIELD:
 					break;
+				
 				default:
 					break;
 
@@ -213,10 +319,52 @@ public class RobotPlayer {
 				e.printStackTrace();
 			}
 
-			rc.yield(); // End the robot's turn to saved bytecode.
-
+			rc.yield(); // End the robot's turn to save bytecode
+			
 		}
 
+	}
+
+	/**
+	 * Gives the ratio of friend to enemy robots around a given location that
+	 * are at most a given distance away
+	 * 
+	 * @param loc
+	 * @param radiusSquared
+	 * @param friendTeam
+	 * @return
+	 */
+	private static double friendEnemyRatio(MapLocation loc, int radiusSquared,
+			Team friendTeam) {
+		RobotInfo[] surroundingRobots;
+
+		if (loc != null) {
+			surroundingRobots = rc.senseNearbyRobots(loc, radiusSquared, null);
+		} else {
+			surroundingRobots = rc.senseNearbyRobots(radiusSquared);
+		}
+
+		double enemyCount = 0.0, friendCount = 0.0;
+
+		if (friendTeam == null) {
+			friendTeam = rc.getTeam();
+		}
+
+		for (RobotInfo roboInfo : surroundingRobots) {
+			if (roboInfo.team == friendTeam) {
+				friendCount++;
+			} else {
+				enemyCount++;
+			}
+		}
+
+		if (friendCount == 0) {
+			return 0;
+		} else if (enemyCount == 0 && friendCount != 0) {
+			return Integer.MAX_VALUE;
+		} else {
+			return friendCount / enemyCount;
+		}
 	}
 
 	/**
@@ -225,6 +373,7 @@ public class RobotPlayer {
 	 * @throws GameActionException
 	 */
 	private static void attackEnemyZero() throws GameActionException {
+		// TODO: find the best (not the first) enemy to attack
 		if (rc.isWeaponReady()) {
 			int attackRadiusSquared;
 			MapLocation thisRobotLocation = rc.getLocation();
@@ -316,6 +465,224 @@ public class RobotPlayer {
 		return true;
 	}
 
+	/**
+	 * Generates a random, valid direction
+	 *  
+	 * @return
+	 */
+	private static Direction getRandomDirection() {
+		return Direction.values()[(int) rand.nextDouble() * 8];
+	}
+	
+	/**
+	 * Moves robot around randomly
+	 * 
+	 * @throws GameActionException
+	 */
+	private static void moveAround() throws GameActionException {
+		if (rand.nextDouble() < 0.1) {
+			if (rand.nextDouble() < 0.5) {
+				facing = facing.rotateLeft(); // 45 degree turn
+			} else {
+				facing = facing.rotateRight();
+			}
+		}
+		if (rc.isCoreReady() && rc.canMove(facing)) {
+			MapLocation tileInFrontLocation = rc.getLocation().add(facing);
+			boolean tileInFrontSafe = isSafe(tileInFrontLocation, false);
+			double probCutoff = tileInFrontSafe ? 0.75 : 0.0;
+
+			if (rand.nextDouble() >= probCutoff) {
+				if (rand.nextDouble() < 0.5) {
+					facing = facing.rotateLeft(); // 45 degree turn
+				} else {
+					facing = facing.rotateRight();
+				}
+			} else { // try to move in the facing direction since the tile in
+						// front is safe
+				rc.move(facing);
+			}
+		}
+	}
+
+	/**
+	 * Directs a robot toward a given destination
+	 * 
+	 * @param dest
+	 * @param ignoreSafety
+	 * @param onlyHQAndTowers
+	 * 
+	 * @return True if there is a direction that the robot can move
+	 * 		   towards the given destination
+	 * @throws GameActionException
+	 */
+	private static boolean moveTowardDestination(MapLocation dest,
+			boolean ignoreSafety, boolean onlyHQAndTowers)
+			throws GameActionException {
+		// TODO: Should we consider including a "crowdedness" heuristic? If so,
+		// how do we incorporate our current implementation?
+
+		Direction straight = rc.getLocation().directionTo(dest);
+		MapLocation currentLocation = rc.getLocation();
+
+		if (rc.isCoreReady()) {
+			int straightIndex = directionToInt(straight);
+
+			int[] offsets = new int[8];
+			offsets[0] = 0;
+			offsets[7] = 4;
+
+			offsets[1] = (rand.nextDouble() > 0.5) ? 1 : -1;
+			offsets[2] = -offsets[1];
+
+			offsets[3] = (rand.nextDouble() > 0.5) ? 2 : -2;
+			offsets[4] = -offsets[3];
+
+			offsets[5] = (rand.nextDouble() > 0.5) ? 3 : -3;
+			offsets[6] = -offsets[5];
+
+			for (int offset : offsets) {
+				Direction possDirection = directions[(straightIndex + offset + 8) % 8];
+
+				if (rc.canMove(possDirection)) {
+					MapLocation possSquare = currentLocation.add(possDirection);
+
+					if (ignoreSafety || isSafe(possSquare, onlyHQAndTowers)) {
+						rc.move(possDirection);
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private static void defendAndMove() throws GameActionException{
+		/**
+		 * Searches for enemies that have crossed the halfway point between the two
+		 * HQ's and tries to attack them; otherwise, moves around randomly
+		 * 
+		 * @throws GameActionException
+		 */
+		
+		// TODO: create ordered list that allows "stronger" robots to attack "weaker" robots
+		// TODO: create target variable that allows robots to track down the invading robot in
+		//		 question; otherwise, look for another one
+		
+		RobotInfo[] incomingEnemies = rc.senseNearbyRobots(friendlyHQ, halfwayDistance, Enemy);
+		boolean weaponReady = rc.isWeaponReady();
+		MapLocation targetLocation = null;
+		
+		for(RobotInfo robot : incomingEnemies){
+			if(weaponReady && rc.canAttackLocation(robot.location)){
+				rc.attackLocation(robot.location);
+				return;
+				
+			}else if(targetLocation == null){
+				targetLocation = robot.location;
+			}
+		}
+		
+		if(targetLocation != null){
+			moveTowardDestination(targetLocation, false, false);
+		}else{
+			moveAround();
+		}
+	}
+	
+	/**
+	 * Determines a direction in which a miner robot (either a BEAVER or MINER) can
+	 * mine the most amount of ore
+	 *  
+	 * @throws GameActionException
+	 */
+	private static void locateBestOre() throws GameActionException {
+		if (rc.isCoreReady()) {
+			MapLocation currentLocation = rc.getLocation();
+
+			int radius = (int) Math.pow(rc.getType().sensorRadiusSquared, 0.5);
+
+			double bestOreCount = 0.0;
+			MapLocation bestDestination = null;
+
+			for (Direction possDirection : Direction.values()) {
+				MapLocation squareOne = currentLocation.add(possDirection,
+						(int) (0.25 * radius));
+				MapLocation squareTwo = currentLocation.add(possDirection,
+						(int) (0.5 * radius));
+				MapLocation squareThree = currentLocation.add(possDirection,
+						(int) (0.75 * radius));
+				MapLocation squareFour = currentLocation.add(possDirection,
+						radius);
+
+				double totalOreCount = rc.senseOre(squareOne)
+						+ rc.senseOre(squareTwo) + rc.senseOre(squareThree)
+						+ rc.senseOre(squareFour);
+
+				if (totalOreCount > bestOreCount) {
+					bestOreCount = totalOreCount;
+					bestDestination = squareFour;
+				} else if (totalOreCount == bestOreCount
+						&& bestDestination != null) {
+					bestDestination = (rand.nextDouble() > 0.5) ? bestDestination
+							: squareFour;
+				}
+			}
+
+			if (bestDestination != null) {
+				moveTowardDestination(bestDestination, false, false);
+			} else {
+				// TODO: Keep track of last destination traveled to by a miner?
+				moveAround();
+			}
+		}
+	}
+
+	/**
+	 * Mines at current location and then tries to look for more ore
+	 * 
+	 * @throws GameActionException
+	 */
+	private static void mineAndMove() throws GameActionException {
+		if (rc.senseOre(rc.getLocation()) > 1) { // if there is ore, try to mine
+			if (rc.isCoreReady() && rc.canMine()) {
+				rc.mine();
+			}
+		} else { // otherwise, look for ore
+			locateBestOre();
+		}
+	}
+	
+	/**
+	 * Gets the corresponding index for each valid Direction
+	 * 
+	 * @param d
+	 * @return integer corresponding to a valid Direction
+	 */
+	private static int directionToInt(Direction d) {
+		switch (d) {
+		case NORTH:
+			return 0;
+		case NORTH_EAST:
+			return 1;
+		case EAST:
+			return 2;
+		case SOUTH_EAST:
+			return 3;
+		case SOUTH:
+			return 4;
+		case SOUTH_WEST:
+			return 5;
+		case WEST:
+			return 6;
+		case NORTH_WEST:
+			return 7;
+		default:
+			return -1;
+		}
+	}
+
 	/**************************************************************************
 	 * Spawns or builds a robot.
 	 * 
@@ -405,10 +772,6 @@ public class RobotPlayer {
 	 * @throws GameActionException
 	 */
 	private static void analyzeTowerStrength() throws GameActionException {
-		/*
-		 * because the board is symmetrical, we can use our own towers for
-		 * analysis, which is cheaper
-		 */
 		int towerStrength = 0;
 
 		// One or no towers -> very weak. Keep at 0.
@@ -417,7 +780,9 @@ public class RobotPlayer {
 			if (friendlyTowers[i].distanceSquaredTo(friendlyHQ) < 48) {
 				towerStrength += 2; /*
 									 * HQ can inflict thrice the damage but has
-									 * double the delay compared to a tower
+									 * the same delay compared to a tower (except
+									 * when tower count is less than 5, in which
+									 * case, it has double the delay)
 									 */
 			}
 			for (int j = i; j < friendlyTowers.length; ++j) {
@@ -430,6 +795,120 @@ public class RobotPlayer {
 		rc.broadcast(TOWER_STRENGTH_CHANNEL, towerStrength);
 	}
 
+	/**
+	 * Counts the number of void and normal squares as well as determines the overall
+	 * dimensions of the board
+	 * 
+	 * @throws GameActionException
+	 */
+	private static void analyzeMap() throws GameActionException{
+		while(rc.senseTerrainTile(new MapLocation(xmin, ymin)) != TerrainTile.OFF_MAP){
+			xmin--;
+			ymin--;
+			
+			if(Clock.getBytecodesLeft() < 100){
+				return;
+			}
+		}
+		
+		if(rc.senseTerrainTile(new MapLocation(xmin + 1, ymin)) == TerrainTile.OFF_MAP){
+			ymin++;
+			
+			while(rc.senseTerrainTile(new MapLocation(xmin, ymin)) != TerrainTile.OFF_MAP){
+				xmin--;
+				
+				if(Clock.getBytecodesLeft() < 100){
+					return;
+				}
+			}
+			
+			xmin++;
+			
+		}else if(rc.senseTerrainTile(new MapLocation(xmin, ymin + 1)) == TerrainTile.OFF_MAP){
+			xmin++;
+			
+			while(rc.senseTerrainTile(new MapLocation(xmin, ymin)) != TerrainTile.OFF_MAP){
+				ymin--;
+				
+				if(Clock.getBytecodesLeft() < 100){
+					return;
+				}
+			}
+			
+			ymin++;
+		}
+		
+		while(rc.senseTerrainTile(new MapLocation(xmax, ymax)) != TerrainTile.OFF_MAP){
+			xmax++;
+			ymax++;
+			
+			if(Clock.getBytecodesLeft() < 100){
+				return;
+			}
+		}
+		
+		if(rc.senseTerrainTile(new MapLocation(xmax - 1, ymax)) == TerrainTile.OFF_MAP){
+			ymax--;
+			
+			while(rc.senseTerrainTile(new MapLocation(xmax, ymax)) != TerrainTile.OFF_MAP){
+				xmax++;
+				
+				if(Clock.getBytecodesLeft() < 100){
+					return;
+				}
+			}
+			
+			xmax--;
+			
+		}else if(rc.senseTerrainTile(new MapLocation(xmax, ymax - 1)) == TerrainTile.OFF_MAP){
+			xmax--;
+			
+			while(rc.senseTerrainTile(new MapLocation(xmax, ymax)) != TerrainTile.OFF_MAP){
+				ymax++;
+				
+				if(Clock.getBytecodesLeft() < 100){
+					return;
+				}
+			}
+			
+			ymax--;
+		}
+		
+		rc.broadcast(MAP_WIDTH_CHANNEL, xmax - xmin);
+		rc.broadcast(MAP_HEIGHT_CHANNEL, ymax - ymin);
+		
+		if(Clock.getBytecodesLeft() < 100){
+			return;
+		}
+		
+		xpos = xmin;
+		ypos = ymin;
+
+		while(xpos <= xmax){
+			if(rc.senseTerrainTile(new MapLocation(xpos, ypos)) == TerrainTile.NORMAL){
+				normalSquareCount++;
+			}else if(rc.senseTerrainTile(new MapLocation(xpos, ypos)) == TerrainTile.VOID){
+				voidSquareCount++;
+			}
+			
+			ypos++;
+			
+			if(ypos > ymax){
+				ypos = ymin;
+				xpos++;
+			}
+			
+			if(Clock.getBytecodesLeft() < 100){
+				return;
+			}
+		}
+		
+		rc.broadcast(MAP_NORMAL_SQUARES_CHANNEL, normalSquareCount);
+		rc.broadcast(MAP_VOID_SQUARES_CHANNEL, voidSquareCount);
+		
+		done = true;
+	}
+	
 	/***************************************************************************
 	 * Broadcasts information about swarming to the troops specified in types.
 	 * 
@@ -972,7 +1451,11 @@ public class RobotPlayer {
 	// Map Analysis
 	private static final int TOWER_STRENGTH_CHANNEL = 2000;
 	private static final int MAP_MOBILITY_CHANNEL = 2001;
-
+	private static final int MAP_WIDTH_CHANNEL = 2002;
+	private static final int MAP_HEIGHT_CHANNEL = 2003;
+	private static final int MAP_VOID_SQUARES_CHANNEL = 2004;
+	private static final int MAP_NORMAL_SQUARES_CHANNEL = 2005;
+	
 	// ------------------------------------------------------------------------
 	// Action Constants
 	// ------------------------------------------------------------------------
