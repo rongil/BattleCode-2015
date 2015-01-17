@@ -99,10 +99,8 @@ public class RobotPlayer {
 		}
 
 		// Slightly less to avoid tower issues
-		halfwayDistance = (int) Math.pow(
-				(0.9 / 2.0)
-						* Math.pow(friendlyHQ.distanceSquaredTo(enemyHQ), 0.5),
-				2);
+		halfwayDistance = (int) ((0.9 / 2.0) * Math.pow(
+				friendlyHQ.distanceSquaredTo(enemyHQ), 0.5));
 
 		rand = new Random(rc.getID());
 		facing = getRandomDirection(); // Randomize starting direction
@@ -143,37 +141,100 @@ public class RobotPlayer {
 				switch (thisRobotType) {
 
 				case AEROSPACELAB:
-					break;
+					if(rc.readBroadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL) < 3){
+						createUnit(RobotType.LAUNCHER, false);
+					}
 
 				case BARRACKS:
-					break;
+					if(rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) +
+							rc.readBroadcast(NUM_FRIENDLY_BASHERS_CHANNEL) < 20) {
+						
+						if(rand.nextDouble() > 0.5) {
+							createUnit(RobotType.SOLDIER, false);
+						} else {
+							createUnit(RobotType.BASHER, false);
+						}
+					}
 
 				case BASHER:
-					attackEnemyZero();
-					defendAndMove();
+					/* BASHERs attack automatically, so we do not need to call the
+					 * attackEnemyZero() method
+					 */
+					
+					int basherSwarm = rc.readBroadcast(BASHER_SWARM_CHANNEL);
+					if (basherSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(BASHER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(BASHER_SWARM_LOCATION_Y_CHANNEL);
+						moveTowardDestination(new MapLocation(x, y), true,
+								false, false);
+					} else {
+						defendAndMove();
+					}
 					break;
 
 				case BEAVER:
-					// Number of units
-					int numFriendlyMinerFactories = rc
-							.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL);
-					int numFriendlyHelipads = rc
-							.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL);
-
-					// Building Order/Preferences
-					if (roundNum < 1800 && numFriendlyMinerFactories < 2) {
-						createUnit(RobotType.MINERFACTORY, true);
-					} else if (numFriendlyHelipads < 1) {
-						createUnit(RobotType.HELIPAD, true);
+					attackEnemyZero();
+					
+					int beaverSwarm = rc.readBroadcast(BEAVER_SWARM_CHANNEL);
+					if (beaverSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(BEAVER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(BEAVER_SWARM_LOCATION_Y_CHANNEL);
+						moveTowardDestination(new MapLocation(x, y), false,
+								false, false);
 					} else {
-						locateBestOre();
+						// Building Order/Preferences
+						if (roundNum < 1800 && rc
+								.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
+							createUnit(RobotType.MINERFACTORY, true);
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
+							createUnit(RobotType.HELIPAD, true);
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
+							createUnit(RobotType.TANKFACTORY, true);
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
+							createUnit(RobotType.BARRACKS, true);
+						} else if(rc
+								.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 1) {
+							createUnit(RobotType.AEROSPACELAB, true);
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
+							createUnit(RobotType.TECHNOLOGYINSTITUTE, true);
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
+							createUnit(RobotType.TRAININGFIELD, true);
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
+							createUnit(RobotType.SUPPLYDEPOT, true);
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 5) {
+							createUnit(RobotType.HANDWASHSTATION, true);
+						}
+						
+						mineAndMove();
 					}
-
 					break;
 
 				case COMMANDER:
 					attackEnemyZero();
-					defendAndMove();
+					
+					int commanderSwarm = rc
+							.readBroadcast(COMMANDER_SWARM_CHANNEL);
+					if (commanderSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(COMMANDER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(COMMANDER_SWARM_LOCATION_Y_CHANNEL);
+						moveTowardDestination(new MapLocation(x, y), true,
+								false, false);
+					} else {
+						defendAndMove();
+					}
 					break;
 
 				case COMPUTER:
@@ -181,7 +242,18 @@ public class RobotPlayer {
 
 				case DRONE:
 					attackEnemyZero();
-					defendAndMove();
+					
+					 int droneSwarm = rc.readBroadcast(DRONE_SWARM_CHANNEL);
+					 if (droneSwarm == GO_TO_LOCATION) {
+						 int x = rc.
+								 readBroadcast(DRONE_SWARM_LOCATION_X_CHANNEL);
+						 int y = rc
+								 .readBroadcast(DRONE_SWARM_LOCATION_Y_CHANNEL);
+						 moveTowardDestination(new MapLocation(x, y), true,
+								 false, false);
+					 } else {
+						 defendAndMove();
+					 }
 					break;
 
 				case HANDWASHSTATION:
@@ -328,13 +400,33 @@ public class RobotPlayer {
 						}
 					}
 
-					moveTowardMaxEnemies(maxMovementCount);
+					int launcherSwarm = rc.readBroadcast(LAUNCHER_SWARM_CHANNEL);
+					if (launcherSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(LAUNCHER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(LAUNCHER_SWARM_LOCATION_Y_CHANNEL);
+						moveTowardDestination(new MapLocation(x, y), true,
+								false, false);
+					} else {
+						moveTowardMaxEnemies(maxMovementCount);
+					}
 					break;
 
 				case MINER:
 					attackEnemyZero();
-					mineAndMove();
-
+					
+					int minerSwarm = rc.readBroadcast(MINER_SWARM_CHANNEL);
+					if (minerSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(MINER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(MINER_SWARM_LOCATION_Y_CHANNEL);
+						moveTowardDestination(new MapLocation(x, y), true,
+								false, false);
+					} else {
+						mineAndMove();
+					}
 					break;
 
 				case MINERFACTORY:
@@ -385,12 +477,33 @@ public class RobotPlayer {
 						}
 					}
 
-					moveTowardMaxEnemies(maxMovementCount);
+					int missileSwarm = rc.readBroadcast(MISSILE_SWARM_CHANNEL);
+					if (missileSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(MISSILE_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(MISSILE_SWARM_LOCATION_Y_CHANNEL);
+						moveTowardDestination(new MapLocation(x, y), true,
+								false, false);
+					} else {
+						moveTowardMaxEnemies(maxMovementCount);
+					}
 					break;
 
 				case SOLDIER:
 					attackEnemyZero();
-					defendAndMove();
+					
+					int soldierSwarm = rc.readBroadcast(SOLDIER_SWARM_CHANNEL);
+					if (soldierSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(SOLDIER_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(SOLDIER_SWARM_LOCATION_Y_CHANNEL);
+						moveTowardDestination(new MapLocation(x, y), true,
+								false, false);
+					} else {
+						defendAndMove();
+					}
 					break;
 
 				case SUPPLYDEPOT:
@@ -398,15 +511,32 @@ public class RobotPlayer {
 
 				case TANK:
 					attackEnemyZero();
-					defendAndMove();
+					
+					int tankSwarm = rc.readBroadcast(TANK_SWARM_CHANNEL);
+					if (tankSwarm == GO_TO_LOCATION) {
+						int x = rc.readBroadcast(TANK_SWARM_LOCATION_X_CHANNEL);
+						int y = rc.readBroadcast(TANK_SWARM_LOCATION_Y_CHANNEL);
+						moveTowardDestination(new MapLocation(x, y), true,
+								false, false);
+					} else {
+						defendAndMove();
+					}
 					break;
 
 				case TANKFACTORY:
+					if(rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL) < 5) {
+						createUnit(RobotType.TANK, false);
+					}
 					break;
 
 				case TECHNOLOGYINSTITUTE:
+					if(rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
+						createUnit(RobotType.TRAININGFIELD, true);
+					} else if(rc.readBroadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL) < 1){
+						createUnit(RobotType.COMPUTER, false);
+					}
 					break;
-
+					
 				case TOWER:
 					attackEnemyZero();
 					break;
@@ -889,10 +1019,6 @@ public class RobotPlayer {
 				if (totalOreCount > bestOreCount) {
 					bestOreCount = totalOreCount;
 					bestDestination = squareFour;
-				} else if (totalOreCount == bestOreCount
-						&& bestDestination != null) {
-					bestDestination = (rand.nextDouble() > 0.5) ? bestDestination
-							: squareFour;
 				}
 			}
 
@@ -1202,46 +1328,55 @@ public class RobotPlayer {
 					rc.broadcast(BASHER_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(BASHER_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
+					
 				case BEAVER:
 					rc.broadcast(BEAVER_SWARM_CHANNEL, action);
 					rc.broadcast(BEAVER_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(BEAVER_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
+					
 				case COMMANDER:
 					rc.broadcast(COMMANDER_SWARM_CHANNEL, action);
 					rc.broadcast(COMMANDER_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(COMMANDER_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
-				case COMPUTER:
-					rc.broadcast(COMPUTER_SWARM_CHANNEL, action);
-					rc.broadcast(COMPUTER_SWARM_LOCATION_X_CHANNEL, x);
-					rc.broadcast(COMPUTER_SWARM_LOCATION_Y_CHANNEL, y);
-					break;
+					
 				case DRONE:
 					rc.broadcast(DRONE_SWARM_CHANNEL, action);
 					rc.broadcast(DRONE_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(DRONE_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
+					
+				case LAUNCHER:
+					rc.broadcast(LAUNCHER_SWARM_CHANNEL, action);
+					rc.broadcast(LAUNCHER_SWARM_LOCATION_X_CHANNEL, x);
+					rc.broadcast(LAUNCHER_SWARM_LOCATION_Y_CHANNEL, y);
+					break;
+					
 				case MINER:
 					rc.broadcast(MINER_SWARM_CHANNEL, action);
 					rc.broadcast(MINER_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(MINER_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
+					
 				case MISSILE:
 					rc.broadcast(MISSILE_SWARM_CHANNEL, action);
 					rc.broadcast(MISSILE_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(MISSILE_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
+					
 				case SOLDIER:
 					rc.broadcast(SOLDIER_SWARM_CHANNEL, action);
 					rc.broadcast(SOLDIER_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(SOLDIER_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
+					
 				case TANK:
 					rc.broadcast(TANK_SWARM_CHANNEL, action);
 					rc.broadcast(TANK_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(TANK_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
+					
 				default:
 					break;
 
@@ -1259,8 +1394,8 @@ public class RobotPlayer {
 				case COMMANDER:
 					rc.broadcast(COMMANDER_SWARM_CHANNEL, action);
 					break;
-				case COMPUTER:
-					rc.broadcast(COMPUTER_SWARM_CHANNEL, action);
+				case LAUNCHER:
+					rc.broadcast(LAUNCHER_SWARM_CHANNEL, action);
 					break;
 				case DRONE:
 					rc.broadcast(DRONE_SWARM_CHANNEL, action);
@@ -1693,8 +1828,8 @@ public class RobotPlayer {
 	private static final int BEAVER_SWARM_LOCATION_Y_CHANNEL = 211;
 	private static final int MINER_SWARM_LOCATION_X_CHANNEL = 202;
 	private static final int MINER_SWARM_LOCATION_Y_CHANNEL = 212;
-	private static final int COMPUTER_SWARM_LOCATION_X_CHANNEL = 203;
-	private static final int COMPUTER_SWARM_LOCATION_Y_CHANNEL = 213;
+	private static final int LAUNCHER_SWARM_LOCATION_X_CHANNEL = 203;
+	private static final int LAUNCHER_SWARM_LOCATION_Y_CHANNEL = 213;
 	private static final int SOLDIER_SWARM_LOCATION_X_CHANNEL = 204;
 	private static final int SOLDIER_SWARM_LOCATION_Y_CHANNEL = 214;
 	private static final int BASHER_SWARM_LOCATION_X_CHANNEL = 205;
@@ -1711,7 +1846,7 @@ public class RobotPlayer {
 	// Offensive + Defensive Signals
 	private static final int BEAVER_SWARM_CHANNEL = 1001;
 	private static final int MINER_SWARM_CHANNEL = 1002;
-	private static final int COMPUTER_SWARM_CHANNEL = 1003;
+	private static final int LAUNCHER_SWARM_CHANNEL = 1003;
 	private static final int SOLDIER_SWARM_CHANNEL = 1004;
 	private static final int BASHER_SWARM_CHANNEL = 1005;
 	private static final int DRONE_SWARM_CHANNEL = 1006;
