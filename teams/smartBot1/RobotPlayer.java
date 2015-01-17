@@ -141,15 +141,15 @@ public class RobotPlayer {
 				switch (thisRobotType) {
 
 				case AEROSPACELAB:
-					if(rc.readBroadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL) < 3){
+					if (rc.readBroadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL) < 3) {
 						createUnit(RobotType.LAUNCHER, false);
 					}
 
 				case BARRACKS:
-					if(rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) +
-							rc.readBroadcast(NUM_FRIENDLY_BASHERS_CHANNEL) < 20) {
-						
-						if(rand.nextDouble() > 0.5) {
+					if (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL)
+							+ rc.readBroadcast(NUM_FRIENDLY_BASHERS_CHANNEL) < 20) {
+
+						if (rand.nextDouble() > 0.5) {
 							createUnit(RobotType.SOLDIER, false);
 						} else {
 							createUnit(RobotType.BASHER, false);
@@ -157,10 +157,11 @@ public class RobotPlayer {
 					}
 
 				case BASHER:
-					/* BASHERs attack automatically, so we do not need to call the
-					 * attackEnemyZero() method
+					/*
+					 * BASHERs attack automatically, so we do not need to call
+					 * the attackEnemyZero() method
 					 */
-					
+
 					int basherSwarm = rc.readBroadcast(BASHER_SWARM_CHANNEL);
 					if (basherSwarm == GO_TO_LOCATION) {
 						int x = rc
@@ -176,7 +177,7 @@ public class RobotPlayer {
 
 				case BEAVER:
 					attackEnemyZero();
-					
+
 					int beaverSwarm = rc.readBroadcast(BEAVER_SWARM_CHANNEL);
 					if (beaverSwarm == GO_TO_LOCATION) {
 						int x = rc
@@ -187,8 +188,8 @@ public class RobotPlayer {
 								false, false);
 					} else {
 						// Building Order/Preferences
-						if (roundNum < 1800 && rc
-								.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
+						if (roundNum < 1800
+								&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 							createUnit(RobotType.MINERFACTORY, true);
 						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
@@ -199,7 +200,7 @@ public class RobotPlayer {
 						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
 							createUnit(RobotType.BARRACKS, true);
-						} else if(rc
+						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 1) {
 							createUnit(RobotType.AEROSPACELAB, true);
 						} else if (rc
@@ -215,14 +216,14 @@ public class RobotPlayer {
 								.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 5) {
 							createUnit(RobotType.HANDWASHSTATION, true);
 						}
-						
+
 						mineAndMove();
 					}
 					break;
 
 				case COMMANDER:
 					attackEnemyZero();
-					
+
 					int commanderSwarm = rc
 							.readBroadcast(COMMANDER_SWARM_CHANNEL);
 					if (commanderSwarm == GO_TO_LOCATION) {
@@ -242,18 +243,18 @@ public class RobotPlayer {
 
 				case DRONE:
 					attackEnemyZero();
-					
-					 int droneSwarm = rc.readBroadcast(DRONE_SWARM_CHANNEL);
-					 if (droneSwarm == GO_TO_LOCATION) {
-						 int x = rc.
-								 readBroadcast(DRONE_SWARM_LOCATION_X_CHANNEL);
-						 int y = rc
-								 .readBroadcast(DRONE_SWARM_LOCATION_Y_CHANNEL);
-						 moveTowardDestination(new MapLocation(x, y), true,
-								 false, false);
-					 } else {
-						 defendAndMove();
-					 }
+
+					int droneSwarm = rc.readBroadcast(DRONE_SWARM_CHANNEL);
+					if (droneSwarm == GO_TO_LOCATION) {
+						int x = rc
+								.readBroadcast(DRONE_SWARM_LOCATION_X_CHANNEL);
+						int y = rc
+								.readBroadcast(DRONE_SWARM_LOCATION_Y_CHANNEL);
+						moveTowardDestination(new MapLocation(x, y), true,
+								false, false);
+					} else {
+						defendAndMove();
+					}
 					break;
 
 				case HANDWASHSTATION:
@@ -400,7 +401,8 @@ public class RobotPlayer {
 						}
 					}
 
-					int launcherSwarm = rc.readBroadcast(LAUNCHER_SWARM_CHANNEL);
+					int launcherSwarm = rc
+							.readBroadcast(LAUNCHER_SWARM_CHANNEL);
 					if (launcherSwarm == GO_TO_LOCATION) {
 						int x = rc
 								.readBroadcast(LAUNCHER_SWARM_LOCATION_X_CHANNEL);
@@ -415,7 +417,7 @@ public class RobotPlayer {
 
 				case MINER:
 					attackEnemyZero();
-					
+
 					int minerSwarm = rc.readBroadcast(MINER_SWARM_CHANNEL);
 					if (minerSwarm == GO_TO_LOCATION) {
 						int x = rc
@@ -492,7 +494,7 @@ public class RobotPlayer {
 
 				case SOLDIER:
 					attackEnemyZero();
-					
+
 					int soldierSwarm = rc.readBroadcast(SOLDIER_SWARM_CHANNEL);
 					if (soldierSwarm == GO_TO_LOCATION) {
 						int x = rc
@@ -511,7 +513,7 @@ public class RobotPlayer {
 
 				case TANK:
 					attackEnemyZero();
-					
+
 					int tankSwarm = rc.readBroadcast(TANK_SWARM_CHANNEL);
 					if (tankSwarm == GO_TO_LOCATION) {
 						int x = rc.readBroadcast(TANK_SWARM_LOCATION_X_CHANNEL);
@@ -524,19 +526,19 @@ public class RobotPlayer {
 					break;
 
 				case TANKFACTORY:
-					if(rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL) < 5) {
+					if (rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL) < 5) {
 						createUnit(RobotType.TANK, false);
 					}
 					break;
 
 				case TECHNOLOGYINSTITUTE:
-					if(rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
+					if (rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
 						createUnit(RobotType.TRAININGFIELD, true);
-					} else if(rc.readBroadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL) < 1){
+					} else if (rc.readBroadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL) < 1) {
 						createUnit(RobotType.COMPUTER, false);
 					}
 					break;
-					
+
 				case TOWER:
 					attackEnemyZero();
 					break;
@@ -791,19 +793,18 @@ public class RobotPlayer {
 	 *            - the location being tested.
 	 * @param onlyHQAndTowers
 	 *            - considers only HQ and Tower range unsafe.
-	 * @param checkFriendlyDrones
+	 * @param checkFriendlyMissiles
 	 *            - considers also being within friendly missile range to be
 	 *            unsafe
 	 * @return - True if the location is safe, false if it is not.
 	 **************************************************************************/
 	private static boolean isSafe(MapLocation loc, boolean onlyHQAndTowers,
-			boolean checkFriendlyDrones) throws GameActionException {
+			boolean checkFriendlyMissiles) throws GameActionException {
 		TerrainTile locTerrain = rc.senseTerrainTile(loc);
 
-		if (locTerrain != TerrainTile.NORMAL) {
-			if (!(locTerrain == TerrainTile.VOID && (thisRobotType == RobotType.DRONE || thisRobotType == RobotType.MISSILE))) {
-				return false;
-			}
+		if (locTerrain != TerrainTile.NORMAL
+				&& !(locTerrain == TerrainTile.VOID && (thisRobotType == RobotType.DRONE || thisRobotType == RobotType.MISSILE))) {
+			return false;
 		}
 
 		// Check if HQ is in range
@@ -823,12 +824,18 @@ public class RobotPlayer {
 		 * within explosion range
 		 */
 		if (!onlyHQAndTowers) {
-			Team roboTeam = checkFriendlyDrones ? null : Enemy;
-			RobotInfo[] nearbyRobots = rc.senseNearbyRobots(
-					thisRobotType.sensorRadiusSquared, roboTeam);
+			Team roboTeam = checkFriendlyMissiles ? null : Enemy;
+			RobotInfo[] nearbyRobots;
+			if (checkFriendlyMissiles) {
+				nearbyRobots = rc
+						.senseNearbyRobots(thisRobotType.sensorRadiusSquared);
+			} else {
+				nearbyRobots = rc.senseNearbyRobots(
+						thisRobotType.sensorRadiusSquared, roboTeam);
+			}
 			for (RobotInfo r : nearbyRobots) {
 				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
-						&& (r.team == Enemy || (checkFriendlyDrones && r.type == RobotType.DRONE))) {
+						&& (r.team == Enemy || (checkFriendlyMissiles && r.type == RobotType.MISSILE))) {
 					return false;
 				}
 			}
@@ -886,7 +893,7 @@ public class RobotPlayer {
 	 *            - boolean to determine whether to call isSafe
 	 * @param onlyHQAndTowers
 	 *            - checks only HQ and Towers
-	 * @param checkFriendlyDrones
+	 * @param checkFriendlyMissiles
 	 *            - considers also being within friendly missile range to be
 	 *            unsafe
 	 * 
@@ -896,7 +903,7 @@ public class RobotPlayer {
 	 */
 	private static boolean moveTowardDestination(MapLocation dest,
 			boolean ignoreSafety, boolean onlyHQAndTowers,
-			boolean checkFriendlyDrones) throws GameActionException {
+			boolean checkFriendlyMissiles) throws GameActionException {
 		// TODO: Should we consider including a "crowdedness" heuristic? If so,
 		// how do we incorporate our current implementation?
 
@@ -927,7 +934,7 @@ public class RobotPlayer {
 
 					if (ignoreSafety
 							|| isSafe(possSquare, onlyHQAndTowers,
-									checkFriendlyDrones)) {
+									checkFriendlyMissiles)) {
 						rc.move(possDirection);
 						return true;
 					}
@@ -1328,55 +1335,55 @@ public class RobotPlayer {
 					rc.broadcast(BASHER_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(BASHER_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
-					
+
 				case BEAVER:
 					rc.broadcast(BEAVER_SWARM_CHANNEL, action);
 					rc.broadcast(BEAVER_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(BEAVER_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
-					
+
 				case COMMANDER:
 					rc.broadcast(COMMANDER_SWARM_CHANNEL, action);
 					rc.broadcast(COMMANDER_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(COMMANDER_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
-					
+
 				case DRONE:
 					rc.broadcast(DRONE_SWARM_CHANNEL, action);
 					rc.broadcast(DRONE_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(DRONE_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
-					
+
 				case LAUNCHER:
 					rc.broadcast(LAUNCHER_SWARM_CHANNEL, action);
 					rc.broadcast(LAUNCHER_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(LAUNCHER_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
-					
+
 				case MINER:
 					rc.broadcast(MINER_SWARM_CHANNEL, action);
 					rc.broadcast(MINER_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(MINER_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
-					
+
 				case MISSILE:
 					rc.broadcast(MISSILE_SWARM_CHANNEL, action);
 					rc.broadcast(MISSILE_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(MISSILE_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
-					
+
 				case SOLDIER:
 					rc.broadcast(SOLDIER_SWARM_CHANNEL, action);
 					rc.broadcast(SOLDIER_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(SOLDIER_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
-					
+
 				case TANK:
 					rc.broadcast(TANK_SWARM_CHANNEL, action);
 					rc.broadcast(TANK_SWARM_LOCATION_X_CHANNEL, x);
 					rc.broadcast(TANK_SWARM_LOCATION_Y_CHANNEL, y);
 					break;
-					
+
 				default:
 					break;
 
@@ -1489,11 +1496,11 @@ public class RobotPlayer {
 		int enemyChunkSize = (int) Math.floor(enemyRobots.length / 4);
 		int friendlyLoopStart = friendlyChunkSize * roundNumMod;
 		// Make sure to read the whole array
-		int friendlyLoopEnd = roundNumMod == 4 ? friendlyRobots.length
+		int friendlyLoopEnd = roundNumMod == 3 ? friendlyRobots.length
 				: friendlyChunkSize * (roundNumMod + 1);
 		int enemyLoopStart = enemyChunkSize * roundNumMod;
 		// Make sure to read the whole array
-		int enemyLoopEnd = roundNumMod == 4 ? enemyRobots.length
+		int enemyLoopEnd = roundNumMod == 3 ? enemyRobots.length
 				: enemyChunkSize * (roundNumMod + 1);
 
 		/**********************************************************************
