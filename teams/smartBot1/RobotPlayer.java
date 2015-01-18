@@ -200,33 +200,23 @@ public class RobotPlayer {
 								false, false);
 					} else {
 						// Building Order/Preferences
-						if (rc
-								.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
+						if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
 							createUnit(RobotType.HELIPAD, true);
-						} else if (roundNum < 1800
-									&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
-								createUnit(RobotType.MINERFACTORY, true);
-							
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
+						} else if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
+							createUnit(RobotType.MINERFACTORY, true);
+						} else if (rc.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
 							createUnit(RobotType.TECHNOLOGYINSTITUTE, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
-							createUnit(RobotType.TANKFACTORY, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
+						} else if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
 							createUnit(RobotType.BARRACKS, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 1) {
+						} else if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
+							createUnit(RobotType.TANKFACTORY, true);
+						} else if (rc.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 1) {
 							createUnit(RobotType.AEROSPACELAB, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
+						} else if (rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
 							createUnit(RobotType.TRAININGFIELD, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
+						} else if (rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
 							createUnit(RobotType.SUPPLYDEPOT, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 5) {
+						} else if (rc.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 5) {
 							createUnit(RobotType.HANDWASHSTATION, true);
 						}
 
@@ -274,8 +264,7 @@ public class RobotPlayer {
 					break;
 
 				case HELIPAD:
-					if (rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) < 20) {
-						System.out.println("Called!");	
+					if (rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) < 20) {	
 						createUnit(RobotType.DRONE, false);
 					}
 					break;
@@ -380,7 +369,7 @@ public class RobotPlayer {
 					// Maintain only a few beavers
 					int currentNumFriendlyBeavers = rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL);
 					
-					if (currentNumFriendlyBeavers < 2) {
+					if (currentNumFriendlyBeavers < 5) {
 						createUnit(RobotType.BEAVER, false);
 					}
 
@@ -841,14 +830,9 @@ public class RobotPlayer {
 		 */
 		if (!onlyHQAndTowers) {
 			Team roboTeam = checkFriendlyMissiles ? null : Enemy;
-			RobotInfo[] nearbyRobots;
-			if (checkFriendlyMissiles) {
-				nearbyRobots = rc
-						.senseNearbyRobots(thisRobotType.sensorRadiusSquared);
-			} else {
-				nearbyRobots = rc.senseNearbyRobots(
-						thisRobotType.sensorRadiusSquared, roboTeam);
-			}
+			RobotInfo[] nearbyRobots = rc
+					.senseNearbyRobots(thisRobotType.sensorRadiusSquared, roboTeam);
+			
 			for (RobotInfo r : nearbyRobots) {
 				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
 						&& (r.team == Enemy || (checkFriendlyMissiles && r.type == RobotType.MISSILE))) {
