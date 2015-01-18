@@ -42,6 +42,11 @@ public class RobotPlayer {
 			Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
 			Direction.NORTH_WEST };
 
+	private static int COMPUTER_CACHE_POINTER;
+	private static final int MIN_COMPUTER_CACHE_CHANNEL = 3000;
+	private static final int MAX_COMPUTER_CACHE_CHANNEL = MIN_COMPUTER_CACHE_CHANNEL +
+			GameConstants.MAP_MAX_HEIGHT * GameConstants.MAP_MAX_WIDTH;
+	
 	// Missile only
 	private static int turnsRemaining;
 
@@ -112,6 +117,9 @@ public class RobotPlayer {
 					.rotateRight();
 		}
 
+		if (thisRobotType == RobotType.COMPUTER) {
+			
+		}
 		// Method can never end or the robot is destroyed.
 		while (true) {
 			/*
@@ -195,6 +203,9 @@ public class RobotPlayer {
 								.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
 							createUnit(RobotType.HELIPAD, true);
 						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
+							createUnit(RobotType.TECHNOLOGYINSTITUTE, true);
+						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
 							createUnit(RobotType.TANKFACTORY, true);
 						} else if (rc
@@ -203,9 +214,6 @@ public class RobotPlayer {
 						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 1) {
 							createUnit(RobotType.AEROSPACELAB, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
-							createUnit(RobotType.TECHNOLOGYINSTITUTE, true);
 						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
 							createUnit(RobotType.TRAININGFIELD, true);
@@ -272,7 +280,7 @@ public class RobotPlayer {
 					 * ========================================================
 					 * Unit Counting -------------------------------> 5 Rounds
 					 * Tower Strength -------------------------------> 1 Round
-					 *********************************************************/
+					 **********************************************************/
 					if (roundNum % 5 < 5) {
 						// Update unit counts every so often!
 						updateUnitCounts();
@@ -343,10 +351,11 @@ public class RobotPlayer {
 						// ___AND Number of Friendly Tanks Remaining ------> 1
 						//
 					} else if (roundNum < 1800
-							&& rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL) < 5
-							&& rc.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL) < 15
-							&& rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL) < 1
-							&& rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) < 5) {
+							&& currentNumFriendlyBashers < 5
+							&& currentNumFriendlySoldiers < 5
+							&& currentNumFriendlyMiners < 15
+							&& currentNumFriendlyTanks < 1
+							&& currentNumFriendlyDrones < 5) {
 						RobotType[] types = { RobotType.BASHER,
 								RobotType.COMMANDER, RobotType.DRONE,
 								RobotType.MINER, RobotType.MISSILE,
@@ -364,8 +373,14 @@ public class RobotPlayer {
 					attackEnemyZero();
 
 					// Maintain only a few beavers
-					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 2) {
-						createUnit(RobotType.BEAVER, false);
+					int currentNumFriendlyBeavers = rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL);
+					System.out.println("Beaver Count: " + currentNumFriendlyBeavers);
+					
+					if (currentNumFriendlyBeavers < 2) {
+						if(createUnit(RobotType.BEAVER, false)) {
+							System.out.println("Called!");
+							rc.broadcast(NUM_FRIENDLY_BEAVERS_CHANNEL, currentNumFriendlyBeavers + 1);
+						}
 					}
 
 					if (!done) {
@@ -532,10 +547,11 @@ public class RobotPlayer {
 					break;
 
 				case TECHNOLOGYINSTITUTE:
-					if (rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
-						createUnit(RobotType.TRAININGFIELD, true);
-					} else if (rc.readBroadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL) < 1) {
+					if (rc.readBroadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL) < 1) {
 						createUnit(RobotType.COMPUTER, false);
+					
+					} else if (rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
+						createUnit(RobotType.TRAININGFIELD, true);
 					}
 					break;
 
@@ -887,27 +903,35 @@ public class RobotPlayer {
 	/**
 	 * Directs a robot toward a given destination.
 	 * 
-	 * @param dest
-	 *            - the target location
-	 * @param ignoreSafety
-	 *            - boolean to determine whether to call isSafe
-	 * @param onlyHQAndTowers
-	 *            - checks only HQ and Towers
-	 * @param checkFriendlyMissiles
-	 *            - considers also being within friendly missile range to be
-	 *            unsafe
+	 * @param startLoc - starting location from which to move toward the target
+	 * 					 destination in question; default is the current location
+	 * 					 of the robot calling the function 
+	 * @param dest - the target location
+	 * @param ignoreSafety - boolean to determine whether to call isSafe
+	 * @param onlyHQAndTowers - checks only HQ and Towers
+	 * @param checkFriendlyMissiles - considers also being within friendly missile
+	 * 								  range to be unsafe
 	 * 
 	 * @return True if there is a direction that the robot can move towards the
 	 *         given destination
 	 * @throws GameActionException
 	 */
-	private static boolean moveTowardDestination(MapLocation dest,
+	
+	private static boolean moveTowardDestination(MapLocation dest, boolean ignoreSafety,
+			boolean onlyHQAndTowers, boolean checkFriendlyMissiles)
+					throws GameActionException {
+		
+		return moveTowardDestination(rc.getLocation(), dest, ignoreSafety, onlyHQAndTowers,
+				checkFriendlyMissiles);
+	}
+	
+	private static boolean moveTowardDestination(MapLocation startLoc, MapLocation dest,
 			boolean ignoreSafety, boolean onlyHQAndTowers,
 			boolean checkFriendlyMissiles) throws GameActionException {
 		// TODO: Should we consider including a "crowdedness" heuristic? If so,
 		// how do we incorporate our current implementation?
 
-		Direction straight = rc.getLocation().directionTo(dest);
+		Direction straight = startLoc.directionTo(dest);
 		MapLocation currentLocation = rc.getLocation();
 
 		if (rc.isCoreReady()) {
