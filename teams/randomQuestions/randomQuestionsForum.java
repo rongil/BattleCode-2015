@@ -4,12 +4,10 @@ import battlecode.common.*;
 
 public class randomQuestionsForum {
 	public static void main(String[] args){
-		int number = 10;
+		int[] test = new int[8];
+		System.out.println(test[0]);
 		
-		String string = Integer.toString(number);
-		string += "000";
-		
-		number = Integer.parseInt(string);
-		System.out.println(number);
+		test[0] += 1;
+		System.out.println(test[0]);
 	}
 }

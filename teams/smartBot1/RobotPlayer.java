@@ -149,8 +149,12 @@ public class RobotPlayer {
 				switch (thisRobotType) {
 
 				case AEROSPACELAB:
-					if (rc.readBroadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL) < 3) {
-						createUnit(RobotType.LAUNCHER, false);
+					int currentNumLaunchersCount = rc.readBroadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL);  
+					
+					if (currentNumLaunchersCount < 3) {
+						if(createUnit(RobotType.LAUNCHER, false)) {
+							rc.broadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL, currentNumLaunchersCount + 1);
+						}
 					}
 
 				case BARRACKS:
@@ -204,7 +208,11 @@ public class RobotPlayer {
 							createUnit(RobotType.HELIPAD, true);
 						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
-							createUnit(RobotType.TECHNOLOGYINSTITUTE, true);
+							if(createUnit(RobotType.TECHNOLOGYINSTITUTE, true)) {
+								int techInstCount = rc
+										.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL);
+								rc.broadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL, techInstCount + 1);
+							}
 						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
 							createUnit(RobotType.TANKFACTORY, true);
@@ -281,10 +289,9 @@ public class RobotPlayer {
 					 * Unit Counting -------------------------------> 5 Rounds
 					 * Tower Strength -------------------------------> 1 Round
 					 **********************************************************/
-					if (roundNum % 5 < 5) {
-						// Update unit counts every so often!
-						updateUnitCounts();
-					}
+
+					updateUnitCounts();
+				
 					if (roundNum % 5 == 4) {
 						// Check tower strength!
 						analyzeTowerStrength();
@@ -374,11 +381,9 @@ public class RobotPlayer {
 
 					// Maintain only a few beavers
 					int currentNumFriendlyBeavers = rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL);
-					System.out.println("Beaver Count: " + currentNumFriendlyBeavers);
 					
 					if (currentNumFriendlyBeavers < 2) {
 						if(createUnit(RobotType.BEAVER, false)) {
-							System.out.println("Called!");
 							rc.broadcast(NUM_FRIENDLY_BEAVERS_CHANNEL, currentNumFriendlyBeavers + 1);
 						}
 					}
@@ -1608,6 +1613,9 @@ public class RobotPlayer {
 				case HELIPAD:
 					++unitCountNumFriendlyHelipad;
 					break;
+				case HQ:
+					// No need to count HQ!
+					break;
 				case LAUNCHER:
 					++unitCountNumFriendlyLaunchers;
 					break;
@@ -1633,6 +1641,7 @@ public class RobotPlayer {
 					++unitCountNumFriendlyTankFactory;
 					break;
 				case TECHNOLOGYINSTITUTE:
+					System.out.println("Count it! Count: " + unitCountNumFriendlyTechInstitute);
 					++unitCountNumFriendlyTechInstitute;
 					break;
 				case TOWER:
@@ -1674,6 +1683,9 @@ public class RobotPlayer {
 					break;
 				case HELIPAD:
 					++unitCountNumEnemyHelipad;
+					break;
+				case HQ: // No need to count HQ! break; case LAUNCHER:
+					++unitCountNumEnemyLaunchers;
 					break;
 				case MINER:
 					++unitCountNumEnemyMiners;
@@ -1769,10 +1781,8 @@ public class RobotPlayer {
 			// Enemy Units Broadcasts
 			rc.broadcast(NUM_ENEMY_BEAVERS_CHANNEL, unitCountNumEnemyBeavers);
 			rc.broadcast(NUM_ENEMY_MINERS_CHANNEL, unitCountNumEnemyMiners);
-			rc.broadcast(NUM_ENEMY_COMPUTERS_CHANNEL,
-					unitCountNumEnemyComputers);
-			rc.broadcast(NUM_ENEMY_COMMANDERS_CHANNEL,
-					unitCountNumEnemyCommanders);
+			rc.broadcast(NUM_ENEMY_COMMANDERS_CHANNEL, unitCountNumEnemyCommanders);
+			rc.broadcast(NUM_ENEMY_COMPUTERS_CHANNEL, unitCountNumEnemyComputers);
 			rc.broadcast(NUM_ENEMY_SOLDIERS_CHANNEL, unitCountNumEnemySoldiers);
 			rc.broadcast(NUM_ENEMY_BASHERS_CHANNEL, unitCountNumEnemyBashers);
 			rc.broadcast(NUM_ENEMY_DRONES_CHANNEL, unitCountNumEnemyDrones);
