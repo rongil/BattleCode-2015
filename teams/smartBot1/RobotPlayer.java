@@ -200,19 +200,16 @@ public class RobotPlayer {
 								false, false);
 					} else {
 						// Building Order/Preferences
-						if (roundNum < 1800
-								&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
-							createUnit(RobotType.MINERFACTORY, true);
-						} else if (rc
+						if (rc
 								.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
 							createUnit(RobotType.HELIPAD, true);
+						} else if (roundNum < 1800
+									&& rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
+								createUnit(RobotType.MINERFACTORY, true);
+							
 						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
-							if(createUnit(RobotType.TECHNOLOGYINSTITUTE, true)) {
-								int techInstCount = rc
-										.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL);
-								rc.broadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL, techInstCount + 1);
-							}
+							createUnit(RobotType.TECHNOLOGYINSTITUTE, true);
 						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
 							createUnit(RobotType.TANKFACTORY, true);
@@ -278,6 +275,7 @@ public class RobotPlayer {
 
 				case HELIPAD:
 					if (rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) < 20) {
+						System.out.println("Called!");	
 						createUnit(RobotType.DRONE, false);
 					}
 					break;
@@ -383,9 +381,7 @@ public class RobotPlayer {
 					int currentNumFriendlyBeavers = rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL);
 					
 					if (currentNumFriendlyBeavers < 2) {
-						if(createUnit(RobotType.BEAVER, false)) {
-							rc.broadcast(NUM_FRIENDLY_BEAVERS_CHANNEL, currentNumFriendlyBeavers + 1);
-						}
+						createUnit(RobotType.BEAVER, false);
 					}
 
 					if (!done) {
@@ -457,9 +453,8 @@ public class RobotPlayer {
 							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
 					// Exponential Decay for miner production
 					double miningFate = rand.nextDouble();
-					if (roundNum < 1500
-							&& miningFate <= Math.pow(Math.E,
-									-minerCount * 0.07)) {
+					if (roundNum < 1500 
+							&& miningFate <= Math.pow(Math.E, -minerCount * 0.07)) {
 						createUnit(RobotType.MINER, false);
 					}
 					break;
@@ -989,7 +984,7 @@ public class RobotPlayer {
 		// question; otherwise, look for another one
 
 		RobotInfo[] incomingEnemies = rc.senseNearbyRobots(friendlyHQ,
-				halfwayDistance, Enemy);
+				(int) Math.pow(halfwayDistance, 2), Enemy);
 		boolean weaponReady = rc.isWeaponReady();
 		MapLocation targetLocation = null;
 
@@ -1012,7 +1007,7 @@ public class RobotPlayer {
 				return;
 			}
 
-			moveTowardDestination(targetLocation, false, false, true);
+			moveTowardDestination(targetLocation, false, true, true);
 
 		} else {
 			if (thisRobotType == RobotType.DRONE) {
@@ -1515,7 +1510,7 @@ public class RobotPlayer {
 	private static void updateUnitCounts() throws GameActionException {
 
 		// Run part of the work on each round
-		int roundNumMod = roundNum % 5;
+		int roundNumMod = (roundNum % 10) / 2;
 		if (roundNumMod == 0 || friendlyRobots == null || enemyRobots == null) {
 			// Collect all robots into separate RobotInfo arrays.
 			friendlyRobots = rc.senseNearbyRobots(Integer.MAX_VALUE, Friend);
@@ -1525,11 +1520,11 @@ public class RobotPlayer {
 		int enemyChunkSize = (int) Math.floor(enemyRobots.length / 4);
 		int friendlyLoopStart = friendlyChunkSize * roundNumMod;
 		// Make sure to read the whole array
-		int friendlyLoopEnd = roundNumMod == 3 ? friendlyRobots.length
+		int friendlyLoopEnd = (roundNumMod == 3) ? friendlyRobots.length
 				: friendlyChunkSize * (roundNumMod + 1);
 		int enemyLoopStart = enemyChunkSize * roundNumMod;
 		// Make sure to read the whole array
-		int enemyLoopEnd = roundNumMod == 3 ? enemyRobots.length
+		int enemyLoopEnd = (roundNumMod == 3) ? enemyRobots.length
 				: enemyChunkSize * (roundNumMod + 1);
 
 		/**********************************************************************
@@ -1641,7 +1636,6 @@ public class RobotPlayer {
 					++unitCountNumFriendlyTankFactory;
 					break;
 				case TECHNOLOGYINSTITUTE:
-					System.out.println("Count it! Count: " + unitCountNumFriendlyTechInstitute);
 					++unitCountNumFriendlyTechInstitute;
 					break;
 				case TOWER:
