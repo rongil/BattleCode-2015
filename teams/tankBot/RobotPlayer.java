@@ -128,11 +128,17 @@ public class RobotPlayer {
 						createUnit(RobotType.BARRACKS, true);
 					} else if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
 						createUnit(RobotType.TANKFACTORY, true);
+					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
+						createUnit(RobotType.HELIPAD, true);
 					}
 						
 					mineAndMove();
 					break;
 				
+				case HELIPAD:
+					createUnit(RobotType.DRONE, false);
+					break;
+					
 				case HQ:
 					attackEnemyZero();
 					updateUnitCounts();
@@ -160,6 +166,7 @@ public class RobotPlayer {
 					}
 					break;
 
+				case DRONE:
 				case TANK:
 					attackNearestTower();					
 					attackEnemyZero();
@@ -196,12 +203,12 @@ public class RobotPlayer {
 		boolean canAttack = rc.isWeaponReady();
 		MapLocation currentLocation = rc.getLocation();
 		int tankCount = rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL);
-		
+		int droneCount = rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
 		if(enemyTowers.length == 0){
 			if(canAttack && rc.canAttackLocation(enemyHQ)) {
 				rc.attackLocation(enemyHQ);
 			} else if (currentLocation.distanceSquaredTo(enemyHQ) > RobotType.TANK.attackRadiusSquared) {
-				if(tankCount > 10) {
+				if(tankCount > 10 || droneCount > 20) {
 					moveTowardDestination(enemyHQ, true, false, false);
 				} else {
 					moveTowardDestination(enemyHQ, false, false, true);
@@ -212,7 +219,7 @@ public class RobotPlayer {
 			if(canAttack && rc.canAttackLocation(enemyTowers[0])) {
 				rc.attackLocation(enemyTowers[0]);
 			} else if (currentLocation.distanceSquaredTo(enemyTowers[0]) > RobotType.TANK.attackRadiusSquared) {
-				if(tankCount > 10) {
+				if(tankCount > 10 || droneCount > 20) {
 					moveTowardDestination(enemyTowers[0], true, false, false);
 				} else {
 					moveTowardDestination(enemyTowers[0], false, false, true);
