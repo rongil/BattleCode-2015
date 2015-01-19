@@ -41,11 +41,6 @@ public class RobotPlayer {
 			Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
 			Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
 			Direction.NORTH_WEST };
-
-	private static int COMPUTER_CACHE_POINTER;
-	private static final int MIN_COMPUTER_CACHE_CHANNEL = 3000;
-	private static final int MAX_COMPUTER_CACHE_CHANNEL = MIN_COMPUTER_CACHE_CHANNEL +
-			GameConstants.MAP_MAX_HEIGHT * GameConstants.MAP_MAX_WIDTH;
 	
 	// Missile only
 	private static int turnsRemaining;
@@ -159,7 +154,7 @@ public class RobotPlayer {
 
 				case BARRACKS:
 					if (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL)
-							+ rc.readBroadcast(NUM_FRIENDLY_BASHERS_CHANNEL) < 20) {
+							+ rc.readBroadcast(NUM_FRIENDLY_BASHERS_CHANNEL) < 40) {
 
 						if (rand.nextDouble() > 0.5) {
 							createUnit(RobotType.SOLDIER, false);
@@ -204,14 +199,14 @@ public class RobotPlayer {
 							createUnit(RobotType.HELIPAD, true);
 						} else if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 							createUnit(RobotType.MINERFACTORY, true);
-						} else if (rc.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
-							createUnit(RobotType.TECHNOLOGYINSTITUTE, true);
 						} else if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
 							createUnit(RobotType.BARRACKS, true);
 						} else if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
 							createUnit(RobotType.TANKFACTORY, true);
 						} else if (rc.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 1) {
 							createUnit(RobotType.AEROSPACELAB, true);
+						} else if (rc.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
+							createUnit(RobotType.TECHNOLOGYINSTITUTE, true);
 						} else if (rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
 							createUnit(RobotType.TRAININGFIELD, true);
 						} else if (rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
@@ -219,7 +214,7 @@ public class RobotPlayer {
 						} else if (rc.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 5) {
 							createUnit(RobotType.HANDWASHSTATION, true);
 						}
-
+						
 						mineAndMove();
 					}
 					break;
@@ -264,7 +259,8 @@ public class RobotPlayer {
 					break;
 
 				case HELIPAD:
-					if (rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) < 20) {	
+					createUnit(RobotType.DRONE, false);
+					if (rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) < 35) {	
 						createUnit(RobotType.DRONE, false);
 					}
 					break;
@@ -383,6 +379,7 @@ public class RobotPlayer {
 					 * The missile is launched one square in front of the
 					 * location of the launcher, hence the "+ 1" at the end
 					 */
+					
 					int maxMovementCount = (int) ((double) turnsRemaining / RobotType.MISSILE.movementDelay) + 1;
 					int maxRadiusSquared = (int) Math
 							.pow(maxMovementCount
@@ -391,6 +388,21 @@ public class RobotPlayer {
 											0.5), 2);
 
 					MapLocation currentLocation = rc.getLocation();
+					
+//					if(enemyTowers.length == 0) {
+//						moveTowardDestination(enemyHQ, true, false, false);
+//						
+//						if(currentLocation.distanceSquaredTo(enemyHQ) <= maxRadiusSquared) {
+//							spawnAndLaunch(enemyHQ);
+//						}
+//					} else {
+//						MapLocation targetTowerLocation = enemyTowers[0];
+//						moveTowardDestination(targetTowerLocation, true, false, false);
+//						
+//						if(currentLocation.distanceSquaredTo(targetTowerLocation) <= maxRadiusSquared) {
+//							spawnAndLaunch(enemyHQ);
+//						}
+//					}
 
 					if (currentLocation.distanceSquaredTo(enemyHQ) <= maxRadiusSquared) {
 						if (spawnAndLaunch(enemyHQ)) {
@@ -984,9 +996,12 @@ public class RobotPlayer {
 
 		if (targetLocation != null) {
 			if (thisRobotType == RobotType.LAUNCHER) {
-				if (!spawnAndLaunch(targetLocation)) {
-					moveTowardDestination(targetLocation, false, false, false);
-				}
+				moveTowardDestination(targetLocation, false, false, false);
+//				if (!spawnAndLaunch(targetLocation)) {
+//					
+//				} else {
+//					System.out.println("Called!");
+//				}
 
 				return;
 			}
