@@ -126,7 +126,7 @@ public class RobotPlayer {
 						createUnit(RobotType.MINERFACTORY, true);
 					} else if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
 						createUnit(RobotType.BARRACKS, true);
-					} else if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
+					} else if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 2) {
 						createUnit(RobotType.TANKFACTORY, true);
 					}
 						
@@ -161,7 +161,10 @@ public class RobotPlayer {
 					break;
 
 				case TANK:
-					attackNearestTower();
+					if(rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL) > 10) {
+						attackNearestTower();
+					}
+					
 					attackEnemyZero();
 					break;
 
@@ -208,6 +211,7 @@ public class RobotPlayer {
 				rc.attackLocation(enemyTowers[0]);
 			} else if (currentLocation.distanceSquaredTo(enemyTowers[0]) > RobotType.TANK.attackRadiusSquared) {
 				moveTowardDestination(enemyTowers[0], true, false, false);
+				System.out.println(enemyTowers[0]);
 			}
 		}
 	}
