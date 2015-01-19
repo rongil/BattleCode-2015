@@ -228,14 +228,19 @@ public class RobotPlayer {
 					minDistance = distance;
 				}
 			}
+			
 			if (canAttack && rc.canAttackLocation(closestTowerLocation)) {
 				rc.attackLocation(closestTowerLocation);
 			} else if (currentLocation.distanceSquaredTo(closestTowerLocation) > RobotType.TANK.attackRadiusSquared) {
-				if (tankCount > 10 || droneCount > 20) {
+				if (tankCount > 10 * (int) (minDistance / 700)|| droneCount > 20 * (int) (minDistance / 700)) {
 					moveTowardDestination(closestTowerLocation, true, false,
 							false);
 				} else {
-					moveTowardDestination(closestTowerLocation, false, false,
+					Direction directionTower = friendlyHQ.directionTo(closestTowerLocation);
+					halfwayDistance = (int) ((0.9 / 2.0) * Math.pow(minDistance, 0.5));
+					MapLocation targetDest = friendlyHQ.add(directionTower, halfwayDistance);
+					
+					moveTowardDestination(targetDest, false, false,
 							true);
 				}
 			}
