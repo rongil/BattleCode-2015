@@ -663,8 +663,7 @@ public class RobotPlayer {
 						return true;
 					}
 				} else { // spawning
-					if (rc.canSpawn(testDir, roboType)
-							&& isSafe(testLoc, false, true)) {
+					if (rc.canSpawn(testDir, roboType)) {
 						rc.spawn(testDir, roboType);
 						return true;
 					}
