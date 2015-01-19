@@ -41,7 +41,7 @@ public class RobotPlayer {
 			Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
 			Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
 			Direction.NORTH_WEST };
-	
+
 	// Missile only
 	private static int turnsRemaining;
 
@@ -92,7 +92,7 @@ public class RobotPlayer {
 
 			xpos = -1;
 			ypos = -1;
-			
+
 			done = false;
 		}
 
@@ -115,7 +115,7 @@ public class RobotPlayer {
 		}
 
 		if (thisRobotType == RobotType.COMPUTER) {
-			
+
 		}
 		// Method can never end or the robot is destroyed.
 		while (true) {
@@ -152,22 +152,22 @@ public class RobotPlayer {
 					break;
 
 				case BARRACKS:
-//					if (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL)
-//							+ rc.readBroadcast(NUM_FRIENDLY_BASHERS_CHANNEL) < 40) {
-//
-//						if (rand.nextDouble() > 0.5) {
-//							createUnit(RobotType.SOLDIER, false);
-//						} else {
-//							createUnit(RobotType.BASHER, false);
-//						}
-//					}
+					// if (rc.readBroadcast(NUM_FRIENDLY_SOLDIERS_CHANNEL)
+					// + rc.readBroadcast(NUM_FRIENDLY_BASHERS_CHANNEL) < 40) {
+					//
+					// if (rand.nextDouble() > 0.5) {
+					// createUnit(RobotType.SOLDIER, false);
+					// } else {
+					// createUnit(RobotType.BASHER, false);
+					// }
+					// }
 					if (rand.nextDouble() > 0.5) {
 						createUnit(RobotType.SOLDIER, false);
 					} else {
 						createUnit(RobotType.BASHER, false);
 					}
 					break;
-					
+
 				case BASHER:
 					/*
 					 * BASHERs attack automatically, so we do not need to call
@@ -202,24 +202,32 @@ public class RobotPlayer {
 						// Building Order/Preferences
 						if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
 							createUnit(RobotType.HELIPAD, true);
-						} else if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 							createUnit(RobotType.MINERFACTORY, true);
-						} else if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
 							createUnit(RobotType.BARRACKS, true);
-						} else if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
 							createUnit(RobotType.TANKFACTORY, true);
-						} else if (rc.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 1) {
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 1) {
 							createUnit(RobotType.AEROSPACELAB, true);
-						} else if (rc.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
 							createUnit(RobotType.TECHNOLOGYINSTITUTE, true);
-						} else if (rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
 							createUnit(RobotType.TRAININGFIELD, true);
-						} else if (rc.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 10) {
 							createUnit(RobotType.SUPPLYDEPOT, true);
-						} else if (rc.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 5) {
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 5) {
 							createUnit(RobotType.HANDWASHSTATION, true);
 						}
-						
+
 						mineAndMove();
 					}
 					break;
@@ -265,7 +273,7 @@ public class RobotPlayer {
 
 				case HELIPAD:
 					createUnit(RobotType.DRONE, false);
-					if (rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) < 35) {	
+					if (rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) < 35) {
 						createUnit(RobotType.DRONE, false);
 					}
 					break;
@@ -279,7 +287,7 @@ public class RobotPlayer {
 					 **********************************************************/
 
 					updateUnitCounts();
-				
+
 					if (roundNum % 5 == 4) {
 						// Check tower strength!
 						analyzeTowerStrength();
@@ -345,8 +353,7 @@ public class RobotPlayer {
 						// ___AND Number of Friendly Miners ---------------> 15
 						// ___AND Number of Friendly Tanks Remaining ------> 1
 						//
-					} else if (roundNum < 1800
-							&& currentNumFriendlyBashers < 5
+					} else if (roundNum < 1800 && currentNumFriendlyBashers < 5
 							&& currentNumFriendlySoldiers < 5
 							&& currentNumFriendlyMiners < 15
 							&& currentNumFriendlyTanks < 1
@@ -368,8 +375,9 @@ public class RobotPlayer {
 					attackEnemyZero();
 
 					// Maintain only a few beavers
-					int currentNumFriendlyBeavers = rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL);
-					
+					int currentNumFriendlyBeavers = rc
+							.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL);
+
 					if (currentNumFriendlyBeavers < 5) {
 						createUnit(RobotType.BEAVER, false);
 					}
@@ -384,7 +392,7 @@ public class RobotPlayer {
 					 * The missile is launched one square in front of the
 					 * location of the launcher, hence the "+ 1" at the end
 					 */
-					
+
 					int maxMovementCount = (int) ((double) turnsRemaining / RobotType.MISSILE.movementDelay) + 1;
 					int maxRadiusSquared = (int) Math
 							.pow(maxMovementCount
@@ -393,21 +401,24 @@ public class RobotPlayer {
 											0.5), 2);
 
 					MapLocation currentLocation = rc.getLocation();
-					
-//					if(enemyTowers.length == 0) {
-//						moveTowardDestination(enemyHQ, true, false, false);
-//						
-//						if(currentLocation.distanceSquaredTo(enemyHQ) <= maxRadiusSquared) {
-//							spawnAndLaunch(enemyHQ);
-//						}
-//					} else {
-//						MapLocation targetTowerLocation = enemyTowers[0];
-//						moveTowardDestination(targetTowerLocation, true, false, false);
-//						
-//						if(currentLocation.distanceSquaredTo(targetTowerLocation) <= maxRadiusSquared) {
-//							spawnAndLaunch(enemyHQ);
-//						}
-//					}
+
+					// if(enemyTowers.length == 0) {
+					// moveTowardDestination(enemyHQ, true, false, false);
+					//
+					// if(currentLocation.distanceSquaredTo(enemyHQ) <=
+					// maxRadiusSquared) {
+					// spawnAndLaunch(enemyHQ);
+					// }
+					// } else {
+					// MapLocation targetTowerLocation = enemyTowers[0];
+					// moveTowardDestination(targetTowerLocation, true, false,
+					// false);
+					//
+					// if(currentLocation.distanceSquaredTo(targetTowerLocation)
+					// <= maxRadiusSquared) {
+					// spawnAndLaunch(enemyHQ);
+					// }
+					// }
 
 					if (currentLocation.distanceSquaredTo(enemyHQ) <= maxRadiusSquared) {
 						if (spawnAndLaunch(enemyHQ)) {
@@ -459,8 +470,9 @@ public class RobotPlayer {
 							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
 					// Exponential Decay for miner production
 					double miningFate = rand.nextDouble();
-					if (roundNum < 1500 
-							&& miningFate <= Math.pow(Math.E, -minerCount * 0.07)) {
+					if (roundNum < 1500
+							&& miningFate <= Math.pow(Math.E,
+									-minerCount * 0.07)) {
 						createUnit(RobotType.MINER, false);
 					}
 					break;
@@ -555,8 +567,9 @@ public class RobotPlayer {
 				case TECHNOLOGYINSTITUTE:
 					if (rc.readBroadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL) < 1) {
 						createUnit(RobotType.COMPUTER, false);
-					
-					} else if (rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
+
+					} else if (rc
+							.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
 						createUnit(RobotType.TRAININGFIELD, true);
 					}
 					break;
@@ -847,9 +860,9 @@ public class RobotPlayer {
 		 */
 		if (!onlyHQAndTowers) {
 			Team roboTeam = checkFriendlyMissiles ? null : Enemy;
-			RobotInfo[] nearbyRobots = rc
-					.senseNearbyRobots(thisRobotType.sensorRadiusSquared, roboTeam);
-			
+			RobotInfo[] nearbyRobots = rc.senseNearbyRobots(
+					thisRobotType.sensorRadiusSquared, roboTeam);
+
 			for (RobotInfo r : nearbyRobots) {
 				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
 						&& (r.team == Enemy || (checkFriendlyMissiles && r.type == RobotType.MISSILE))) {
@@ -904,30 +917,35 @@ public class RobotPlayer {
 	/**
 	 * Directs a robot toward a given destination.
 	 * 
-	 * @param startLoc - starting location from which to move toward the target
-	 * 					 destination in question; default is the current location
-	 * 					 of the robot calling the function 
-	 * @param dest - the target location
-	 * @param ignoreSafety - boolean to determine whether to call isSafe
-	 * @param onlyHQAndTowers - checks only HQ and Towers
-	 * @param checkFriendlyMissiles - considers also being within friendly missile
-	 * 								  range to be unsafe
+	 * @param startLoc
+	 *            - starting location from which to move toward the target
+	 *            destination in question; default is the current location of
+	 *            the robot calling the function
+	 * @param dest
+	 *            - the target location
+	 * @param ignoreSafety
+	 *            - boolean to determine whether to call isSafe
+	 * @param onlyHQAndTowers
+	 *            - checks only HQ and Towers
+	 * @param checkFriendlyMissiles
+	 *            - considers also being within friendly missile range to be
+	 *            unsafe
 	 * 
 	 * @return True if there is a direction that the robot can move towards the
 	 *         given destination
 	 * @throws GameActionException
 	 */
-	
-	private static boolean moveTowardDestination(MapLocation dest, boolean ignoreSafety,
-			boolean onlyHQAndTowers, boolean checkFriendlyMissiles)
-					throws GameActionException {
-		
-		return moveTowardDestination(rc.getLocation(), dest, ignoreSafety, onlyHQAndTowers,
-				checkFriendlyMissiles);
-	}
-	
-	private static boolean moveTowardDestination(MapLocation startLoc, MapLocation dest,
+
+	private static boolean moveTowardDestination(MapLocation dest,
 			boolean ignoreSafety, boolean onlyHQAndTowers,
+			boolean checkFriendlyMissiles) throws GameActionException {
+
+		return moveTowardDestination(rc.getLocation(), dest, ignoreSafety,
+				onlyHQAndTowers, checkFriendlyMissiles);
+	}
+
+	private static boolean moveTowardDestination(MapLocation startLoc,
+			MapLocation dest, boolean ignoreSafety, boolean onlyHQAndTowers,
 			boolean checkFriendlyMissiles) throws GameActionException {
 		// TODO: Should we consider including a "crowdedness" heuristic? If so,
 		// how do we incorporate our current implementation?
@@ -1002,11 +1020,11 @@ public class RobotPlayer {
 		if (targetLocation != null) {
 			if (thisRobotType == RobotType.LAUNCHER) {
 				moveTowardDestination(targetLocation, false, false, false);
-//				if (!spawnAndLaunch(targetLocation)) {
-//					
-//				} else {
-//					System.out.println("Called!");
-//				}
+				// if (!spawnAndLaunch(targetLocation)) {
+				//
+				// } else {
+				// System.out.println("Called!");
+				// }
 
 				return;
 			}
@@ -1125,7 +1143,7 @@ public class RobotPlayer {
 			throws GameActionException {
 		if (rc.isCoreReady() && rc.getTeamOre() > roboType.oreCost) {
 			MapLocation currentLocation = rc.getLocation();
-			Direction testDir = Direction.values()[rand.nextInt(9)];
+			Direction testDir = getRandomDirection();
 			boolean goLeft = rand.nextDouble() > 0.5;
 
 			for (int turnCount = 0; turnCount < 8; turnCount++) {
@@ -1138,8 +1156,7 @@ public class RobotPlayer {
 						return true;
 					}
 				} else { // spawning
-					if (rc.canSpawn(testDir, roboType)
-							&& isSafe(testLoc, false, true)) {
+					if (rc.canSpawn(testDir, roboType)) {
 						rc.spawn(testDir, roboType);
 						return true;
 					}
@@ -1335,7 +1352,7 @@ public class RobotPlayer {
 		rc.broadcast(MAP_VOID_SQUARES_CHANNEL, voidSquareCount);
 
 		done = true;
-		
+
 		System.out.println("Round Number: " + roundNum);
 		System.out.println("Width: " + (xmax - xmin));
 		System.out.println("Height: " + (ymax - ymin));
@@ -1786,8 +1803,10 @@ public class RobotPlayer {
 			// Enemy Units Broadcasts
 			rc.broadcast(NUM_ENEMY_BEAVERS_CHANNEL, unitCountNumEnemyBeavers);
 			rc.broadcast(NUM_ENEMY_MINERS_CHANNEL, unitCountNumEnemyMiners);
-			rc.broadcast(NUM_ENEMY_COMMANDERS_CHANNEL, unitCountNumEnemyCommanders);
-			rc.broadcast(NUM_ENEMY_COMPUTERS_CHANNEL, unitCountNumEnemyComputers);
+			rc.broadcast(NUM_ENEMY_COMMANDERS_CHANNEL,
+					unitCountNumEnemyCommanders);
+			rc.broadcast(NUM_ENEMY_COMPUTERS_CHANNEL,
+					unitCountNumEnemyComputers);
 			rc.broadcast(NUM_ENEMY_SOLDIERS_CHANNEL, unitCountNumEnemySoldiers);
 			rc.broadcast(NUM_ENEMY_BASHERS_CHANNEL, unitCountNumEnemyBashers);
 			rc.broadcast(NUM_ENEMY_DRONES_CHANNEL, unitCountNumEnemyDrones);

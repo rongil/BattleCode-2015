@@ -41,7 +41,7 @@ public class RobotPlayer {
 			Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
 			Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
 			Direction.NORTH_WEST };
-	
+
 	// Missile only
 	private static int turnsRemaining;
 
@@ -89,7 +89,7 @@ public class RobotPlayer {
 
 		rand = new Random(rc.getID());
 		facing = getRandomDirection(); // Randomize starting direction
-		
+
 		// Method can never end or the robot is destroyed.
 		while (true) {
 			/*
@@ -120,29 +120,30 @@ public class RobotPlayer {
 
 				case BEAVER:
 					attackEnemyZero();
-					
+
 					// Building Order/Preferences
 					if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 						createUnit(RobotType.MINERFACTORY, true);
 					} else if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
 						createUnit(RobotType.BARRACKS, true);
-					} else if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
+					} else if (rc
+							.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
 						createUnit(RobotType.TANKFACTORY, true);
 					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
 						createUnit(RobotType.HELIPAD, true);
 					}
-						
+
 					mineAndMove();
 					break;
-				
+
 				case HELIPAD:
 					createUnit(RobotType.DRONE, false);
 					break;
-					
+
 				case HQ:
 					attackEnemyZero();
 					updateUnitCounts();
-					
+
 					// Maintain only a few beavers
 					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 5) {
 						createUnit(RobotType.BEAVER, false);
@@ -160,15 +161,16 @@ public class RobotPlayer {
 							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
 					// Exponential Decay for miner production
 					double miningFate = rand.nextDouble();
-					if (roundNum < 1500 
-							&& miningFate <= Math.pow(Math.E, -minerCount * 0.07)) {
+					if (roundNum < 1500
+							&& miningFate <= Math.pow(Math.E,
+									-minerCount * 0.07)) {
 						createUnit(RobotType.MINER, false);
 					}
 					break;
 
 				case DRONE:
 				case TANK:
-					attackNearestTower();					
+					attackNearestTower();
 					attackEnemyZero();
 					break;
 
@@ -198,35 +200,48 @@ public class RobotPlayer {
 		}
 
 	}
-	
+
 	private static void attackNearestTower() throws GameActionException {
 		boolean canAttack = rc.isWeaponReady();
 		MapLocation currentLocation = rc.getLocation();
 		int tankCount = rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL);
 		int droneCount = rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
-		if(enemyTowers.length == 0){
-			if(canAttack && rc.canAttackLocation(enemyHQ)) {
+		if (enemyTowers.length == 0) {
+			if (canAttack && rc.canAttackLocation(enemyHQ)) {
 				rc.attackLocation(enemyHQ);
 			} else if (currentLocation.distanceSquaredTo(enemyHQ) > RobotType.TANK.attackRadiusSquared) {
-				if(tankCount > 10 || droneCount > 20) {
+				if (tankCount > 10 || droneCount > 20) {
 					moveTowardDestination(enemyHQ, true, false, false);
 				} else {
 					moveTowardDestination(enemyHQ, false, false, true);
 				}
 			}
-		
+
 		} else {
-			if(canAttack && rc.canAttackLocation(enemyTowers[0])) {
-				rc.attackLocation(enemyTowers[0]);
-			} else if (currentLocation.distanceSquaredTo(enemyTowers[0]) > RobotType.TANK.attackRadiusSquared) {
-				if(tankCount > 10 || droneCount > 20) {
-					moveTowardDestination(enemyTowers[0], true, false, false);
+			int minDistance = enemyTowers[0].distanceSquaredTo(friendlyHQ);
+			MapLocation closestTowerLocation = enemyTowers[0];
+			// Bytecode conserving loop format
+			for (int i = enemyTowers.length; --i > 0;) {
+				int distance = enemyTowers[i].distanceSquaredTo(friendlyHQ);
+				if (distance < minDistance) {
+					closestTowerLocation = enemyTowers[i];
+					minDistance = distance;
+				}
+			}
+			if (canAttack && rc.canAttackLocation(closestTowerLocation)) {
+				rc.attackLocation(closestTowerLocation);
+			} else if (currentLocation.distanceSquaredTo(closestTowerLocation) > RobotType.TANK.attackRadiusSquared) {
+				if (tankCount > 10 || droneCount > 20) {
+					moveTowardDestination(closestTowerLocation, true, false,
+							false);
 				} else {
-					moveTowardDestination(enemyTowers[0], false, false, true);
+					moveTowardDestination(closestTowerLocation, false, false,
+							true);
 				}
 			}
 		}
 	}
+
 	/**************************************************************************
 	 * Gives the ratio of friend to enemy robots around a given location that
 	 * are at most a given distance away.
@@ -367,9 +382,9 @@ public class RobotPlayer {
 		 */
 		if (!onlyHQAndTowers) {
 			Team roboTeam = checkFriendlyMissiles ? null : Enemy;
-			RobotInfo[] nearbyRobots = rc
-					.senseNearbyRobots(thisRobotType.sensorRadiusSquared, roboTeam);
-			
+			RobotInfo[] nearbyRobots = rc.senseNearbyRobots(
+					thisRobotType.sensorRadiusSquared, roboTeam);
+
 			for (RobotInfo r : nearbyRobots) {
 				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
 						&& (r.team == Enemy || (checkFriendlyMissiles && r.type == RobotType.MISSILE))) {
@@ -424,30 +439,35 @@ public class RobotPlayer {
 	/**
 	 * Directs a robot toward a given destination.
 	 * 
-	 * @param startLoc - starting location from which to move toward the target
-	 * 					 destination in question; default is the current location
-	 * 					 of the robot calling the function 
-	 * @param dest - the target location
-	 * @param ignoreSafety - boolean to determine whether to call isSafe
-	 * @param onlyHQAndTowers - checks only HQ and Towers
-	 * @param checkFriendlyMissiles - considers also being within friendly missile
-	 * 								  range to be unsafe
+	 * @param startLoc
+	 *            - starting location from which to move toward the target
+	 *            destination in question; default is the current location of
+	 *            the robot calling the function
+	 * @param dest
+	 *            - the target location
+	 * @param ignoreSafety
+	 *            - boolean to determine whether to call isSafe
+	 * @param onlyHQAndTowers
+	 *            - checks only HQ and Towers
+	 * @param checkFriendlyMissiles
+	 *            - considers also being within friendly missile range to be
+	 *            unsafe
 	 * 
 	 * @return True if there is a direction that the robot can move towards the
 	 *         given destination
 	 * @throws GameActionException
 	 */
-	
-	private static boolean moveTowardDestination(MapLocation dest, boolean ignoreSafety,
-			boolean onlyHQAndTowers, boolean checkFriendlyMissiles)
-					throws GameActionException {
-		
-		return moveTowardDestination(rc.getLocation(), dest, ignoreSafety, onlyHQAndTowers,
-				checkFriendlyMissiles);
-	}
-	
-	private static boolean moveTowardDestination(MapLocation startLoc, MapLocation dest,
+
+	private static boolean moveTowardDestination(MapLocation dest,
 			boolean ignoreSafety, boolean onlyHQAndTowers,
+			boolean checkFriendlyMissiles) throws GameActionException {
+
+		return moveTowardDestination(rc.getLocation(), dest, ignoreSafety,
+				onlyHQAndTowers, checkFriendlyMissiles);
+	}
+
+	private static boolean moveTowardDestination(MapLocation startLoc,
+			MapLocation dest, boolean ignoreSafety, boolean onlyHQAndTowers,
 			boolean checkFriendlyMissiles) throws GameActionException {
 		// TODO: Should we consider including a "crowdedness" heuristic? If so,
 		// how do we incorporate our current implementation?
@@ -756,7 +776,7 @@ public class RobotPlayer {
 	private static void updateUnitCounts() throws GameActionException {
 
 		// Run part of the work on each round
-//		int roundNumMod = (roundNum % 10) / 2;
+		// int roundNumMod = (roundNum % 10) / 2;
 		int roundNumMod = roundNum % 5;
 		if (roundNumMod == 0 || friendlyRobots == null || enemyRobots == null) {
 			// Collect all robots into separate RobotInfo arrays.
@@ -1022,8 +1042,10 @@ public class RobotPlayer {
 			// Enemy Units Broadcasts
 			rc.broadcast(NUM_ENEMY_BEAVERS_CHANNEL, unitCountNumEnemyBeavers);
 			rc.broadcast(NUM_ENEMY_MINERS_CHANNEL, unitCountNumEnemyMiners);
-			rc.broadcast(NUM_ENEMY_COMMANDERS_CHANNEL, unitCountNumEnemyCommanders);
-			rc.broadcast(NUM_ENEMY_COMPUTERS_CHANNEL, unitCountNumEnemyComputers);
+			rc.broadcast(NUM_ENEMY_COMMANDERS_CHANNEL,
+					unitCountNumEnemyCommanders);
+			rc.broadcast(NUM_ENEMY_COMPUTERS_CHANNEL,
+					unitCountNumEnemyComputers);
 			rc.broadcast(NUM_ENEMY_SOLDIERS_CHANNEL, unitCountNumEnemySoldiers);
 			rc.broadcast(NUM_ENEMY_BASHERS_CHANNEL, unitCountNumEnemyBashers);
 			rc.broadcast(NUM_ENEMY_DRONES_CHANNEL, unitCountNumEnemyDrones);
