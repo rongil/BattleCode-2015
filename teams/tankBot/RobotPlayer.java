@@ -126,7 +126,7 @@ public class RobotPlayer {
 						createUnit(RobotType.MINERFACTORY, true);
 					} else if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
 						createUnit(RobotType.BARRACKS, true);
-					} else if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 2) {
+					} else if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
 						createUnit(RobotType.TANKFACTORY, true);
 					}
 						
@@ -161,10 +161,7 @@ public class RobotPlayer {
 					break;
 
 				case TANK:
-					if(rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL) > 10) {
-						attackNearestTower();
-					}
-					
+					attackNearestTower();					
 					attackEnemyZero();
 					break;
 
@@ -198,20 +195,28 @@ public class RobotPlayer {
 	private static void attackNearestTower() throws GameActionException {
 		boolean canAttack = rc.isWeaponReady();
 		MapLocation currentLocation = rc.getLocation();
+		int tankCount = rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL);
 		
 		if(enemyTowers.length == 0){
 			if(canAttack && rc.canAttackLocation(enemyHQ)) {
 				rc.attackLocation(enemyHQ);
-			} else if (currentLocation.distanceSquaredTo(enemyHQ) > RobotType.TANK.attackRadiusSquared) { 
-				moveTowardDestination(enemyHQ, true, false, false);
+			} else if (currentLocation.distanceSquaredTo(enemyHQ) > RobotType.TANK.attackRadiusSquared) {
+				if(tankCount > 10) {
+					moveTowardDestination(enemyHQ, true, false, false);
+				} else {
+					moveTowardDestination(enemyHQ, false, false, true);
+				}
 			}
 		
 		} else {
 			if(canAttack && rc.canAttackLocation(enemyTowers[0])) {
 				rc.attackLocation(enemyTowers[0]);
 			} else if (currentLocation.distanceSquaredTo(enemyTowers[0]) > RobotType.TANK.attackRadiusSquared) {
-				moveTowardDestination(enemyTowers[0], true, false, false);
-				System.out.println(enemyTowers[0]);
+				if(tankCount > 10) {
+					moveTowardDestination(enemyTowers[0], true, false, false);
+				} else {
+					moveTowardDestination(enemyTowers[0], false, false, true);
+				}
 			}
 		}
 	}
@@ -744,7 +749,8 @@ public class RobotPlayer {
 	private static void updateUnitCounts() throws GameActionException {
 
 		// Run part of the work on each round
-		int roundNumMod = (roundNum % 10) / 2;
+//		int roundNumMod = (roundNum % 10) / 2;
+		int roundNumMod = roundNum % 5;
 		if (roundNumMod == 0 || friendlyRobots == null || enemyRobots == null) {
 			// Collect all robots into separate RobotInfo arrays.
 			friendlyRobots = rc.senseNearbyRobots(Integer.MAX_VALUE, Friend);
