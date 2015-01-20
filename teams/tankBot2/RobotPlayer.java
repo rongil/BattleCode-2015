@@ -5,8 +5,6 @@ import battlecode.common.*;
 import java.util.LinkedList;
 import java.util.Random;
 
-import smartEvalDroneBot.RobotPlayer.SearchNode;
-
 /**
  * Main class which defines every robot.
  * 
@@ -316,6 +314,7 @@ public class RobotPlayer {
 	}
 
 	private static void attackNearestTower() throws GameActionException {
+		// TODO: Make number counts a function of towerStrength
 		boolean canAttack = rc.isWeaponReady();
 		MapLocation currentLocation = rc.getLocation();
 		int tankCount = rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL);
