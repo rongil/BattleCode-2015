@@ -382,13 +382,18 @@ public class RobotPlayer {
 			}
 		}
 
-		if (onlyHQAndTowers && !checkFriendlyMissiles) {
+//			if (onlyHQAndTowers && !checkFriendlyMissiles) {
+//			return true;
+//		}
+//		
+//		Team roboTeam = checkFriendlyMissiles ? null : Enemy;
+//		roboTeam = onlyHQAndTowers ? Friend : roboTeam;
+		
+		if (onlyHQAndTowers) {
 			return true;
 		}
 		
-		Team roboTeam = checkFriendlyMissiles ? null : Enemy;
-		roboTeam = onlyHQAndTowers ? Friend : roboTeam;
-		
+		Team roboTeam = Enemy;		
 		/*
 		 * Check if any enemies are in range or if any friendly drones are
 		 * within explosion range
