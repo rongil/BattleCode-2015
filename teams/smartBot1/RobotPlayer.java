@@ -1,6 +1,7 @@
 package smartBot1;
 
 import battlecode.common.*;
+
 import java.util.Random;
 import java.util.ArrayList;
 
@@ -1147,96 +1148,127 @@ public class RobotPlayer {
 			throws GameActionException {
 		if (rc.isCoreReady() && rc.getTeamOre() > roboType.oreCost) {
 			MapLocation currentLocation = rc.getLocation();
-			ArrayList<MapLocation> possSquares = new ArrayList<MapLocation>();
-			MapLocation possLoc;
-			
-			for (Direction possDir : directions) {
+			Direction testDir = Direction.values()[rand.nextInt(9)];
+			boolean goLeft = rand.nextDouble() > 0.5;
+
+			for (int turnCount = 0; turnCount < 8; turnCount++) {
+				MapLocation testLoc = currentLocation.add(testDir);
+
 				if (build) {
-					if (rc.canBuild(possDir, roboType)) {
-						possLoc = currentLocation.add(possDir);
-						possSquares.add(possLoc);
+					if (rc.canBuild(testDir, roboType)
+							&& isSafe(testLoc, false, true)) {
+						rc.build(testDir, roboType);
+						return true;
 					}
 				} else { // spawning
-					if (rc.canSpawn(possDir, roboType)) {
-						possLoc = currentLocation.add(possDir);
-						possSquares.add(possLoc);
+					if (rc.canSpawn(testDir, roboType)
+							&& isSafe(testLoc, false, true)) {
+						rc.spawn(testDir, roboType);
+						return true;
 					}
 				}
-			}
-			
-			if(possSquares.size() > 0) {
-				MapLocation createLocation = getSafeCreateLocation(possSquares, false, true);
-				
-				if(createLocation != null) {
-					Direction createDirection = currentLocation.directionTo(createLocation);
-					
-					if(build) {
-						rc.build(createDirection, roboType);
-					} else {
-						rc.spawn(createDirection, roboType);
-					}
-					
-					return true;
-				}
+
+				testDir = goLeft ? testDir.rotateLeft() : testDir.rotateRight();
 			}
 		}
 
 		return false;
 	}
 
-	private static MapLocation getSafeCreateLocation(ArrayList<MapLocation> possSquares, boolean onlyHQAndTowers,
-            boolean checkFriendlyMissiles) throws GameActionException {
-		ArrayList<MapLocation> remainingSquares = new ArrayList<MapLocation>(possSquares);
-    
-		for(MapLocation possSquare : remainingSquares) { 
-	        TerrainTile locTerrain = rc.senseTerrainTile(possSquare);
-	        
-	        if (locTerrain != TerrainTile.NORMAL && !(locTerrain == TerrainTile.VOID && (thisRobotType == RobotType.DRONE || thisRobotType == RobotType.MISSILE))) {
-	            possSquares.remove(possSquare);
-	        } else if (enemyHQ.distanceSquaredTo(possSquare) <= enemyHQAttackRadiusSquared) {
-	            // Check if HQ is in range
-	            possSquares.remove(possSquare);        
-	        }
-	        
-	        // Check if towers are in range
-	        for (MapLocation enemyTower : enemyTowers) {
-	            if (enemyTower.distanceSquaredTo(possSquare) <= RobotType.TOWER.attackRadiusSquared) {
-	                possSquares.remove(possSquare);
-	            }
-	        }        
-	        
-	    }
-	   
-	    if (possSquares.size() == 0) {
-	        return null;
-	    }
-	
-	    if (!onlyHQAndTowers || checkFriendlyMissiles) {
-	        remainingSquares = possSquares;
-	        Team roboTeam = checkFriendlyMissiles ? null : Enemy;
-	        roboTeam = !onlyHQAndTowers ? Friend : roboTeam;
-	    
-	        int sensorRadiusSquared = (int) Math.pow(Math.sqrt(thisRobotType.sensorRadiusSquared) + 1, 2);
-	        RobotInfo[] surroundingRobots = rc.senseNearbyRobots(sensorRadiusSquared, roboTeam);
-	    
-	        for(RobotInfo surroundingRobot : surroundingRobots) {
-	            for(MapLocation possSquare : remainingSquares) {
-	                if(surroundingRobot.location.distanceSquaredTo(possSquare) <= surroundingRobot.type.attackRadiusSquared &&  (surroundingRobot.team == Enemy || (checkFriendlyMissiles && surroundingRobot.type == RobotType.MISSILE))) {
-	                    possSquares.remove(possSquare);
-	                }
-	            }
-	        
-	            remainingSquares = possSquares;
-	        
-	            if(remainingSquares.size() == 0) {
-	                return null;
-	            }
-	        }     
-	    }
-	
-	    
-	    return remainingSquares.get(rand.nextInt(remainingSquares.size()));
-	}
+//	private static boolean createUnit(RobotType roboType, boolean build)
+//			throws GameActionException {
+//		if (rc.isCoreReady() && rc.getTeamOre() > roboType.oreCost) {
+//			MapLocation currentLocation = rc.getLocation();
+//			ArrayList<MapLocation> possSquares = new ArrayList<MapLocation>();
+//			MapLocation possLoc;
+//			
+//			for (Direction possDir : directions) {
+//				if (build) {
+//					if (rc.canBuild(possDir, roboType)) {
+//						possLoc = currentLocation.add(possDir);
+//						possSquares.add(possLoc);
+//					}
+//				} else { // spawning
+//					if (rc.canSpawn(possDir, roboType)) {
+//						possLoc = currentLocation.add(possDir);
+//						possSquares.add(possLoc);
+//					}
+//				}
+//			}
+//			
+//			if(possSquares.size() > 0) {
+//				MapLocation createLocation = getSafeCreateLocation(possSquares, false, true);
+//				
+//				if(createLocation != null) {
+//					Direction createDirection = currentLocation.directionTo(createLocation);
+//					
+//					if(build) {
+//						rc.build(createDirection, roboType);
+//					} else {
+//						rc.spawn(createDirection, roboType);
+//					}
+//					
+//					return true;
+//				}
+//			}
+//		}
+//
+//		return false;
+//	}
+//
+//	private static MapLocation getSafeCreateLocation(ArrayList<MapLocation> possSquares, boolean onlyHQAndTowers,
+//            boolean checkFriendlyMissiles) throws GameActionException {
+//		ArrayList<MapLocation> remainingSquares = new ArrayList<MapLocation>(possSquares);
+//    
+//		for(MapLocation possSquare : remainingSquares) { 
+//	        TerrainTile locTerrain = rc.senseTerrainTile(possSquare);
+//	        
+//	        if (locTerrain != TerrainTile.NORMAL && !(locTerrain == TerrainTile.VOID && (thisRobotType == RobotType.DRONE || thisRobotType == RobotType.MISSILE))) {
+//	            possSquares.remove(possSquare);
+//	        } else if (enemyHQ.distanceSquaredTo(possSquare) <= enemyHQAttackRadiusSquared) {
+//	            // Check if HQ is in range
+//	            possSquares.remove(possSquare);        
+//	        }
+//	        
+//	        // Check if towers are in range
+//	        for (MapLocation enemyTower : enemyTowers) {
+//	            if (enemyTower.distanceSquaredTo(possSquare) <= RobotType.TOWER.attackRadiusSquared) {
+//	                possSquares.remove(possSquare);
+//	            }
+//	        }        
+//	        
+//	    }
+//	   
+//	    if (possSquares.size() == 0) {
+//	        return null;
+//	    }
+//	
+//	    if (!onlyHQAndTowers || checkFriendlyMissiles) {
+//	        remainingSquares = possSquares;
+//	        Team roboTeam = checkFriendlyMissiles ? null : Enemy;
+//	        roboTeam = !onlyHQAndTowers ? Friend : roboTeam;
+//	    
+//	        int sensorRadiusSquared = (int) Math.pow(Math.sqrt(thisRobotType.sensorRadiusSquared) + 1, 2);
+//	        RobotInfo[] surroundingRobots = rc.senseNearbyRobots(sensorRadiusSquared, roboTeam);
+//	    
+//	        for(RobotInfo surroundingRobot : surroundingRobots) {
+//	            for(MapLocation possSquare : remainingSquares) {
+//	                if(surroundingRobot.location.distanceSquaredTo(possSquare) <= surroundingRobot.type.attackRadiusSquared &&  (surroundingRobot.team == Enemy || (checkFriendlyMissiles && surroundingRobot.type == RobotType.MISSILE))) {
+//	                    possSquares.remove(possSquare);
+//	                }
+//	            }
+//	        
+//	            remainingSquares = possSquares;
+//	        
+//	            if(remainingSquares.size() == 0) {
+//	                return null;
+//	            }
+//	        }     
+//	    }
+//	
+//	    
+//	    return remainingSquares.get(rand.nextInt(remainingSquares.size()));
+//	}
 	
 	/**************************************************************************
 	 * Transfer supplies between units.
