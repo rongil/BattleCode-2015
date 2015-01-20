@@ -324,7 +324,7 @@ public class RobotPlayer {
 		
 		if (enemyTowers.length == 0) {
 			if (thisRobotType == RobotType.LAUNCHER) {
-				double maxRadius = 2.0 + RobotType.MISSILE.attackRadiusSquared;
+				double maxRadius = 4.0 + RobotType.MISSILE.attackRadiusSquared;
 				
 				if(Math.sqrt(currentLocation.distanceSquaredTo(enemyHQ)) < maxRadius) {
 					spawnAndLaunch(enemyHQ);
@@ -358,7 +358,7 @@ public class RobotPlayer {
 			previousTowerLocation = closestTowerLocation;
 
 			if (thisRobotType == RobotType.LAUNCHER) {
-				double maxRadius = 2.0 + RobotType.MISSILE.attackRadiusSquared;
+				double maxRadius = 4.0 + RobotType.MISSILE.attackRadiusSquared;
 				
 				if(Math.sqrt(currentLocation.distanceSquaredTo(closestTowerLocation))
 						< maxRadius) {
