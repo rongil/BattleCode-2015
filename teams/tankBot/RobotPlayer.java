@@ -86,8 +86,8 @@ public class RobotPlayer {
 		enemyTowers = rc.senseEnemyTowerLocations();
 
 		// Slightly less to avoid tower issues
-		halfwayDistance = (int) (0.45 * Math.pow(
-				friendlyHQ.distanceSquaredTo(enemyHQ), 0.5));
+		halfwayDistance = (int) (0.45 * Math.sqrt(friendlyHQ
+				.distanceSquaredTo(enemyHQ)));
 		int wholeDistanceCoefficient = friendlyHQ.distanceSquaredTo(enemyHQ) / 700;
 
 		rand = new Random(rc.getID());
@@ -608,7 +608,7 @@ public class RobotPlayer {
 		if (rc.isCoreReady()) {
 			MapLocation currentLocation = rc.getLocation();
 
-			int radius = (int) Math.pow(rc.getType().sensorRadiusSquared, 0.5);
+			int radius = (int) Math.sqrt(rc.getType().sensorRadiusSquared);
 
 			double bestOreCount = 0.0;
 			MapLocation bestDestination = null;
