@@ -53,20 +53,6 @@ public class RobotPlayer {
 	// Drone only
 	private static Direction patrolDirection;
 
-	// HQ only
-	private static int xmin;
-	private static int xmax;
-	private static int ymin;
-	private static int ymax;
-
-	private static int xpos;
-	private static int ypos;
-
-	private static int voidSquareCount;
-	private static int normalSquareCount;
-
-	private static boolean done;
-
 	/**************************************************************************
 	 * Main method called when it is a robot's turn. Needs to be looped
 	 * indefinitely, otherwise the robot will die.
@@ -165,6 +151,10 @@ public class RobotPlayer {
 					attackEnemyZero();
 					updateUnitCounts();
 
+					if(roundNum%5 == 0) {
+						analyzeTowerStrength();
+					}
+					
 					// Maintain only a few beavers
 					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 3) {
 						createUnit(RobotType.BEAVER, false);
@@ -322,7 +312,8 @@ public class RobotPlayer {
 		}
 	}
 
-	private static LinkedList<MapLocation> search(MapLocation dest, boolean DFS) {
+	private static LinkedList<MapLocation> search(MapLocation dest, boolean DFS)
+			throws GameActionException {
 		MapLocation currentLocation = rc.getLocation();
 
 		if (!reachedGoal(currentLocation, dest)) {
@@ -341,6 +332,12 @@ public class RobotPlayer {
 					currentNode = agenda.removeFirst();
 				}
 
+				MapLocation currentLoc = currentNode.getLoc();
+				MapLocation parentLoc = currentNode.getParent().getLoc();
+				Direction parentToCurrent = parentLoc.directionTo(currentLoc);
+				
+				rc.broadcast(channelHashFunc(parentLoc), directionToInt(parentToCurrent));
+				
 				LinkedList<MapLocation> nodeLocations = getChildren(currentNode
 						.getLoc());
 
@@ -1210,6 +1207,35 @@ public class RobotPlayer {
 
 	}
 
+	// ************************** START OF MAP ANALYSIS ***********************
+		/**
+		 * 
+		 * @throws GameActionException
+		 */
+		private static void analyzeTowerStrength() throws GameActionException {
+			int towerStrength = 0;
+
+			// One or no towers -> very weak. Keep at 0.
+			// Otherwise measure strength based on closeness.
+			for (int i = 0; i < enemyTowers.length; ++i) {
+				if (enemyTowers[i].distanceSquaredTo(enemyHQ) < 48) {
+					towerStrength += 2;
+				}
+				
+				for (int j = i; j < enemyTowers.length; ++j) {
+					if (enemyTowers[i].distanceSquaredTo(enemyTowers[j]) < 48) {
+						towerStrength += 1;
+					}
+				}
+			}
+			
+			System.out.println("Tower Strength: " + towerStrength);
+			rc.resign();
+			
+			rc.broadcast(TOWER_STRENGTH_CHANNEL, towerStrength);
+		}
+	
+
 	/**************************************************************************
 	 * BROADCAST CHANNELS
 	 * ========================================================================
@@ -1278,4 +1304,6 @@ public class RobotPlayer {
 	private static final int NUM_ENEMY_COMMANDERS_CHANNEL = 37;
 	private static final int NUM_ENEMY_LAUNCHERS_CHANNEL = 38;
 	private static final int NUM_ENEMY_MISSILES_CHANNEL = 39;
+	// Map Analysis
+	private static final int TOWER_STRENGTH_CHANNEL = 2000;
 }
