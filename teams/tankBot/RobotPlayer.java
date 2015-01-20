@@ -35,6 +35,8 @@ public class RobotPlayer {
 	private static MapLocation[] enemyTowers;
 
 	private static int halfwayDistance;
+	private static MapLocation previousTowerLocation;
+	private static boolean swarming = false;
 
 	private static Direction facing;
 	private static Direction[] directions = { Direction.NORTH,
@@ -84,8 +86,9 @@ public class RobotPlayer {
 		enemyTowers = rc.senseEnemyTowerLocations();
 
 		// Slightly less to avoid tower issues
-		halfwayDistance = (int) ((0.9 / 2.0) * Math.pow(
+		halfwayDistance = (int) (0.45 * Math.pow(
 				friendlyHQ.distanceSquaredTo(enemyHQ), 0.5));
+		int wholeDistanceCoefficient = friendlyHQ.distanceSquaredTo(enemyHQ) / 700;
 
 		rand = new Random(rc.getID());
 		facing = getRandomDirection(); // Randomize starting direction
@@ -129,8 +132,23 @@ public class RobotPlayer {
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 2) {
 						createUnit(RobotType.TANKFACTORY, true);
-					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 2) {
+					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
 						createUnit(RobotType.HELIPAD, true);
+					} else if (rc
+							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 7
+							|| (wholeDistanceCoefficient >= 10 && rc
+									.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 12)) {
+						createUnit(RobotType.SUPPLYDEPOT, true);
+					} else if (rc.getTeamOre() > 1000) {
+						if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 2) {
+							createUnit(RobotType.HELIPAD, true);
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 1) {
+							createUnit(RobotType.HANDWASHSTATION, true);
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 3) {
+							createUnit(RobotType.TANKFACTORY, true);
+						}
 					}
 
 					mineAndMove();
@@ -145,7 +163,7 @@ public class RobotPlayer {
 					updateUnitCounts();
 
 					// Maintain only a few beavers
-					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 5) {
+					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 3) {
 						createUnit(RobotType.BEAVER, false);
 					}
 					break;
@@ -218,34 +236,48 @@ public class RobotPlayer {
 			}
 
 		} else {
-			int minDistance = enemyTowers[0].distanceSquaredTo(friendlyHQ);
+			MapLocation referencePoint = swarming ? previousTowerLocation
+					: friendlyHQ;
+
+			int minDistance = enemyTowers[0].distanceSquaredTo(referencePoint);
 			MapLocation closestTowerLocation = enemyTowers[0];
 			// Bytecode conserving loop format
 			for (int i = enemyTowers.length; --i > 0;) {
-				int distance = enemyTowers[i].distanceSquaredTo(friendlyHQ);
+				int distance = enemyTowers[i].distanceSquaredTo(referencePoint);
 				if (distance < minDistance) {
 					closestTowerLocation = enemyTowers[i];
 					minDistance = distance;
 				}
 			}
+			previousTowerLocation = closestTowerLocation;
 
 			if (canAttack && rc.canAttackLocation(closestTowerLocation)) {
 				rc.attackLocation(closestTowerLocation);
-			} else if (currentLocation.distanceSquaredTo(closestTowerLocation) > RobotType.TANK.attackRadiusSquared) {
-				int multiplier = (int) (minDistance / 700);
-				if (tankCount > 10 * multiplier || droneCount > 20 * multiplier
-						|| roundNum > 1800) {
+				moveTowardDestination(closestTowerLocation, true, false, false);
+			} else if (currentLocation.distanceSquaredTo(closestTowerLocation) > thisRobotType.attackRadiusSquared) {
+				int multiplier = Math.max(2, minDistance / 700);
+				if (swarming
+						&& roundNum < 1800
+						&& (tankCount < 5 * multiplier && droneCount < 10 * multiplier)) {
+					swarming = false;
+				} else if (roundNum >= 1800
+						|| (tankCount > 10 * multiplier || droneCount > 20 * multiplier)
+						|| swarming) {
+					swarming = true;
 					moveTowardDestination(closestTowerLocation, true, false,
 							false);
+				} else if (rc.getSupplyLevel() < 10 * multiplier) {
+					moveTowardDestination(friendlyHQ, false, false, true);
 				} else {
+					// moveTowardDestination(assignment, false, false, true);
 					Direction directionTower = friendlyHQ
 							.directionTo(closestTowerLocation);
-					halfwayDistance = (int) ((0.9 / 2.0) * Math.pow(
-							minDistance, 0.5));
+					// halfwayDistance = (int) (0.35 * Math.sqrt(minDistance));
 					MapLocation targetDest = friendlyHQ.add(directionTower,
 							halfwayDistance);
 
 					moveTowardDestination(targetDest, false, false, true);
+
 				}
 			}
 		}
@@ -715,15 +747,7 @@ public class RobotPlayer {
 			MapLocation suppliesToThisLocation = null;
 
 			for (RobotInfo ri : nearbyAllies) {
-				if ((ri.type == RobotType.BEAVER
-						|| ri.type == RobotType.COMPUTER
-						|| ri.type == RobotType.SOLDIER
-						|| ri.type == RobotType.BASHER
-						|| ri.type == RobotType.MINER
-						|| ri.type == RobotType.DRONE
-						|| ri.type == RobotType.TANK
-						|| ri.type == RobotType.COMMANDER || ri.type == RobotType.LAUNCHER)
-						&& ri.supplyLevel < lowestSupply) {
+				if (ri.type.needsSupply() && ri.supplyLevel < lowestSupply) {
 					lowestSupply = ri.supplyLevel;
 					transferAmount = (rc.getSupplyLevel() - lowestSupply) / 2;
 					suppliesToThisLocation = ri.location;
