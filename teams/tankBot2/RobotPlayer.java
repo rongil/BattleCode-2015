@@ -177,6 +177,32 @@ public class RobotPlayer {
 					break;
 
 				case LAUNCHER:
+					MapLocation currentLocation = rc.getLocation();
+					
+					double possEnemyFriendRatio;
+					double bestEnemyFriendRatio = 0.0;
+					MapLocation bestTarget = null;
+					
+					MapLocation radiusSquare;
+					TerrainTile radiusTerrain;
+					
+					for(Direction possDir : directions) {
+						radiusSquare = currentLocation.add(possDir, 2);
+						radiusTerrain = rc.senseTerrainTile(radiusSquare);
+						possEnemyFriendRatio = friendEnemyRatio(radiusSquare,
+								RobotType.MISSILE.attackRadiusSquared, Enemy);
+						
+						if(radiusTerrain == TerrainTile.NORMAL &&
+						possEnemyFriendRatio > bestEnemyFriendRatio) {
+							bestEnemyFriendRatio = possEnemyFriendRatio;
+							bestTarget = radiusSquare;
+						}
+					}
+					
+					if(bestTarget != null) {
+						spawnAndLaunch(bestTarget);
+					}
+					
 					attackNearestTower();
 					break;
 					
@@ -237,6 +263,23 @@ public class RobotPlayer {
 
 	}
 
+	private static boolean spawnAndLaunch(MapLocation targetLoc)
+			throws GameActionException {
+		MapLocation currentLocation = rc.getLocation();
+		Direction directionToTarget = currentLocation.directionTo(targetLoc);
+
+		if (rc.getMissileCount() < GameConstants.MISSILE_MAX_COUNT) {
+			createUnit(RobotType.MISSILE, false);
+		}
+
+		if (rc.canLaunch(directionToTarget)) {
+			rc.launchMissile(directionToTarget);
+			return true;
+		}
+
+		return false;
+	}
+	
 	/**************************************************************************
 	 * directs drones to patrol the borderline between the two HQ's
 	 * 
@@ -280,9 +323,17 @@ public class RobotPlayer {
 		int launcherCount = rc.readBroadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL);
 		
 		if (enemyTowers.length == 0) {
+			if (thisRobotType == RobotType.LAUNCHER) {
+				double maxRadius = 2.0 + RobotType.MISSILE.attackRadiusSquared;
+				
+				if(Math.sqrt(currentLocation.distanceSquaredTo(enemyHQ)) < maxRadius) {
+					spawnAndLaunch(enemyHQ);
+				}
+			}
+			
 			if (canAttack && rc.canAttackLocation(enemyHQ)) {
 				rc.attackLocation(enemyHQ);
-			} else if (currentLocation.distanceSquaredTo(enemyHQ) > RobotType.TANK.attackRadiusSquared) {
+			} else if (currentLocation.distanceSquaredTo(enemyHQ) > thisRobotType.attackRadiusSquared) {
 				if (tankCount > 10 || droneCount > 20 || launcherCount > 6 || roundNum > 1800) {
 					moveTowardDestination(enemyHQ, true, false, false);
 				} else {
@@ -306,6 +357,15 @@ public class RobotPlayer {
 			}
 			previousTowerLocation = closestTowerLocation;
 
+			if (thisRobotType == RobotType.LAUNCHER) {
+				double maxRadius = 2.0 + RobotType.MISSILE.attackRadiusSquared;
+				
+				if(Math.sqrt(currentLocation.distanceSquaredTo(closestTowerLocation))
+						< maxRadius) {
+					spawnAndLaunch(closestTowerLocation);
+				}
+			}
+			
 			if (canAttack && rc.canAttackLocation(closestTowerLocation)) {
 				rc.attackLocation(closestTowerLocation);
 				moveTowardDestination(closestTowerLocation, true, false, false);
