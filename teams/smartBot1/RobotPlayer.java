@@ -1460,6 +1460,9 @@ public class RobotPlayer {
 
 		done = true;
 
+		/* TODO: cut down computation time of this method to make smartBot
+		 * output map data and resign
+		 */
 		System.out.println("Round Number: " + roundNum);
 		System.out.println("Width: " + (xmax - xmin));
 		System.out.println("Height: " + (ymax - ymin));
