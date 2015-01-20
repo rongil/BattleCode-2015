@@ -381,26 +381,30 @@ public class RobotPlayer {
 			}
 		}
 
+		if (onlyHQAndTowers && !checkFriendlyMissiles) {
+			return true;
+		}
+		
+		Team roboTeam = checkFriendlyMissiles ? null : Enemy;
+		roboTeam = onlyHQAndTowers ? Friend : roboTeam;
+		
 		/*
 		 * Check if any enemies are in range or if any friendly drones are
 		 * within explosion range
 		 */
-		if (!onlyHQAndTowers) {
-			Team roboTeam = checkFriendlyMissiles ? null : Enemy;
-			RobotInfo[] nearbyRobots = rc.senseNearbyRobots(
-					thisRobotType.sensorRadiusSquared, roboTeam);
+		RobotInfo[] nearbyRobots = rc.senseNearbyRobots(
+				thisRobotType.sensorRadiusSquared, roboTeam);
 
-			for (RobotInfo r : nearbyRobots) {
-				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
-						&& (r.team == Enemy || (checkFriendlyMissiles && r.type == RobotType.MISSILE))) {
-					return false;
-				}
+		for (RobotInfo r : nearbyRobots) {
+			if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
+					&& (r.team == Enemy || (checkFriendlyMissiles && r.type == RobotType.MISSILE))) {
+				return false;
 			}
 		}
 
 		return true;
 	}
-
+	
 	/**
 	 * Generates a random, valid direction.
 	 * 
@@ -668,7 +672,8 @@ public class RobotPlayer {
 						return true;
 					}
 				} else { // spawning
-					if (rc.canSpawn(testDir, roboType)) {
+					if (rc.canSpawn(testDir, roboType)
+							&& isSafe(testLoc, false, true)) {
 						rc.spawn(testDir, roboType);
 						return true;
 					}
