@@ -127,9 +127,9 @@ public class RobotPlayer {
 					} else if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
 						createUnit(RobotType.BARRACKS, true);
 					} else if (rc
-							.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
+							.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 2) {
 						createUnit(RobotType.TANKFACTORY, true);
-					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
+					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 2) {
 						createUnit(RobotType.HELIPAD, true);
 					}
 
@@ -210,7 +210,7 @@ public class RobotPlayer {
 			if (canAttack && rc.canAttackLocation(enemyHQ)) {
 				rc.attackLocation(enemyHQ);
 			} else if (currentLocation.distanceSquaredTo(enemyHQ) > RobotType.TANK.attackRadiusSquared) {
-				if (tankCount > 10 || droneCount > 20) {
+				if (tankCount > 10 || droneCount > 20 || roundNum > 1800) {
 					moveTowardDestination(enemyHQ, true, false, false);
 				} else {
 					moveTowardDestination(enemyHQ, false, false, true);
@@ -228,21 +228,24 @@ public class RobotPlayer {
 					minDistance = distance;
 				}
 			}
-			
+
 			if (canAttack && rc.canAttackLocation(closestTowerLocation)) {
 				rc.attackLocation(closestTowerLocation);
 			} else if (currentLocation.distanceSquaredTo(closestTowerLocation) > RobotType.TANK.attackRadiusSquared) {
 				int multiplier = (int) (minDistance / 700);
-				if (tankCount > 10 * multiplier || droneCount > 20 * multiplier) {
+				if (tankCount > 10 * multiplier || droneCount > 20 * multiplier
+						|| roundNum > 1800) {
 					moveTowardDestination(closestTowerLocation, true, false,
 							false);
 				} else {
-					Direction directionTower = friendlyHQ.directionTo(closestTowerLocation);
-					halfwayDistance = (int) ((0.9 / 2.0) * Math.pow(minDistance, 0.5));
-					MapLocation targetDest = friendlyHQ.add(directionTower, halfwayDistance);
-					
-					moveTowardDestination(targetDest, false, false,
-							true);
+					Direction directionTower = friendlyHQ
+							.directionTo(closestTowerLocation);
+					halfwayDistance = (int) ((0.9 / 2.0) * Math.pow(
+							minDistance, 0.5));
+					MapLocation targetDest = friendlyHQ.add(directionTower,
+							halfwayDistance);
+
+					moveTowardDestination(targetDest, false, false, true);
 				}
 			}
 		}
@@ -334,8 +337,9 @@ public class RobotPlayer {
 					MapLocation actualEnemyZeroLocation = splashRangeEnemies[0].location;
 					Direction towardsEnemyZero = friendlyHQ
 							.directionTo(actualEnemyZeroLocation);
-					MapLocation splashEnemyZeroLocation = friendlyHQ
-							.add(towardsEnemyZero);
+					MapLocation splashEnemyZeroLocation = friendlyHQ.add(
+							towardsEnemyZero,
+							(int) Math.sqrt(attackRadiusSquared));
 
 					if (rc.canAttackLocation(splashEnemyZeroLocation)) {
 						rc.attackLocation(splashEnemyZeroLocation);
@@ -382,18 +386,18 @@ public class RobotPlayer {
 			}
 		}
 
-//			if (onlyHQAndTowers && !checkFriendlyMissiles) {
-//			return true;
-//		}
-//		
-//		Team roboTeam = checkFriendlyMissiles ? null : Enemy;
-//		roboTeam = onlyHQAndTowers ? Friend : roboTeam;
-		
+		// if (onlyHQAndTowers && !checkFriendlyMissiles) {
+		// return true;
+		// }
+		//
+		// Team roboTeam = checkFriendlyMissiles ? null : Enemy;
+		// roboTeam = onlyHQAndTowers ? Friend : roboTeam;
+
 		if (onlyHQAndTowers) {
 			return true;
 		}
-		
-		Team roboTeam = Enemy;		
+
+		Team roboTeam = Enemy;
 		/*
 		 * Check if any enemies are in range or if any friendly drones are
 		 * within explosion range
@@ -410,7 +414,7 @@ public class RobotPlayer {
 
 		return true;
 	}
-	
+
 	/**
 	 * Generates a random, valid direction.
 	 * 
