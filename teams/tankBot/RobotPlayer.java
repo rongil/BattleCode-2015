@@ -232,7 +232,8 @@ public class RobotPlayer {
 			if (canAttack && rc.canAttackLocation(closestTowerLocation)) {
 				rc.attackLocation(closestTowerLocation);
 			} else if (currentLocation.distanceSquaredTo(closestTowerLocation) > RobotType.TANK.attackRadiusSquared) {
-				if (tankCount > 10 * (int) (minDistance / 700)|| droneCount > 20 * (int) (minDistance / 700)) {
+				int multiplier = (int) (minDistance / 700);
+				if (tankCount > 10 * multiplier || droneCount > 20 * multiplier) {
 					moveTowardDestination(closestTowerLocation, true, false,
 							false);
 				} else {
