@@ -1,13 +1,13 @@
 package randomQuestions;
 
 import battlecode.common.*;
+import java.util.*;
 
 public class randomQuestionsForum {
 	public static void main(String[] args){
-		int[] test = new int[8];
-		System.out.println(test[0]);
+		ArrayList<Integer> test = new ArrayList<Integer>();
+		test.add(1);
 		
-		test[0] += 1;
-		System.out.println(test[0]);
+		System.out.println(test.get(1));
 	}
 }
