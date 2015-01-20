@@ -47,9 +47,6 @@ public class RobotPlayer {
 			Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
 			Direction.NORTH_WEST };
 
-	// Missile only
-	private static int turnsRemaining;
-
 	// Drone only
 	private static Direction patrolDirection;
 
@@ -82,6 +79,13 @@ public class RobotPlayer {
 		rand = new Random(rc.getID());
 		facing = getRandomDirection(); // Randomize starting direction
 
+		if (thisRobotType == RobotType.DRONE) {
+			Direction HQdirection = friendlyHQ.directionTo(enemyHQ);
+			patrolDirection = (rand.nextDouble() > 0.5) ? HQdirection
+					.rotateLeft().rotateLeft() : HQdirection.rotateRight()
+					.rotateRight();
+		}
+		
 		// Method can never end or the robot is destroyed.
 		while (true) {
 			/*
@@ -123,7 +127,7 @@ public class RobotPlayer {
 					} else if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
 						createUnit(RobotType.BARRACKS, true);
 					} else if (rc
-							.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 2) {
+							.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
 						createUnit(RobotType.TANKFACTORY, true);
 					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
 						createUnit(RobotType.HELIPAD, true);
@@ -233,6 +237,41 @@ public class RobotPlayer {
 
 	}
 
+	/**************************************************************************
+	 * directs drones to patrol the borderline between the two HQ's
+	 * 
+	 * @throws GameActionException
+	 *************************************************************************/
+	private static void patrolBorder() throws GameActionException {
+		// TODO: should other robots help patrol as well?
+		MapLocation currentLocation = rc.getLocation();
+
+		double distanceToFriendHQ = Math.pow(
+				currentLocation.distanceSquaredTo(friendlyHQ), 0.5);
+		double distanceToEnemyHQ = Math.pow(
+				currentLocation.distanceSquaredTo(enemyHQ), 0.5);
+
+		if (distanceToFriendHQ < 0.85 * distanceToEnemyHQ
+				|| distanceToEnemyHQ < 0.95) {
+
+			Direction HQdirection = friendlyHQ.directionTo(enemyHQ);
+			MapLocation checkpoint = friendlyHQ.add(HQdirection,
+					halfwayDistance);
+
+			moveTowardDestination(checkpoint, false, false, true);
+
+		} else {
+			MapLocation newLocation = currentLocation.add(patrolDirection);
+
+			if (rc.senseTerrainTile(newLocation) == TerrainTile.OFF_MAP) {
+				patrolDirection = patrolDirection.opposite();
+				newLocation = currentLocation.add(patrolDirection);
+			}
+
+			moveTowardDestination(newLocation, false, false, true);
+		}
+	}
+
 	private static void attackNearestTower() throws GameActionException {
 		boolean canAttack = rc.isWeaponReady();
 		MapLocation currentLocation = rc.getLocation();
@@ -294,8 +333,11 @@ public class RobotPlayer {
 					MapLocation targetDest = friendlyHQ.add(directionTower,
 							halfwayDistance);
 
-					moveTowardDestination(targetDest, false, false, true);
-
+					if(thisRobotType != RobotType.DRONE) {
+						moveTowardDestination(targetDest, false, false, true);
+					} else {
+						patrolBorder();
+					}
 				}
 			}
 		}
