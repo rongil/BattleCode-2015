@@ -1218,19 +1218,19 @@ public class RobotPlayer {
 			// One or no towers -> very weak. Keep at 0.
 			// Otherwise measure strength based on closeness.
 			for (int i = 0; i < enemyTowers.length; ++i) {
-				if (enemyTowers[i].distanceSquaredTo(enemyHQ) < 48) {
+				if (Math.sqrt(enemyTowers[i].distanceSquaredTo(enemyHQ)) < 
+						Math.sqrt(RobotType.TOWER.attackRadiusSquared) + 
+						Math.sqrt(RobotType.HQ.attackRadiusSquared)) {
 					towerStrength += 2;
 				}
 				
-				for (int j = i; j < enemyTowers.length; ++j) {
-					if (enemyTowers[i].distanceSquaredTo(enemyTowers[j]) < 48) {
+				for (int j = i + 1; j < enemyTowers.length; ++j) {
+					if (Math.sqrt(enemyTowers[i].distanceSquaredTo(enemyTowers[j])) < 
+							2 * Math.sqrt(RobotType.TOWER.attackRadiusSquared)) {
 						towerStrength += 1;
 					}
 				}
 			}
-			
-			System.out.println("Tower Strength: " + towerStrength);
-			rc.resign();
 			
 			rc.broadcast(TOWER_STRENGTH_CHANNEL, towerStrength);
 		}
