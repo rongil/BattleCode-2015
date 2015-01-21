@@ -44,6 +44,9 @@ public class RobotPlayer {
 			Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
 			Direction.NORTH_WEST };
 
+	// Missile only
+	private static int turnsRemaining;
+	
 	// Drone only
 	private static Direction patrolDirection;
 
@@ -83,6 +86,10 @@ public class RobotPlayer {
 					.rotateRight();
 		}
 
+		if (thisRobotType == RobotType.MISSILE) {
+			turnsRemaining = GameConstants.MISSILE_LIFESPAN;
+		}
+		
 		// Method can never end or the robot is destroyed.
 		while (true) {
 			/*
@@ -222,6 +229,8 @@ public class RobotPlayer {
 							RobotType.MISSILE.attackRadiusSquared, Enemy) >= 1.0) {
 						rc.explode();
 					}
+					
+					turnsRemaining--;
 					break;
 
 				case TANK:
