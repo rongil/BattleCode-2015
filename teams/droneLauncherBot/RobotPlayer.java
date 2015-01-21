@@ -204,6 +204,11 @@ public class RobotPlayer {
 						}
 					}
 
+					RobotInfo[] targets = rc.senseNearbyRobots(
+							GameConstants.MISSILE_LIFESPAN
+									* GameConstants.MISSILE_LIFESPAN, Enemy);
+					bestTarget = targets.length == 0 ? null
+							: targets[0].location;
 					if (bestTarget != null) {
 						launchMissile(bestTarget);
 						moveTowardDestination(
