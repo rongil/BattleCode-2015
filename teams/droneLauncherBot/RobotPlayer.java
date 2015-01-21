@@ -35,6 +35,7 @@ public class RobotPlayer {
 	private static MapLocation[] enemyTowers;
 
 	private static int halfwayDistance;
+	private static int wholeDistanceCoefficient;
 	private static MapLocation previousTowerLocation;
 	private static boolean swarming = false;
 
@@ -46,7 +47,7 @@ public class RobotPlayer {
 
 	// Missile only
 	private static int turnsRemaining;
-	
+
 	// Drone only
 	private static Direction patrolDirection;
 
@@ -66,30 +67,32 @@ public class RobotPlayer {
 		thisRobotType = rc.getType();
 		Friend = rc.getTeam();
 		Enemy = Friend.opponent();
-		friendlyHQ = rc.senseHQLocation();
-		enemyHQ = rc.senseEnemyHQLocation();
-		friendlyTowers = rc.senseTowerLocations();
-		enemyTowers = rc.senseEnemyTowerLocations();
-
-		// Slightly less to avoid tower issues
-		halfwayDistance = (int) (0.45 * Math.sqrt(friendlyHQ
-				.distanceSquaredTo(enemyHQ)));
-		int wholeDistanceCoefficient = friendlyHQ.distanceSquaredTo(enemyHQ) / 700;
-
 		rand = new Random(rc.getID());
-		facing = getRandomDirection(); // Randomize starting direction
+		if (thisRobotType != RobotType.MISSILE) {
+			friendlyHQ = rc.senseHQLocation();
+			enemyHQ = rc.senseEnemyHQLocation();
+			friendlyTowers = rc.senseTowerLocations();
+			enemyTowers = rc.senseEnemyTowerLocations();
 
-		if (thisRobotType == RobotType.DRONE) {
-			Direction HQdirection = friendlyHQ.directionTo(enemyHQ);
-			patrolDirection = (rand.nextDouble() > 0.5) ? HQdirection
-					.rotateLeft().rotateLeft() : HQdirection.rotateRight()
-					.rotateRight();
-		}
+			// Slightly less to avoid tower issues
+			halfwayDistance = (int) (0.45 * Math.sqrt(friendlyHQ
+					.distanceSquaredTo(enemyHQ)));
+			wholeDistanceCoefficient = friendlyHQ.distanceSquaredTo(enemyHQ) / 700;
 
-		if (thisRobotType == RobotType.MISSILE) {
+			facing = getRandomDirection(); // Randomize starting direction
+
+			// Drone only stuff
+			if (thisRobotType == RobotType.DRONE) {
+				Direction HQdirection = friendlyHQ.directionTo(enemyHQ);
+				patrolDirection = (rand.nextDouble() > 0.5) ? HQdirection
+						.rotateLeft().rotateLeft() : HQdirection.rotateRight()
+						.rotateRight();
+			}
+
+		} else {
 			turnsRemaining = GameConstants.MISSILE_LIFESPAN;
 		}
-		
+
 		// Method can never end or the robot is destroyed.
 		while (true) {
 			/*
@@ -107,13 +110,15 @@ public class RobotPlayer {
 				 * ------------------------------------------------------------
 				 * 3) HQ Attack Range on both teams
 				 *************************************************************/
-				roundNum = Clock.getRoundNum();
-				friendlyTowers = rc.senseTowerLocations();
-				enemyTowers = rc.senseEnemyTowerLocations();
-				friendlyHQAttackRadiusSquared = friendlyTowers.length >= 5 ? GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
-						: RobotType.HQ.attackRadiusSquared;
-				enemyHQAttackRadiusSquared = enemyTowers.length >= 5 ? GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
-						: RobotType.HQ.attackRadiusSquared;
+				if (thisRobotType != RobotType.MISSILE) {
+					roundNum = Clock.getRoundNum();
+					friendlyTowers = rc.senseTowerLocations();
+					enemyTowers = rc.senseEnemyTowerLocations();
+					friendlyHQAttackRadiusSquared = friendlyTowers.length >= 5 ? GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
+							: RobotType.HQ.attackRadiusSquared;
+					enemyHQAttackRadiusSquared = enemyTowers.length >= 5 ? GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
+							: RobotType.HQ.attackRadiusSquared;
+				}
 
 				// Choose an action based on the type of robot.
 				switch (thisRobotType) {
@@ -201,9 +206,14 @@ public class RobotPlayer {
 
 					if (bestTarget != null) {
 						launchMissile(bestTarget);
+						moveTowardDestination(
+								currentLocation.subtract(currentLocation
+										.directionTo(bestTarget)), true, false,
+								false);
+					} else {
+						attackNearestTower();
 					}
 
-					attackNearestTower();
 					break;
 
 				case MINER:
@@ -225,11 +235,15 @@ public class RobotPlayer {
 					break;
 
 				case MISSILE:
-					if (friendEnemyRatio(null,
-							RobotType.MISSILE.attackRadiusSquared, Enemy) >= 1.0) {
-						rc.explode();
+					RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(
+							thisRobotType.sensorRadiusSquared, Enemy);
+					if (nearbyEnemies.length == 0) {
+						moveTowardDestination(rc.senseEnemyHQLocation(), true,
+								false, false);
+					} else {
+						moveTowardDestination(nearbyEnemies[0].location, true,
+								false, false);
 					}
-					
 					turnsRemaining--;
 					break;
 
@@ -251,7 +265,7 @@ public class RobotPlayer {
 
 				}
 
-				if (thisRobotType != RobotType.MISSILE) {
+				if (thisRobotType == RobotType.HQ) {
 					transferSupplies();
 				}
 
@@ -267,7 +281,9 @@ public class RobotPlayer {
 
 	/**
 	 * Missile launching towards location (overloaded for direction as well)
-	 * @param targetLoc - destination
+	 * 
+	 * @param targetLoc
+	 *            - destination
 	 * @return missile launched or not
 	 * @throws GameActionException
 	 */
@@ -389,7 +405,8 @@ public class RobotPlayer {
 					swarming = true;
 					moveTowardDestination(closestTowerLocation, true, false,
 							false);
-				} else if (rc.getSupplyLevel() < 10 * multiplier) {
+				} else if (rc.getSupplyLevel() < 10 * multiplier
+						&& thisRobotType == RobotType.DRONE) {
 					moveTowardDestination(friendlyHQ, false, false, true);
 				} else {
 					// moveTowardDestination(assignment, false, false, true);
@@ -979,27 +996,25 @@ public class RobotPlayer {
 		// robots may decide to "sacrifice" themselves for the sake of a
 		// stronger, more able robot?
 
-		if (!thisRobotType.needsSupply()) {
-			RobotInfo[] nearbyAllies = rc.senseNearbyRobots(rc.getLocation(),
-					GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, Friend);
-			double lowestSupply = rc.getSupplyLevel();
-			double transferAmount = 0;
+		RobotInfo[] nearbyAllies = rc.senseNearbyRobots(rc.getLocation(),
+				GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, Friend);
+		double lowestSupply = rc.getSupplyLevel();
+		double transferAmount = 0;
 
-			MapLocation suppliesToThisLocation = null;
+		MapLocation suppliesToThisLocation = null;
 
-			for (RobotInfo ri : nearbyAllies) {
-				if (ri.type.needsSupply() && ri.supplyLevel < lowestSupply) {
-					lowestSupply = ri.supplyLevel;
-					transferAmount = (rc.getSupplyLevel() - lowestSupply) / 2;
-					suppliesToThisLocation = ri.location;
-				}
-			}
-
-			if (suppliesToThisLocation != null) {
-				rc.transferSupplies((int) transferAmount,
-						suppliesToThisLocation);
+		for (RobotInfo ri : nearbyAllies) {
+			if (ri.type.needsSupply() && ri.supplyLevel < lowestSupply) {
+				lowestSupply = ri.supplyLevel;
+				transferAmount = (rc.getSupplyLevel() - lowestSupply) / 2;
+				suppliesToThisLocation = ri.location;
 			}
 		}
+
+		if (suppliesToThisLocation != null) {
+			rc.transferSupplies((int) transferAmount, suppliesToThisLocation);
+		}
+
 	}
 
 	/**************************************************************************
