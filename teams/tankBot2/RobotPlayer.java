@@ -152,6 +152,7 @@ public class RobotPlayer {
 					break;
 
 				case DRONE:
+					// TODO: Add signal for drone circling based on towerStrength analysis
 					attackNearestTower();
 					attackEnemyZero();
 					break;
