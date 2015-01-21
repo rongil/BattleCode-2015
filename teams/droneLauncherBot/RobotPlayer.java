@@ -219,7 +219,7 @@ public class RobotPlayer {
 
 				case MISSILE:
 					if (friendEnemyRatio(null,
-							RobotType.MISSILE.attackRadiusSquared, Enemy) >= 1.5) {
+							RobotType.MISSILE.attackRadiusSquared, Enemy) >= 1.0) {
 						rc.explode();
 					}
 					break;
@@ -269,23 +269,6 @@ public class RobotPlayer {
 
 		if (rc.getMissileCount() > 0 && rc.canLaunch(directionToTarget)) {
 			rc.launchMissile(directionToTarget);
-			return true;
-		}
-
-		return false;
-	}
-
-	/**
-	 * @see RobotPlayer#launchMissile(MapLocation)
-	 * @param direction
-	 * @return
-	 * @throws GameActionException
-	 */
-	private static boolean launchMissile(Direction direction)
-			throws GameActionException {
-
-		if (rc.getMissileCount() > 0 && rc.canLaunch(direction)) {
-			rc.launchMissile(direction);
 			return true;
 		}
 
