@@ -467,8 +467,7 @@ public class RobotPlayer {
 		}
 	}
 
-	private static LinkedList<MapLocation> search(MapLocation dest, boolean DFS)
-			throws GameActionException {
+	private static boolean search(MapLocation dest, boolean DFS) throws GameActionException {
 		MapLocation currentLocation = rc.getLocation();
 
 		if (!reachedGoal(currentLocation, dest)) {
@@ -502,7 +501,11 @@ public class RobotPlayer {
 							currentNode);
 
 					if (reachedGoal(nodeLocation, dest)) {
-						return childNode.getPath();
+						Direction currentToChild = currentLoc.directionTo(nodeLocation);
+						rc.broadcast(channelHashFunc(currentLoc),
+								directionToInt(currentToChild));
+						return true;
+
 					} else {
 						if (!visited.contains(nodeLocation)) {
 							visited.add(nodeLocation);
@@ -513,7 +516,7 @@ public class RobotPlayer {
 			}
 		}
 
-		return null;
+		return false;
 	}
 
 	private static boolean reachedGoal(MapLocation loc, MapLocation dest) {
