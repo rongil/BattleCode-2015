@@ -424,7 +424,7 @@ public class RobotPlayer {
 					if (thisRobotType != RobotType.DRONE) {
 						moveTowardDestination(targetDest, false, false, true);
 					} else {
-						patrolBorder();
+						defendAndMove();
 					}
 				}
 			}
@@ -860,7 +860,7 @@ public class RobotPlayer {
 			moveTowardDestination(targetLocation, false, true, true);
 
 		} else {
-			moveAround();
+			patrolBorder();
 		}
 	}
 
