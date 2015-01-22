@@ -170,10 +170,11 @@ public class RobotPlayer {
 				case DRONE:
 					if (swarming || roundNum > 1800) {
 						attackNearestTower();
-					} else if (rc.getSupplyLevel() < 80) {
-						moveTowardDestination(friendlyHQ, false, false, true);
+//					} else if (rc.getSupplyLevel() < 80) {
+//						moveTowardDestination(friendlyHQ, false, false, true);
 					} else {
-						targetEnemyMiners();
+//						targetEnemyMiners();
+						defendAndMove();
 					}
 					attackEnemyZero();
 					break;
@@ -240,8 +241,10 @@ public class RobotPlayer {
 								currentLocation.subtract(currentLocation
 										.directionTo(bestTarget)), true, false,
 								false);
-					} else {
+					} else if (swarming) {
 						attackNearestTower();
+					} else {
+						defendAndMove();
 					}
 
 					break;
@@ -259,7 +262,7 @@ public class RobotPlayer {
 					double miningFate = rand.nextDouble();
 					if (roundNum < 1500
 							&& miningFate <= Math.pow(Math.E,
-									-minerCount * 0.07)) {
+									-minerCount * 0.4)) {
 						createUnit(RobotType.MINER, false);
 					}
 					break;
@@ -429,7 +432,7 @@ public class RobotPlayer {
 				rc.attackLocation(closestTowerLocation);
 				moveTowardDestination(closestTowerLocation, true, false, false);
 			} else if (currentLocation.distanceSquaredTo(closestTowerLocation) > thisRobotType.attackRadiusSquared) {
-				int multiplier = Math.max(2, minDistance / 700);
+				int multiplier = Math.min(2, minDistance / 700);
 				if (swarming
 						&& roundNum < 1800
 						&& (tankCount < 5 * multiplier
@@ -932,7 +935,7 @@ public class RobotPlayer {
 		if (targetLocation != null) {
 			moveTowardDestination(targetLocation, false, true, true);
 
-		} else {
+		} else if (thisRobotType == RobotType.DRONE){
 			patrolBorder();
 		}
 	}
