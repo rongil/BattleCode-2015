@@ -1,6 +1,7 @@
 package droneLauncherBot;
 
 import battlecode.common.*;
+
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -140,7 +141,7 @@ public class RobotPlayer {
 							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 2) {
 						createUnit(RobotType.AEROSPACELAB, true);
 					} else if (rc
-							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < (int) numFriendlyUnit / 10) {
+							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 10) {
 						createUnit(RobotType.SUPPLYDEPOT, true);
 					} else if (rc.getTeamOre() > 1000) {
 						if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 2) {
@@ -149,8 +150,17 @@ public class RobotPlayer {
 								.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 3) {
 							createUnit(RobotType.AEROSPACELAB, true);
 						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 5) {
+								.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3) {
 							createUnit(RobotType.HANDWASHSTATION, true);
+							// Beyond this point means we have a LOT of ore! :D
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 7) {
+							createUnit(RobotType.SUPPLYDEPOT, true);
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 5) {
+							createUnit(RobotType.AEROSPACELAB, true);
+						} else {
+							createUnit(RobotType.HELIPAD, true);
 						}
 					}
 
@@ -158,7 +168,7 @@ public class RobotPlayer {
 					break;
 
 				case DRONE:
-					if (swarming) {
+					if (swarming || roundNum > 1800) {
 						attackNearestTower();
 					} else if (rc.getSupplyLevel() < 80) {
 						moveTowardDestination(friendlyHQ, false, false, true);
@@ -258,11 +268,9 @@ public class RobotPlayer {
 					RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(
 							thisRobotType.sensorRadiusSquared, Enemy);
 					if (nearbyEnemies.length == 0) {
-						moveTowardDestination(rc.senseEnemyHQLocation(), true,
-								false, false);
+						missileMoveTowardDestination(rc.senseEnemyHQLocation());
 					} else {
-						moveTowardDestination(nearbyEnemies[0].location, true,
-								false, false);
+						missileMoveTowardDestination(nearbyEnemies[0].location);
 					}
 					turnsRemaining--;
 					break;
@@ -366,10 +374,14 @@ public class RobotPlayer {
 
 		if (enemyTowers.length == 0) {
 			if (thisRobotType == RobotType.LAUNCHER) {
-				double maxRadius = 4.0 + RobotType.MISSILE.attackRadiusSquared;
+				double maxRadius = GameConstants.MISSILE_LIFESPAN
+						+ RobotType.MISSILE.attackRadiusSquared;
 
 				if (Math.sqrt(currentLocation.distanceSquaredTo(enemyHQ)) < maxRadius) {
 					launchMissile(enemyHQ);
+					moveTowardDestination(
+							currentLocation.subtract(currentLocation
+									.directionTo(enemyHQ)), true, false, false);
 				}
 			}
 
@@ -406,6 +418,10 @@ public class RobotPlayer {
 				if (Math.sqrt(currentLocation
 						.distanceSquaredTo(closestTowerLocation)) < maxRadius) {
 					launchMissile(closestTowerLocation);
+					moveTowardDestination(
+							currentLocation.subtract(currentLocation
+									.directionTo(closestTowerLocation)), true,
+							false, false);
 				}
 			}
 
@@ -417,11 +433,11 @@ public class RobotPlayer {
 				if (swarming
 						&& roundNum < 1800
 						&& (tankCount < 5 * multiplier
-								&& droneCount < 10 * multiplier && launcherCount < 6 * multiplier)) {
+								&& droneCount < 10 * multiplier && launcherCount < 1 * multiplier)) {
 					swarming = false;
 				} else if (roundNum >= 1800
 						|| (tankCount > 10 * multiplier
-								|| droneCount > 20 * multiplier || launcherCount > 6 * multiplier)
+								|| droneCount > 20 * multiplier || launcherCount > 3 * multiplier)
 						|| swarming) {
 					swarming = true;
 					moveTowardDestination(closestTowerLocation, true, false,
@@ -444,16 +460,17 @@ public class RobotPlayer {
 		}
 	}
 
-	private static void targetEnemyMiners() throws GameActionException {
+	private static boolean targetEnemyMiners() throws GameActionException {
 		RobotInfo[] allEnemies = rc.senseNearbyRobots(enemyHQ,
 				Integer.MAX_VALUE, Enemy);
 		for (RobotInfo e : allEnemies) {
 			if (e.type == RobotType.MINER || e.type == RobotType.BEAVER
 					|| !e.type.needsSupply()) {
-				moveTowardDestination(e.location, false, true, true);
-				return;
+				moveTowardDestination(e.location, false, false, true, true);
+				return true;
 			}
 		}
+		return false;
 	}
 
 	/*
@@ -692,6 +709,12 @@ public class RobotPlayer {
 	 **************************************************************************/
 	private static boolean isSafe(MapLocation loc, boolean onlyHQAndTowers,
 			boolean checkFriendlyMissiles) throws GameActionException {
+		return isSafe(loc, onlyHQAndTowers, checkFriendlyMissiles, false);
+	}
+
+	private static boolean isSafe(MapLocation loc, boolean onlyHQAndTowers,
+			boolean checkFriendlyMissiles, boolean ignoreMinersBeavers)
+			throws GameActionException {
 		TerrainTile locTerrain = rc.senseTerrainTile(loc);
 
 		if (locTerrain != TerrainTile.NORMAL
@@ -732,7 +755,8 @@ public class RobotPlayer {
 
 		for (RobotInfo r : nearbyRobots) {
 			if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
-					&& (r.team == Enemy || (checkFriendlyMissiles && r.type == RobotType.MISSILE))) {
+					&& (r.team == Enemy || (checkFriendlyMissiles && r.type == RobotType.MISSILE))
+					&& !(ignoreMinersBeavers && (r.type == RobotType.BEAVER || r.type == RobotType.MINER))) {
 				return false;
 			}
 		}
@@ -807,12 +831,22 @@ public class RobotPlayer {
 			boolean checkFriendlyMissiles) throws GameActionException {
 
 		return moveTowardDestination(rc.getLocation(), dest, ignoreSafety,
-				onlyHQAndTowers, checkFriendlyMissiles);
+				onlyHQAndTowers, checkFriendlyMissiles, false);
+	}
+
+	private static boolean moveTowardDestination(MapLocation dest,
+			boolean ignoreSafety, boolean onlyHQAndTowers,
+			boolean checkFriendlyMissiles, boolean ignoreMinersBeavers)
+			throws GameActionException {
+
+		return moveTowardDestination(rc.getLocation(), dest, ignoreSafety,
+				onlyHQAndTowers, checkFriendlyMissiles, ignoreMinersBeavers);
 	}
 
 	private static boolean moveTowardDestination(MapLocation startLoc,
 			MapLocation dest, boolean ignoreSafety, boolean onlyHQAndTowers,
-			boolean checkFriendlyMissiles) throws GameActionException {
+			boolean checkFriendlyMissiles, boolean ignoreMinersBeavers)
+			throws GameActionException {
 		// TODO: Should we consider including a "crowdedness" heuristic? If so,
 		// how do we incorporate our current implementation?
 
@@ -843,12 +877,24 @@ public class RobotPlayer {
 
 					if (ignoreSafety
 							|| isSafe(possSquare, onlyHQAndTowers,
-									checkFriendlyMissiles)) {
+									checkFriendlyMissiles, ignoreMinersBeavers)) {
 						rc.move(possDirection);
 						return true;
 					}
 				}
 			}
+		}
+
+		return false;
+	}
+
+	// FOR MISSILES ONLY
+	private static boolean missileMoveTowardDestination(MapLocation loc)
+			throws GameActionException {
+		Direction dir = rc.getLocation().directionTo(loc);
+		if (rc.isCoreReady() && rc.canMove(dir)) {
+			rc.move(dir);
+			return true;
 		}
 
 		return false;
