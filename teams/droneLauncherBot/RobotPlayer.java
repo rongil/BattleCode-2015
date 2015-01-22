@@ -241,10 +241,8 @@ public class RobotPlayer {
 								currentLocation.subtract(currentLocation
 										.directionTo(bestTarget)), true, false,
 								false);
-					} else if (swarming) {
-						attackNearestTower();
 					} else {
-						defendAndMove();
+						attackNearestTower();
 					}
 
 					break;
