@@ -38,7 +38,7 @@ public class RobotPlayer {
 	private static int halfwayDistance;
 	private static int wholeDistanceCoefficient;
 	private static MapLocation previousTowerLocation;
-	private static boolean swarming = false;
+	private static boolean swarming = true;
 	private static int swarmRound;
 
 	private static Direction facing;
@@ -85,6 +85,10 @@ public class RobotPlayer {
 			// It was this or int casting...
 			swarmRound = rc.getRoundLimit() * 9 / 10;
 
+			if (thisRobotType == RobotType.DRONE || thisRobotType == RobotType.LAUNCHER) {
+				previousTowerLocation = null;
+			}
+			
 			// Drone only stuff
 			if (thisRobotType == RobotType.DRONE) {
 				Direction HQdirection = friendlyHQ.directionTo(enemyHQ);
@@ -135,6 +139,7 @@ public class RobotPlayer {
 					attackEnemyZero();
 					int numFriendlyUnit = rc.senseNearbyRobots(
 							Integer.MAX_VALUE, Friend).length;
+					
 					// Building Order/Preferences
 					if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 						createUnit(RobotType.MINERFACTORY, true);
@@ -154,7 +159,6 @@ public class RobotPlayer {
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3) {
 						createUnit(RobotType.HANDWASHSTATION, true);
-							// Beyond this point means we have a LOT of ore! :D
 					} else if (rc
 						.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 7) {
 						createUnit(RobotType.SUPPLYDEPOT, true);
@@ -169,16 +173,19 @@ public class RobotPlayer {
 					break;
 
 				case DRONE:
-					if (swarming || roundNum > swarmRound) {
-						attackNearestTower();
-						// } else if (rc.getSupplyLevel() < 80) {
-						// moveTowardDestination(friendlyHQ, false, false,
-						// true);
-					} else {
-						// targetEnemyMiners();
-						defendAndMove();
-					}
+//					if (swarming || roundNum > swarmRound) {
+//						attackNearestTower();
+//						} else if (rc.getSupplyLevel() < 80) {
+//						moveTowardDestination(friendlyHQ, false, false, true);
+//					} else {
+//						targetEnemyMiners();
+//						defendAndMove();
+//					}
+//					attackEnemyZero();
+					
+					attackNearestTower();
 					attackEnemyZero();
+					defendAndMove();
 					break;
 
 				case HELIPAD:
@@ -400,8 +407,7 @@ public class RobotPlayer {
 			}
 
 		} else {
-			MapLocation referencePoint = swarming ? previousTowerLocation
-					: friendlyHQ;
+			MapLocation referencePoint = (previousTowerLocation == null) ? friendlyHQ : previousTowerLocation;
 
 			int minDistance = enemyTowers[0].distanceSquaredTo(referencePoint);
 			MapLocation closestTowerLocation = enemyTowers[0];
