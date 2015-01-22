@@ -159,7 +159,11 @@ public class RobotPlayer {
 					break;
 
 				case DRONE:
-					attackNearestTower();
+					if (swarming) {
+						attackNearestTower();
+					} else {
+						targetEnemyMiners();
+					}
 					attackEnemyZero();
 					break;
 
@@ -270,7 +274,8 @@ public class RobotPlayer {
 
 				}
 
-				if (thisRobotType == RobotType.HQ) {
+				if (thisRobotType == RobotType.HQ
+						|| thisRobotType == RobotType.DRONE) {
 					transferSupplies();
 				}
 
@@ -431,6 +436,17 @@ public class RobotPlayer {
 		}
 	}
 
+	private static void targetEnemyMiners() throws GameActionException {
+		RobotInfo[] allEnemies = rc.senseNearbyRobots(enemyHQ,
+				Integer.MAX_VALUE, Enemy);
+		for (RobotInfo e : allEnemies) {
+			if (e.type == RobotType.MINER) {
+				moveTowardDestination(e.location, false, true, true);
+				break;
+			}
+		}
+	}
+
 	/*
 	 * ==========================================================================
 	 */
@@ -467,7 +483,8 @@ public class RobotPlayer {
 		}
 	}
 
-	private static boolean search(MapLocation dest, boolean DFS) throws GameActionException {
+	private static boolean search(MapLocation dest, boolean DFS)
+			throws GameActionException {
 		MapLocation currentLocation = rc.getLocation();
 
 		if (!reachedGoal(currentLocation, dest)) {
@@ -501,7 +518,8 @@ public class RobotPlayer {
 							currentNode);
 
 					if (reachedGoal(nodeLocation, dest)) {
-						Direction currentToChild = currentLoc.directionTo(nodeLocation);
+						Direction currentToChild = currentLoc
+								.directionTo(nodeLocation);
 						rc.broadcast(channelHashFunc(currentLoc),
 								directionToInt(currentToChild));
 						return true;
