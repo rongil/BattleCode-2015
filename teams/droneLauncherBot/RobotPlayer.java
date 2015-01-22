@@ -129,7 +129,8 @@ public class RobotPlayer {
 
 				case BEAVER:
 					attackEnemyZero();
-
+					int numFriendlyUnit = rc.senseNearbyRobots(
+							Integer.MAX_VALUE, Friend).length;
 					// Building Order/Preferences
 					if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 						createUnit(RobotType.MINERFACTORY, true);
@@ -139,9 +140,7 @@ public class RobotPlayer {
 							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 2) {
 						createUnit(RobotType.AEROSPACELAB, true);
 					} else if (rc
-							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 7
-							|| (wholeDistanceCoefficient >= 10 && rc
-									.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 12)) {
+							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < (int) numFriendlyUnit / 10) {
 						createUnit(RobotType.SUPPLYDEPOT, true);
 					} else if (rc.getTeamOre() > 1000) {
 						if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 2) {
@@ -170,7 +169,17 @@ public class RobotPlayer {
 					break;
 
 				case HELIPAD:
-					createUnit(RobotType.DRONE, false);
+					// TODO: Use map analysis to decide drone production vs.
+					// launcher production.
+
+					// Get drone count
+					int droneCount = rc
+							.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
+					// Exponential Decay for drone production
+					double droneFate = rand.nextDouble();
+					if (droneFate <= Math.pow(Math.E, -droneCount * 0.15)) {
+						createUnit(RobotType.DRONE, false);
+					}
 					break;
 
 				case HQ:
@@ -439,9 +448,10 @@ public class RobotPlayer {
 		RobotInfo[] allEnemies = rc.senseNearbyRobots(enemyHQ,
 				Integer.MAX_VALUE, Enemy);
 		for (RobotInfo e : allEnemies) {
-			if (e.type == RobotType.MINER) {
+			if (e.type == RobotType.MINER || e.type == RobotType.BEAVER
+					|| !e.type.needsSupply()) {
 				moveTowardDestination(e.location, false, true, true);
-				break;
+				return;
 			}
 		}
 	}
@@ -1029,7 +1039,8 @@ public class RobotPlayer {
 		MapLocation suppliesToThisLocation = null;
 
 		for (RobotInfo ri : nearbyAllies) {
-			if (ri.type.needsSupply() && ri.supplyLevel < lowestSupply) {
+			if (ri.type.needsSupply() && ri.supplyLevel < lowestSupply
+					&& thisRobotType != ri.type) {
 				lowestSupply = ri.supplyLevel;
 				transferAmount = (rc.getSupplyLevel() - lowestSupply) / 2;
 				suppliesToThisLocation = ri.location;
