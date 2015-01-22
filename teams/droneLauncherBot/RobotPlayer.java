@@ -161,6 +161,8 @@ public class RobotPlayer {
 				case DRONE:
 					if (swarming) {
 						attackNearestTower();
+					} else if (rc.getSupplyLevel() < 80) {
+						moveTowardDestination(friendlyHQ, false, false, true);
 					} else {
 						targetEnemyMiners();
 					}
@@ -415,9 +417,6 @@ public class RobotPlayer {
 					swarming = true;
 					moveTowardDestination(closestTowerLocation, true, false,
 							false);
-				} else if (rc.getSupplyLevel() < 10 * multiplier
-						&& thisRobotType == RobotType.DRONE) {
-					moveTowardDestination(friendlyHQ, false, false, true);
 				} else {
 					// moveTowardDestination(assignment, false, false, true);
 					Direction directionTower = friendlyHQ
