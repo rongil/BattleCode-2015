@@ -141,30 +141,28 @@ public class RobotPlayer {
 					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
 						createUnit(RobotType.HELIPAD, true);
 					} else if (rc
-							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 2) {
+							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 1) {
 						createUnit(RobotType.AEROSPACELAB, true);
 					} else if (rc
-							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 10) {
+							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 5) {
 						createUnit(RobotType.SUPPLYDEPOT, true);
-					} else if (rc.getTeamOre() > 1000) {
-						if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 2) {
+					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 2) {
 							createUnit(RobotType.HELIPAD, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 3) {
-							createUnit(RobotType.AEROSPACELAB, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3) {
-							createUnit(RobotType.HANDWASHSTATION, true);
+					} else if (rc
+							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 3) {
+						createUnit(RobotType.AEROSPACELAB, true);
+					} else if (rc
+							.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3) {
+						createUnit(RobotType.HANDWASHSTATION, true);
 							// Beyond this point means we have a LOT of ore! :D
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 7) {
-							createUnit(RobotType.SUPPLYDEPOT, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 5) {
-							createUnit(RobotType.AEROSPACELAB, true);
-						} else {
-							createUnit(RobotType.HELIPAD, true);
-						}
+					} else if (rc
+						.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 7) {
+						createUnit(RobotType.SUPPLYDEPOT, true);
+					} else if (rc
+							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 5) {
+						createUnit(RobotType.AEROSPACELAB, true);
+					} else {
+						createUnit(RobotType.HELIPAD, true);
 					}
 
 					mineAndMove();
