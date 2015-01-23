@@ -185,10 +185,10 @@ public class RobotPlayer {
 					// attackEnemyZero();
 
 					attackNearestTower();
-					
-					if(!attackEnemyZero()) {
+
+					if (!attackEnemyZero()) {
 						defendAndMove();
-					}			
+					}
 					break;
 
 				case HELIPAD:
@@ -676,15 +676,17 @@ public class RobotPlayer {
 					rc.attackLocation(enemyZeroLocation);
 					return true;
 				}
-			// If there are none and the HQ has splash, then check if there
-			// are targets in splash range.
+				// If there are none and the HQ has splash, then check if there
+				// are targets in splash range.
 			} else if (thisRobotType == RobotType.HQ
 					&& friendlyTowers.length >= 5) {
 				RobotInfo[] splashRangeEnemies = rc
-						.senseNearbyRobots(thisRobotLocation,
-								(int) Math.pow(Math.sqrt(attackRadiusSquared)
-								+ Math.sqrt(GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED), 2),
-								Enemy);
+						.senseNearbyRobots(
+								thisRobotLocation,
+								(int) Math.pow(
+										Math.sqrt(attackRadiusSquared)
+												+ Math.sqrt(GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED),
+										2), Enemy);
 
 				if (splashRangeEnemies.length > 0) {
 					MapLocation actualEnemyZeroLocation = splashRangeEnemies[0].location;
@@ -1095,24 +1097,23 @@ public class RobotPlayer {
 
 		RobotInfo[] nearbyAllies = rc.senseNearbyRobots(rc.getLocation(),
 				GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, Friend);
-		
-		if(nearbyAllies.length == 0) {
+
+		if (nearbyAllies.length == 0) {
 			return;
 		}
-		
+
 		double lowestSupply = rc.getSupplyLevel();
 		double transferAmount = 0;
 
 		MapLocation suppliesToThisLocation = null;
 		if (thisRobotType == RobotType.DRONE) {
 			if (lowestSupply > 200) {
-				for (int i = rand.nextInt(nearbyAllies.length); i < (int) Math
-						.min(4, nearbyAllies.length); i = rand
-						.nextInt(nearbyAllies.length)) {
-					if (nearbyAllies[i].type.needsSupply()
-							&& nearbyAllies[i].supplyLevel < 10) {
-						transferAmount = (rc.getSupplyLevel() - nearbyAllies[i].supplyLevel) / 2;
-						suppliesToThisLocation = nearbyAllies[i].location;
+				for (int i = 0; i < (int) Math.min(4, nearbyAllies.length); ++i) {
+					int j = rand.nextInt(nearbyAllies.length);
+					RobotInfo ally = nearbyAllies[j];
+					if (ally.type.needsSupply() && ally.supplyLevel < 10) {
+						transferAmount = (rc.getSupplyLevel() - ally.supplyLevel) / 2;
+						suppliesToThisLocation = ally.location;
 						break;
 					}
 				}
