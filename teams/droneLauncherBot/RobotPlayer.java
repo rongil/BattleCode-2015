@@ -674,15 +674,14 @@ public class RobotPlayer {
 					rc.attackLocation(enemyZeroLocation);
 					return true;
 				}
-				// If there are none and the HQ has splash, then check if there
-				// are targets in splash range.
+			// If there are none and the HQ has splash, then check if there
+			// are targets in splash range.
 			} else if (thisRobotType == RobotType.HQ
 					&& friendlyTowers.length >= 5) {
 				RobotInfo[] splashRangeEnemies = rc
-						.senseNearbyRobots(
-								thisRobotLocation,
-								attackRadiusSquared
-										+ GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED,
+						.senseNearbyRobots(thisRobotLocation,
+								(int) Math.pow(Math.sqrt(attackRadiusSquared)
+								+ Math.sqrt(GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED), 2),
 								Enemy);
 
 				if (splashRangeEnemies.length > 0) {
@@ -1107,6 +1106,7 @@ public class RobotPlayer {
 							&& nearbyAllies[i].supplyLevel < 10) {
 						transferAmount = (rc.getSupplyLevel() - nearbyAllies[i].supplyLevel) / 2;
 						suppliesToThisLocation = nearbyAllies[i].location;
+						break;
 					}
 				}
 			}
