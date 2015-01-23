@@ -85,10 +85,11 @@ public class RobotPlayer {
 			// It was this or int casting...
 			swarmRound = rc.getRoundLimit() * 9 / 10;
 
-			if (thisRobotType == RobotType.DRONE || thisRobotType == RobotType.LAUNCHER) {
+			if (thisRobotType == RobotType.DRONE
+					|| thisRobotType == RobotType.LAUNCHER) {
 				previousTowerLocation = null;
 			}
-			
+
 			// Drone only stuff
 			if (thisRobotType == RobotType.DRONE) {
 				Direction HQdirection = friendlyHQ.directionTo(enemyHQ);
@@ -139,7 +140,7 @@ public class RobotPlayer {
 					attackEnemyZero();
 					int numFriendlyUnit = rc.senseNearbyRobots(
 							Integer.MAX_VALUE, Friend).length;
-					
+
 					// Building Order/Preferences
 					if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 						createUnit(RobotType.MINERFACTORY, true);
@@ -152,7 +153,7 @@ public class RobotPlayer {
 							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < 5) {
 						createUnit(RobotType.SUPPLYDEPOT, true);
 					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 2) {
-							createUnit(RobotType.HELIPAD, true);
+						createUnit(RobotType.HELIPAD, true);
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 3) {
 						createUnit(RobotType.AEROSPACELAB, true);
@@ -160,7 +161,7 @@ public class RobotPlayer {
 							.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3) {
 						createUnit(RobotType.HANDWASHSTATION, true);
 					} else if (rc
-						.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 7) {
+							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 7) {
 						createUnit(RobotType.SUPPLYDEPOT, true);
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 5) {
@@ -173,16 +174,16 @@ public class RobotPlayer {
 					break;
 
 				case DRONE:
-//					if (swarming || roundNum > swarmRound) {
-//						attackNearestTower();
-//						} else if (rc.getSupplyLevel() < 80) {
-//						moveTowardDestination(friendlyHQ, false, false, true);
-//					} else {
-//						targetEnemyMiners();
-//						defendAndMove();
-//					}
-//					attackEnemyZero();
-					
+					// if (swarming || roundNum > swarmRound) {
+					// attackNearestTower();
+					// } else if (rc.getSupplyLevel() < 80) {
+					// moveTowardDestination(friendlyHQ, false, false, true);
+					// } else {
+					// targetEnemyMiners();
+					// defendAndMove();
+					// }
+					// attackEnemyZero();
+
 					attackNearestTower();
 					attackEnemyZero();
 					defendAndMove();
@@ -407,7 +408,8 @@ public class RobotPlayer {
 			}
 
 		} else {
-			MapLocation referencePoint = (previousTowerLocation == null) ? friendlyHQ : previousTowerLocation;
+			MapLocation referencePoint = (previousTowerLocation == null) ? friendlyHQ
+					: previousTowerLocation;
 
 			int minDistance = enemyTowers[0].distanceSquaredTo(referencePoint);
 			MapLocation closestTowerLocation = enemyTowers[0];
@@ -689,12 +691,16 @@ public class RobotPlayer {
 							.directionTo(actualEnemyZeroLocation);
 					MapLocation splashEnemyZeroLocation = friendlyHQ.add(
 							towardsEnemyZero,
-							(int) Math.ceil(Math.sqrt(attackRadiusSquared)));
+							(int) Math.sqrt(attackRadiusSquared));
 
-					while (!rc.canAttackLocation(splashEnemyZeroLocation)) {
+					// Subtract at most one square
+					if (!rc.canAttackLocation(splashEnemyZeroLocation)) {
 						splashEnemyZeroLocation.subtract(towardsEnemyZero);
 					}
-					rc.attackLocation(splashEnemyZeroLocation);
+
+					if (rc.canAttackLocation(splashEnemyZeroLocation)) {
+						rc.attackLocation(splashEnemyZeroLocation);
+					}
 					return true;
 
 				}
