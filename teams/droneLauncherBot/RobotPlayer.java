@@ -185,8 +185,10 @@ public class RobotPlayer {
 					// attackEnemyZero();
 
 					attackNearestTower();
-					attackEnemyZero();
-					defendAndMove();
+					
+					if(!attackEnemyZero()) {
+						defendAndMove();
+					}			
 					break;
 
 				case HELIPAD:
@@ -1093,6 +1095,11 @@ public class RobotPlayer {
 
 		RobotInfo[] nearbyAllies = rc.senseNearbyRobots(rc.getLocation(),
 				GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, Friend);
+		
+		if(nearbyAllies.length == 0) {
+			return;
+		}
+		
 		double lowestSupply = rc.getSupplyLevel();
 		double transferAmount = 0;
 
