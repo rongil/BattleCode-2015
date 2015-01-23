@@ -1107,7 +1107,7 @@ public class RobotPlayer {
 		MapLocation suppliesToThisLocation = null;
 		if (thisRobotType == RobotType.DRONE) {
 			if (lowestSupply > 200) {
-				for (int i = 0; i < (int) Math.min(4, nearbyAllies.length); ++i) {
+				for (int i = 0; i < Math.min(4, nearbyAllies.length); ++i) {
 					int j = rand.nextInt(nearbyAllies.length);
 					RobotInfo ally = nearbyAllies[j];
 					if (ally.type.needsSupply() && ally.supplyLevel < 10) {
