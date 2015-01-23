@@ -430,7 +430,7 @@ public class RobotPlayer {
 			 * to the approximate number of 700 squared units if distance between
 			 * 'lastSwarmTarget' and 'targetLocation' */
 			
-			multiplier = (int) ((double) minDistance / 700.0);
+			multiplier = Math.max(1, (int) ((double) minDistance / 700.0));
 		}
 		
 		if(roundNum > swarmRound || tankCount > 10 * multiplier
@@ -440,11 +440,13 @@ public class RobotPlayer {
 			rc.broadcast(SWARM_SIGNAL_CHANNEL, 1);
 			rc.broadcast(SWARM_LOCATION_X_CHANNEL, targetLocation.x);
 			rc.broadcast(SWARM_LOCATION_Y_CHANNEL, targetLocation.y);
+			System.out.println("Round " + roundNum + ": " + 1);
 			
 		} else {
 			rc.broadcast(SWARM_SIGNAL_CHANNEL, 0);
 			rc.broadcast(SWARM_LOCATION_X_CHANNEL, targetLocation.x);
 			rc.broadcast(SWARM_LOCATION_Y_CHANNEL, targetLocation.y);
+			System.out.println("Round " + roundNum + ": " + 0);
 		}
 	}
 
