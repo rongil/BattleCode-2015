@@ -47,6 +47,9 @@ public class RobotPlayer {
 			Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
 			Direction.NORTH_WEST };
 
+	// HQ only
+	private static MapLocation lastSwarmTarget;
+	
 	// Missile only
 	private static int turnsRemaining;
 
@@ -85,9 +88,9 @@ public class RobotPlayer {
 			// It was this or int casting...
 			swarmRound = rc.getRoundLimit() * 9 / 10;
 
-			if (thisRobotType == RobotType.DRONE
-					|| thisRobotType == RobotType.LAUNCHER) {
-				previousTowerLocation = null;
+			// HQ only stuff
+			if (thisRobotType == RobotType.HQ) {
+				lastSwarmTarget = friendlyHQ;
 			}
 
 			// Drone only stuff
@@ -213,6 +216,8 @@ public class RobotPlayer {
 						analyzeTowerStrength();
 					}
 
+					broadcastSwarmConditions();
+					
 					// Maintain only a few beavers
 					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 3) {
 						createUnit(RobotType.BEAVER, false);
@@ -377,6 +382,29 @@ public class RobotPlayer {
 		}
 	}
 
+	private static void broadcastSwarmConditions() throws GameActionException {
+		int tankCount = rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL);
+		int droneCount = rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
+		int launcherCount = rc.readBroadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL);
+		
+		MapLocation targetLocation;
+		int possDistance;
+		int minDistance;
+		int multiplier;
+		
+		if(enemyTowers.length == 0) {
+			targetLocation = enemyHQ;
+			multiplier = 1;
+			
+		} else {
+			minDistance = Integer.MAX_VALUE;
+			
+			for(int index = 0; index < enemyTowers.length; index++) {
+				possDistance = lastSwarmTarget.distanceSquaredTo(enemyTowers[index]);
+			}
+		}
+	}
+	
 	private static void attackNearestTower() throws GameActionException {
 		// TODO: Make number counts a function of towerStrength
 		boolean canAttack = rc.isWeaponReady();
@@ -1572,6 +1600,10 @@ public class RobotPlayer {
 	private static final int NUM_ENEMY_COMMANDERS_CHANNEL = 37;
 	private static final int NUM_ENEMY_LAUNCHERS_CHANNEL = 38;
 	private static final int NUM_ENEMY_MISSILES_CHANNEL = 39;
+	// Swarm Signals
+	private static final int SWARM_SIGNAL_CHANNEL = 1000;
+	private static final int SWARM_LOCATION_X_CHANNEL = 1001;
+	private static final int SWARM_LOCATION_Y_CHANNEL = 1002;
 	// Map Analysis
 	private static final int TOWER_STRENGTH_CHANNEL = 2000;
 }
