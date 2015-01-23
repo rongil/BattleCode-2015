@@ -1502,6 +1502,33 @@ public class RobotPlayer {
 		rc.broadcast(TOWER_STRENGTH_CHANNEL, towerStrength);
 	}
 
+	private static int analyzeTowerStrength(MapLocation towerLoc) {
+		int towerStrength = 0;
+		
+		double distanceToHQ = Math.sqrt(towerLoc.distanceSquaredTo(enemyHQ));
+		
+		// We don't want to count this distance if towerLoc is the
+		// location of enemyHQ
+		if (distanceToHQ > 0 && distanceToHQ < Math
+				.sqrt(RobotType.TOWER.attackRadiusSquared)
+				+ Math.sqrt(RobotType.HQ.attackRadiusSquared)) {
+			towerStrength += 2;			
+		}
+		
+		for (int index = 0; index < enemyTowers.length; index++) {
+			double distanceToTower = Math.sqrt(towerLoc.distanceSquaredTo(enemyTowers[index]));
+			
+			// We don't want to count this distance if towerLoc is the
+			// location of the tower being looped through
+			if (distanceToTower > 0 && distanceToTower < 2 * Math
+					.sqrt(RobotType.TOWER.attackRadiusSquared)) {
+				towerStrength += 1;
+			}
+		}
+		
+		return towerStrength;
+	}
+	
 	/**************************************************************************
 	 * BROADCAST CHANNELS
 	 * ========================================================================
