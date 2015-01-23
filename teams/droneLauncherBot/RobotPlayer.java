@@ -305,7 +305,7 @@ public class RobotPlayer {
 				}
 
 				if (thisRobotType == RobotType.HQ
-						|| thisRobotType == RobotType.DRONE) {
+						|| (thisRobotType == RobotType.DRONE && swarming)) {
 					transferSupplies();
 				}
 
@@ -929,7 +929,7 @@ public class RobotPlayer {
 		// invading robot in
 		// question; otherwise, look for another one
 
-		RobotInfo[] incomingEnemies = rc.senseNearbyRobots(friendlyHQ,
+		RobotInfo[] incomingEnemies = rc.senseNearbyRobots(
 				(int) Math.pow(halfwayDistance, 2), Enemy);
 		boolean weaponReady = rc.isWeaponReady();
 		MapLocation targetLocation = null;
@@ -948,7 +948,7 @@ public class RobotPlayer {
 			moveTowardDestination(targetLocation, false, true, true);
 
 		} else if (thisRobotType == RobotType.DRONE) {
-			patrolBorder();
+			// patrolBorder();
 		}
 	}
 
@@ -1098,13 +1098,27 @@ public class RobotPlayer {
 		double transferAmount = 0;
 
 		MapLocation suppliesToThisLocation = null;
+		if (thisRobotType == RobotType.DRONE) {
+			if (lowestSupply > 200) {
+				for (int i = rand.nextInt(nearbyAllies.length); i < (int) Math
+						.min(4, nearbyAllies.length); i = rand
+						.nextInt(nearbyAllies.length)) {
+					if (nearbyAllies[i].type.needsSupply()
+							&& nearbyAllies[i].supplyLevel < 10) {
+						transferAmount = (rc.getSupplyLevel() - nearbyAllies[i].supplyLevel) / 2;
+						suppliesToThisLocation = nearbyAllies[i].location;
+					}
+				}
+			}
 
-		for (RobotInfo ri : nearbyAllies) {
-			if (ri.type.needsSupply() && ri.supplyLevel < lowestSupply
-					&& thisRobotType != ri.type) {
-				lowestSupply = ri.supplyLevel;
-				transferAmount = (rc.getSupplyLevel() - lowestSupply) / 2;
-				suppliesToThisLocation = ri.location;
+		} else if (thisRobotType == RobotType.HQ) {
+			for (RobotInfo ri : nearbyAllies) {
+				if (ri.type.needsSupply() && ri.supplyLevel < lowestSupply
+						&& thisRobotType != ri.type) {
+					lowestSupply = ri.supplyLevel;
+					transferAmount = (rc.getSupplyLevel() - lowestSupply) / 2;
+					suppliesToThisLocation = ri.location;
+				}
 			}
 		}
 
