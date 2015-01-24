@@ -1151,17 +1151,35 @@ public class RobotPlayer {
 
 		RobotInfo[] nearbyAllies = rc.senseNearbyRobots(rc.getLocation(),
 				GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, Friend);
+
+		if (nearbyAllies.length == 0) {
+			return;
+		}
+
 		double lowestSupply = rc.getSupplyLevel();
 		double transferAmount = 0;
 
 		MapLocation suppliesToThisLocation = null;
+		if (thisRobotType == RobotType.DRONE) {
+			if (lowestSupply > 200) {
+				for (int i = 0; i < Math.min(4, nearbyAllies.length); ++i) {
+					int index = rand.nextInt(nearbyAllies.length);
+					RobotInfo ally = nearbyAllies[index];
+					if (ally.type.needsSupply() && ally.supplyLevel < 10) {
+						transferAmount = (rc.getSupplyLevel() - ally.supplyLevel) / 2;
+						suppliesToThisLocation = ally.location;
+						break;
+					}
+				}
+			}
 
-		for (RobotInfo ri : nearbyAllies) {
-			if (ri.type.needsSupply() && ri.supplyLevel < lowestSupply
-					&& thisRobotType != ri.type) {
-				lowestSupply = ri.supplyLevel;
-				transferAmount = (rc.getSupplyLevel() - lowestSupply) / 2;
-				suppliesToThisLocation = ri.location;
+		} else if (thisRobotType == RobotType.HQ) {
+			for (RobotInfo ri : nearbyAllies) {
+				if (ri.type.needsSupply() && ri.supplyLevel < lowestSupply) {
+					lowestSupply = ri.supplyLevel;
+					transferAmount = (rc.getSupplyLevel() - lowestSupply) / 2;
+					suppliesToThisLocation = ri.location;
+				}
 			}
 		}
 
