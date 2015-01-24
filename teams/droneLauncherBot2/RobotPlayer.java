@@ -105,6 +105,8 @@ public class RobotPlayer {
 						.rotateRight();
 			}
 
+		} else {
+			//turnsRemaining = GameConstants.MISSILE_LIFESPAN;
 		}
 
 		// Method can never end or the robot is destroyed.
@@ -337,7 +339,7 @@ public class RobotPlayer {
 						}
 						// friendEnemyRatio(currentLocation, dir);
 					}
-					turnsRemaining -= 1;
+					//turnsRemaining -= 1;
 					/******************************************************
 					 * Bytecode use will be < 100 if the robot was forced to
 					 * yield before it was done.
