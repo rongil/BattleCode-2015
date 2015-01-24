@@ -446,13 +446,11 @@ public class RobotPlayer {
 			rc.broadcast(SWARM_SIGNAL_CHANNEL, 1);
 			rc.broadcast(SWARM_LOCATION_X_CHANNEL, targetLocation.x);
 			rc.broadcast(SWARM_LOCATION_Y_CHANNEL, targetLocation.y);
-			System.out.println("Round " + roundNum + ": " + 1);
 			
 		} else {
 			rc.broadcast(SWARM_SIGNAL_CHANNEL, 0);
 			rc.broadcast(SWARM_LOCATION_X_CHANNEL, targetLocation.x);
 			rc.broadcast(SWARM_LOCATION_Y_CHANNEL, targetLocation.y);
-			System.out.println("Round " + roundNum + ": " + 0);
 		}
 	}
 
@@ -627,6 +625,7 @@ public class RobotPlayer {
 	 * are at most a given distance away.
 	 * 
 	 * @param loc - the location being analyzed
+	 * @param forward (optional) - direction that the robot is moving in
 	 * @param radiusSquared - the radius being checked
 	 * @param friendTeam - the team considered friendly
 	 * @return ratio of friend to enemy robots
@@ -644,7 +643,7 @@ public class RobotPlayer {
 		double enemyCount = 0.0, friendCount = 0.0;
 
 		if (friendTeam == null) {
-			friendTeam = rc.getTeam();
+			friendTeam = Friend;
 		}
 
 		for (RobotInfo roboInfo : surroundingRobots) {
@@ -657,13 +656,56 @@ public class RobotPlayer {
 
 		if (friendCount == 0) {
 			return 0;
+			
 		} else if (enemyCount == 0 && friendCount != 0) {
 			return Integer.MAX_VALUE;
+			
 		} else {
 			return friendCount / enemyCount;
 		}
 	}
 
+	private static double friendEnemyRatio(MapLocation loc, Direction forward,
+			int radiusSquared, Team friendTeam) throws GameActionException {
+		if (loc == null) {
+			loc = rc.getLocation();
+		}
+		
+		if (friendTeam == null) {
+			friendTeam = Friend;
+		}
+		
+		RobotInfo forwardRobot;
+		double enemyCount = 0.0, friendCount = 0.0;
+		Direction[] forwardDirections = {forward.rotateLeft().rotateLeft(),
+				forward.rotateLeft(), forward, forward.rotateRight(),
+				forward.rotateRight().rotateRight()};
+		
+		
+		for(Direction forwardDirection : forwardDirections) {
+			MapLocation forwardLoc = loc.add(forwardDirection);
+			forwardRobot = rc.senseRobotAtLocation(forwardLoc);
+			
+			if(forwardRobot != null) {
+				if(forwardRobot.team == friendTeam) {
+					friendCount++;
+				} else {
+					enemyCount++;
+				}
+			}
+		}
+		
+		if (friendCount == 0) {
+			return 0;
+		
+		} else if (enemyCount == 0 && friendCount != 0) {
+			return Integer.MAX_VALUE;
+		
+		} else {
+			return friendCount / enemyCount;
+		}
+	}
+	
 	/**************************************************************************
 	 * Attacks the first enemy in the list of enemies within attack range
 	 * 
