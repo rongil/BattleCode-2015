@@ -1654,7 +1654,6 @@ public class RobotPlayer {
 		}
 
 		if (Clock.getBytecodesLeft() < 100) {
-			System.out.println("Called!");
 			return;
 		}
 
@@ -1697,17 +1696,6 @@ public class RobotPlayer {
 		rc.broadcast(VOID_TERRAIN_COUNT_CHANNEL, voidSquareCount);
 		rc.broadcast(TERRAIN_ANALYZED_CHANNEL, 1); // '1' --> entire map has
 													// been analyzed
-
-		System.out.println("Board Width: "
-				+ (rc.readBroadcast(XMAX_VALUE_CHANNEL) - rc
-						.readBroadcast(XMIN_VALUE_CHANNEL)));
-		System.out.println("Board Height: "
-				+ (rc.readBroadcast(YMAX_VALUE_CHANNEL) - rc
-						.readBroadcast(YMIN_VALUE_CHANNEL)));
-		
-		System.out.println("Normal Square Count: " + normalSquareCount);
-		System.out.println("Void Square Count: " + voidSquareCount);
-		rc.resign();
 	}
 
 	/**************************************************************************
