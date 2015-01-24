@@ -49,6 +49,9 @@ public class RobotPlayer {
 			Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
 			Direction.NORTH_WEST };
 
+	// HQ only
+	private static MapLocation lastSwarmTarget;
+
 	// Missile only
 	private static int turnsRemaining;
 
@@ -80,6 +83,11 @@ public class RobotPlayer {
 			totalNumberTowers = friendlyTowers.length + enemyTowers.length;
 			// It was this or int casting...
 			swarmRound = rc.getRoundLimit() * 9 / 10;
+
+			// HQ only stuff
+			if (thisRobotType == RobotType.HQ) {
+				lastSwarmTarget = friendlyHQ;
+			}
 
 			// Slightly less to avoid tower issues
 			halfwayDistance = (int) (0.45 * Math.sqrt(friendlyHQ
@@ -175,9 +183,12 @@ public class RobotPlayer {
 					break;
 
 				case DRONE:
-					if (swarming || roundNum > swarmRound) {
-						attackNearestTower();
-					} else if (rc.getSupplyLevel() < 80) {
+					// Testing seems to show better general results when drones
+					// don't swarm. Might change if a more detailed map analysis
+					// can be obtained.
+
+					// TODO: Make variable depending on map size.
+					if (rc.getSupplyLevel() < 80) {
 						moveTowardDestination(friendlyHQ, false, false, true);
 					} else {
 						targetEnemyMiners();
@@ -211,6 +222,8 @@ public class RobotPlayer {
 					if (roundNum % 5 == 0) {
 						analyzeTowerStrength();
 					}
+
+					broadcastSwarmConditions();
 
 					// Maintain only a few beavers
 					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 3) {
@@ -414,100 +427,93 @@ public class RobotPlayer {
 		}
 	}
 
-	private static void attackNearestTower() throws GameActionException {
-		// TODO: Make number counts a function of towerStrength
-		boolean canAttack = rc.isWeaponReady();
-		MapLocation currentLocation = rc.getLocation();
+	/*******************************************************************
+	 * Directs drones and launchers to attack the nearest tower when it
+	 * determines that there are sufficient resources to attack or when the time
+	 * is appropriate for attacking
+	 * 
+	 * @throws GameActionException
+	 *******************************************************************/
+	private static void broadcastSwarmConditions() throws GameActionException {
 		int tankCount = rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL);
 		int droneCount = rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
 		int launcherCount = rc.readBroadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL);
 
+		MapLocation targetLocation;
+		int possDistance;
+		int minDistance;
+		int multiplier;
+
 		if (enemyTowers.length < 5) { // Avoid splash!
-			if (thisRobotType == RobotType.LAUNCHER) {
-				double maxRadius = GameConstants.MISSILE_LIFESPAN
-						+ RobotType.MISSILE.attackRadiusSquared;
-
-				if (Math.sqrt(currentLocation.distanceSquaredTo(enemyHQ)) < maxRadius) {
-					launchMissile(enemyHQ);
-					moveTowardDestination(
-							currentLocation.subtract(currentLocation
-									.directionTo(enemyHQ)), true, false, false);
-				}
-			}
-
-			if (canAttack && rc.canAttackLocation(enemyHQ)) {
-				rc.attackLocation(enemyHQ);
-			} else if (currentLocation.distanceSquaredTo(enemyHQ) > thisRobotType.attackRadiusSquared) {
-				if (tankCount > 10 || droneCount > 20 || launcherCount > 6
-						|| roundNum > swarmRound) {
-					moveTowardDestination(enemyHQ, true, false, false);
-				} else {
-					moveTowardDestination(enemyHQ, false, false, true);
-				}
-			}
+			targetLocation = enemyHQ;
+			multiplier = 1;
 
 		} else {
-			MapLocation referencePoint = swarming ? previousTowerLocation
-					: friendlyHQ;
+			minDistance = Integer.MAX_VALUE;
+			targetLocation = null;
 
-			int minDistance = enemyTowers[0].distanceSquaredTo(referencePoint);
-			MapLocation closestTowerLocation = enemyTowers[0];
-			// Bytecode conserving loop format
-			for (int i = enemyTowers.length; --i > 0;) {
-				int distance = enemyTowers[i].distanceSquaredTo(referencePoint);
-				if (distance < minDistance) {
-					closestTowerLocation = enemyTowers[i];
-					minDistance = distance;
-				}
-			}
-			previousTowerLocation = closestTowerLocation;
+			for (int index = 0; index < enemyTowers.length; index++) {
+				possDistance = lastSwarmTarget
+						.distanceSquaredTo(enemyTowers[index]);
 
-			if (thisRobotType == RobotType.LAUNCHER) {
-				double maxRadius = 4.0 + RobotType.MISSILE.attackRadiusSquared;
-
-				if (Math.sqrt(currentLocation
-						.distanceSquaredTo(closestTowerLocation)) < maxRadius) {
-					launchMissile(closestTowerLocation);
-					moveTowardDestination(
-							currentLocation.subtract(currentLocation
-									.directionTo(closestTowerLocation)), true,
-							false, false);
+				if (possDistance < minDistance) {
+					targetLocation = enemyTowers[index];
+					minDistance = possDistance;
 				}
 			}
 
-			if (canAttack && rc.canAttackLocation(closestTowerLocation)) {
-				rc.attackLocation(closestTowerLocation);
-				moveTowardDestination(closestTowerLocation, true, false, false);
-			} else if (currentLocation.distanceSquaredTo(closestTowerLocation) > thisRobotType.attackRadiusSquared) {
-				int multiplier = 1;
-				Math.max(3, minDistance / 700);
-				if (swarming
-						&& roundNum < swarmRound
-						&& (tankCount < 5 * multiplier
-								&& droneCount < 10 * multiplier && launcherCount < 1 * multiplier)) {
-					swarming = false;
-				} else if (roundNum >= swarmRound
-						|| (tankCount > 10 * multiplier
-								|| droneCount > 20 * multiplier || launcherCount > 3 * multiplier)
-						|| swarming) {
-					swarming = true;
-					moveTowardDestination(closestTowerLocation, true, false,
-							false);
-				} else {
-					// moveTowardDestination(assignment, false, false, true);
-					Direction directionTower = friendlyHQ
-							.directionTo(closestTowerLocation);
-					halfwayDistance = (int) (0.3 * Math.sqrt(minDistance));
-					MapLocation targetDest = friendlyHQ.add(directionTower,
-							halfwayDistance);
+			/*
+			 * We can safely assume that targetLocation != null because the
+			 * maximum squared distance between any two points on the map has an
+			 * upper bound of 2 * 120^2 = 28,800
+			 * 
+			 * Testing has suggested that the number of attacking units is
+			 * proportional to the approximate number of 700 squared units if
+			 * distance between 'lastSwarmTarget' and 'targetLocation'
+			 */
 
-					if (thisRobotType != RobotType.DRONE) {
-						moveTowardDestination(targetDest, false, false, true);
-					} else {
-						defendAndMove();
-					}
-				}
-			}
+			// NOTE: Currently setting the multiplier fixed at one seems to work
+			// better.
+			multiplier = 1;// Math.max(1, (int) ((double) minDistance / 700.0));
+		}
+
+		if (roundNum > swarmRound || tankCount > 10 * multiplier
+				|| droneCount > 20 * multiplier
+				|| launcherCount > 5 * multiplier) {
+
+			lastSwarmTarget = targetLocation;
+			rc.broadcast(SWARM_SIGNAL_CHANNEL, 1);
+			rc.broadcast(SWARM_LOCATION_X_CHANNEL, targetLocation.x);
+			rc.broadcast(SWARM_LOCATION_Y_CHANNEL, targetLocation.y);
+
+		} else {
+			rc.broadcast(SWARM_SIGNAL_CHANNEL, 0);
+			rc.broadcast(SWARM_LOCATION_X_CHANNEL, targetLocation.x);
+			rc.broadcast(SWARM_LOCATION_Y_CHANNEL, targetLocation.y);
+		}
+	}
+
+	/***************************************************************************
+	 * Directs a bot towards the swarm location.
+	 * 
+	 * @throws GameActionException
+	 **************************************************************************/
+	private static void attackNearestTower() throws GameActionException {
+		// TODO: Make number counts a function of towerStrength
+		MapLocation currentLocation = rc.getLocation();
+		MapLocation targetLocation = new MapLocation(
+				rc.readBroadcast(SWARM_LOCATION_X_CHANNEL),
+				rc.readBroadcast(SWARM_LOCATION_Y_CHANNEL));
+
+		int distanceToTarget = currentLocation
+				.distanceSquaredTo(targetLocation);
+		// NOTE: Launcher has its own enemy checking and special attacking in
+		// it's case before reaching here.
+		if (thisRobotType != RobotType.LAUNCHER && rc.isWeaponReady()
+				&& rc.canAttackLocation(targetLocation)) {
+			rc.attackLocation(targetLocation);
+		} else {
+				moveTowardDestination(targetLocation, false, false, true);
 		}
 	}
 
@@ -1627,6 +1633,10 @@ public class RobotPlayer {
 	private static final int NUM_ENEMY_MISSILES_CHANNEL = 39;
 	// Miscellaneous Channels
 	private static final int SANITATION_CHANNEL = 70;
+	// Swarm Signals
+	private static final int SWARM_SIGNAL_CHANNEL = 1000;
+	private static final int SWARM_LOCATION_X_CHANNEL = 1001;
+	private static final int SWARM_LOCATION_Y_CHANNEL = 1002;
 	// Map Analysis
 	private static final int TOWER_STRENGTH_CHANNEL = 2000;
 }
