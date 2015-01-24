@@ -410,7 +410,7 @@ public class RobotPlayer {
 		int droneCount = rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
 		int launcherCount = rc.readBroadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL);
 
-		if (enemyTowers.length < 4) {
+		if (enemyTowers.length < 5) { // Avoid splash!
 			if (thisRobotType == RobotType.LAUNCHER) {
 				double maxRadius = GameConstants.MISSILE_LIFESPAN
 						+ RobotType.MISSILE.attackRadiusSquared;
