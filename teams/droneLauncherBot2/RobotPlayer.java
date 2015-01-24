@@ -105,8 +105,6 @@ public class RobotPlayer {
 						.rotateRight();
 			}
 
-		} else {
-			turnsRemaining = GameConstants.MISSILE_LIFESPAN;
 		}
 
 		// Method can never end or the robot is destroyed.
@@ -304,8 +302,8 @@ public class RobotPlayer {
 						/******************************************************
 						 * The missile should be facing the direction of its
 						 * target. rc.senseRobotAtLocation costs 25 bytecode, so
-						 * can'tafford more checking more than 3 squares since a
-						 * lost turn is worse. Bytecode conservation gains
+						 * can't afford more checking more than 3 squares since
+						 * a lost turn is worse. Bytecode conservation gains
 						 * complete priority over code niceness here.
 						 *****************************************************/
 						RobotInfo frontSquare1 = rc
@@ -316,25 +314,41 @@ public class RobotPlayer {
 						RobotInfo frontSquare3 = rc
 								.senseRobotAtLocation(currentLocation.add(dir
 										.rotateRight()));
-						if ((frontSquare1 != null && frontSquare1.team == Enemy)
-								|| (frontSquare2 != null && frontSquare2.team == Enemy)
-								|| (frontSquare3 != null && frontSquare3.team == Enemy)) {
+						int enemySquares = 0;
+						if (frontSquare1 != null && frontSquare1.team == Enemy) {
+							enemySquares += 1;
+						} else {
+							enemySquares -= 1;
+						}
+						if (frontSquare2 != null && frontSquare2.team == Enemy) {
+							enemySquares += 1;
+						} else {
+							enemySquares -= 1;
+						}
+						if (frontSquare3 != null && frontSquare3.team == Enemy) {
+							enemySquares += 1;
+						} else {
+							enemySquares -= 1;
+						}
+
+						if (enemySquares > 0) {
 							// If this is triggered, no more bytecode worries...
 							rc.explode();
 						}
 						// friendEnemyRatio(currentLocation, dir);
-						/******************************************************
-						 * Bytecode use will be < 100 if the robot was forced to
-						 * yield before it was done.
-						 * -----------------------------------------------------
-						 * NOTE: This assumes bytecode use is not so high that
-						 * multiple turns don't get skipped or a large chunk of
-						 * the next turn's bytecode is used.
-						 *****************************************************/
-						// if (Clock.getBytecodeNum() < 100)
-						// System.out.println(Clock.getBytecodeNum());
 					}
-					--turnsRemaining;
+					turnsRemaining -= 1;
+					/******************************************************
+					 * Bytecode use will be < 100 if the robot was forced to
+					 * yield before it was done.
+					 * -----------------------------------------------------
+					 * NOTE: This assumes bytecode use is not so high that
+					 * multiple turns don't get skipped or a large chunk of the
+					 * next turn's bytecode is used.
+					 *****************************************************/
+					// int num = Clock.getBytecodeNum();
+					// if (num < 100)
+					// System.out.println(num);
 					rc.yield();
 					continue; // Restart the loop from here to save bytecode!
 
@@ -513,7 +527,7 @@ public class RobotPlayer {
 				&& rc.canAttackLocation(targetLocation)) {
 			rc.attackLocation(targetLocation);
 		} else {
-				moveTowardDestination(targetLocation, false, false, true);
+			moveTowardDestination(targetLocation, false, false, true);
 		}
 	}
 
