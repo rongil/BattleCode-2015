@@ -115,7 +115,7 @@ public class RobotPlayer {
 			rc.broadcast(YMIN_VALUE_CHANNEL, Math.min(friendlyHQ.y, enemyHQ.y));
 			rc.broadcast(YMAX_VALUE_CHANNEL, Math.max(friendlyHQ.y, enemyHQ.y));
 		}
-		
+
 		// Method can never end or the robot is destroyed.
 		while (true) {
 			/*
@@ -148,47 +148,49 @@ public class RobotPlayer {
 
 				case AEROSPACELAB:
 					createUnit(RobotType.LAUNCHER, false);
-					
-					if (rc.readBroadcast(TERRAIN_ANALYZED_CHANNEL) != 1) {
-						analyzeMap();
-					}
 					break;
 
 				case BEAVER:
 					attackEnemyZero();
-//					int numFriendlyUnit = rc.senseNearbyRobots(
-//							Integer.MAX_VALUE, Friend).length;
-//					// Building Order/Preferences
-//					if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
-//						createUnit(RobotType.MINERFACTORY, true);
-//					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
-//						createUnit(RobotType.HELIPAD, true);
-//					} else if (rc
-//							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 2) {
-//						createUnit(RobotType.AEROSPACELAB, true);
-//					} else if (roundNum > swarmRound
-//							&& rc.readBroadcast(SANITATION_CHANNEL) == 0
-//							&& rc.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3) {
-//						// If all towers are standing, some handwash stations
-//						// might help.
-//						createUnit(RobotType.HANDWASHSTATION, true);
-//					} else if (rc
-//							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 10) {
-//						createUnit(RobotType.SUPPLYDEPOT, true);
-//					} else if (rc.getTeamOre() > 1000) {
-//						if (rc.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 4) {
-//							createUnit(RobotType.AEROSPACELAB, true);
-//							// Beyond this point means we have a LOT of ore! :D
-//						} else if (rc
-//								.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 7) {
-//							createUnit(RobotType.SUPPLYDEPOT, true);
-//						} else if (rc
-//								.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 5) {
-//							createUnit(RobotType.AEROSPACELAB, true);
-//						} else {
-//							createUnit(RobotType.HELIPAD, true);
-//						}
-//					}
+					// int numFriendlyUnit = rc.senseNearbyRobots(
+					// Integer.MAX_VALUE, Friend).length;
+					// // Building Order/Preferences
+					// if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) <
+					// 1) {
+					// createUnit(RobotType.MINERFACTORY, true);
+					// } else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL)
+					// < 1) {
+					// createUnit(RobotType.HELIPAD, true);
+					// } else if (rc
+					// .readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 2) {
+					// createUnit(RobotType.AEROSPACELAB, true);
+					// } else if (roundNum > swarmRound
+					// && rc.readBroadcast(SANITATION_CHANNEL) == 0
+					// && rc.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL)
+					// < 3) {
+					// // If all towers are standing, some handwash stations
+					// // might help.
+					// createUnit(RobotType.HANDWASHSTATION, true);
+					// } else if (rc
+					// .readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) <
+					// numFriendlyUnit / 10) {
+					// createUnit(RobotType.SUPPLYDEPOT, true);
+					// } else if (rc.getTeamOre() > 1000) {
+					// if (rc.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) <
+					// 4) {
+					// createUnit(RobotType.AEROSPACELAB, true);
+					// // Beyond this point means we have a LOT of ore! :D
+					// } else if (rc
+					// .readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) <
+					// numFriendlyUnit / 7) {
+					// createUnit(RobotType.SUPPLYDEPOT, true);
+					// } else if (rc
+					// .readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 5) {
+					// createUnit(RobotType.AEROSPACELAB, true);
+					// } else {
+					// createUnit(RobotType.HELIPAD, true);
+					// }
+					// }
 					int numFriendlyUnit = rc.senseNearbyRobots(
 							Integer.MAX_VALUE, Friend).length;
 					// Building Order/Preferences
@@ -222,7 +224,7 @@ public class RobotPlayer {
 							createUnit(RobotType.HELIPAD, true);
 						}
 					}
-					
+
 					mineAndMove();
 					break;
 
@@ -252,10 +254,7 @@ public class RobotPlayer {
 					if (droneFate <= Math.pow(Math.E, -droneCount * 0.4)) {
 						createUnit(RobotType.DRONE, false);
 					}
-					
-					if (rc.readBroadcast(TERRAIN_ANALYZED_CHANNEL) != 1) {
-						analyzeMap();
-					}
+
 					break;
 
 				case HQ:
@@ -276,10 +275,6 @@ public class RobotPlayer {
 					// Maintain only a few beavers
 					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 3) {
 						createUnit(RobotType.BEAVER, false);
-					}
-					
-					if (rc.readBroadcast(TERRAIN_ANALYZED_CHANNEL) != 1) {
-						analyzeMap();
 					}
 					break;
 
@@ -307,7 +302,7 @@ public class RobotPlayer {
 					}
 
 					// Launcher version of Attack Enemy Zero
-//					MapLocation bestTarget = null;
+					// MapLocation bestTarget = null;
 					RobotInfo[] targets = rc.senseNearbyRobots(
 							GameConstants.MISSILE_LIFESPAN
 									* GameConstants.MISSILE_LIFESPAN, Enemy);
@@ -339,10 +334,6 @@ public class RobotPlayer {
 							&& miningFate <= Math.pow(Math.E,
 									-minerCount * 0.35)) {
 						createUnit(RobotType.MINER, false);
-					}
-					
-					if (rc.readBroadcast(TERRAIN_ANALYZED_CHANNEL) != 1) {
-						analyzeMap();
 					}
 					break;
 
@@ -418,18 +409,10 @@ public class RobotPlayer {
 
 				case TANKFACTORY:
 					createUnit(RobotType.TANK, false);
-					
-					if (rc.readBroadcast(TERRAIN_ANALYZED_CHANNEL) != 1) {
-						analyzeMap();
-					}
 					break;
 
 				case TOWER:
 					attackEnemyZero();
-					
-					if (rc.readBroadcast(TERRAIN_ANALYZED_CHANNEL) != 1) {
-						analyzeMap();
-					}
 					break;
 
 				default:
@@ -440,6 +423,11 @@ public class RobotPlayer {
 				if (thisRobotType == RobotType.HQ
 						|| thisRobotType == RobotType.DRONE) {
 					transferSupplies();
+
+					if (!thisRobotType.needsSupply()
+							&& rc.readBroadcast(TERRAIN_ANALYZED_CHANNEL) != 1) {
+						analyzeMap();
+					}
 				}
 
 			} catch (GameActionException e) {
@@ -1516,34 +1504,37 @@ public class RobotPlayer {
 
 		rc.broadcast(TOWER_STRENGTH_CHANNEL, towerStrength);
 	}
-	
+
 	private static int analyzeTowerStrength(MapLocation towerLoc) {
 		int towerStrength = 0;
-		
+
 		double distanceToHQ = Math.sqrt(towerLoc.distanceSquaredTo(enemyHQ));
-		
+
 		// We don't want to count this distance if towerLoc is the
 		// location of enemyHQ
-		if (distanceToHQ > 0 && distanceToHQ < Math
-				.sqrt(RobotType.TOWER.attackRadiusSquared)
-				+ Math.sqrt(RobotType.HQ.attackRadiusSquared)) {
-			towerStrength += 2;			
+		if (distanceToHQ > 0
+				&& distanceToHQ < Math
+						.sqrt(RobotType.TOWER.attackRadiusSquared)
+						+ Math.sqrt(RobotType.HQ.attackRadiusSquared)) {
+			towerStrength += 2;
 		}
-		
+
 		for (int index = 0; index < enemyTowers.length; index++) {
-			double distanceToTower = Math.sqrt(towerLoc.distanceSquaredTo(enemyTowers[index]));
-			
+			double distanceToTower = Math.sqrt(towerLoc
+					.distanceSquaredTo(enemyTowers[index]));
+
 			// We don't want to count this distance if towerLoc is the
 			// location of the tower being looped through
-			if (distanceToTower > 0 && distanceToTower < 2 * Math
-					.sqrt(RobotType.TOWER.attackRadiusSquared)) {
+			if (distanceToTower > 0
+					&& distanceToTower < 2 * Math
+							.sqrt(RobotType.TOWER.attackRadiusSquared)) {
 				towerStrength += 1;
 			}
 		}
-		
+
 		return towerStrength;
 	}
-	
+
 	/**************************************************************************
 	 * Counts the number of void and normal squares as well as determines the
 	 * overall dimensions of the board.
@@ -1554,40 +1545,40 @@ public class RobotPlayer {
 		if (rc.readBroadcast(DIMENSIONS_FOUND_CHANNEL) == 0) {
 			int xmin = rc.readBroadcast(XMIN_VALUE_CHANNEL);
 			int ymin = rc.readBroadcast(YMIN_VALUE_CHANNEL);
-			
-			while (rc.senseTerrainTile(new MapLocation(xmin, ymin)) != TerrainTile.OFF_MAP ||
-					Math.max(friendlyHQ.x, enemyHQ.x) - xmin < GameConstants.MAP_MAX_WIDTH ||
-					Math.max(friendlyHQ.y, enemyHQ.y) - ymin < GameConstants.MAP_MAX_HEIGHT) {
+
+			while (rc.senseTerrainTile(new MapLocation(xmin, ymin)) != TerrainTile.OFF_MAP
+					|| Math.max(friendlyHQ.x, enemyHQ.x) - xmin < GameConstants.MAP_MAX_WIDTH
+					|| Math.max(friendlyHQ.y, enemyHQ.y) - ymin < GameConstants.MAP_MAX_HEIGHT) {
 				xmin--;
 				ymin--;
-						
-				if (Clock.getBytecodesLeft() < 100)  {
+
+				if (Clock.getBytecodesLeft() < 100) {
 					rc.broadcast(XMIN_VALUE_CHANNEL, xmin);
 					rc.broadcast(YMIN_VALUE_CHANNEL, ymin);
 					return;
 				}
 			}
-			
+
 			if (rc.senseTerrainTile(new MapLocation(xmin + 1, ymin)) == TerrainTile.OFF_MAP) {
 				ymin++;
-				
-				while (rc.senseTerrainTile(new MapLocation(xmin, ymin)) != TerrainTile.OFF_MAP ||
-						Math.max(friendlyHQ.x, enemyHQ.x) - xmin < GameConstants.MAP_MAX_WIDTH) {
+
+				while (rc.senseTerrainTile(new MapLocation(xmin, ymin)) != TerrainTile.OFF_MAP
+						|| Math.max(friendlyHQ.x, enemyHQ.x) - xmin < GameConstants.MAP_MAX_WIDTH) {
 					xmin--;
-					
-					if (Clock.getBytecodesLeft() < 100)  {
+
+					if (Clock.getBytecodesLeft() < 100) {
 						rc.broadcast(XMIN_VALUE_CHANNEL, xmin);
 						rc.broadcast(YMIN_VALUE_CHANNEL, ymin);
 						return;
 					}
 				}
 				xmin++;
-				
+
 			} else if (rc.senseTerrainTile(new MapLocation(xmin, ymin + 1)) == TerrainTile.OFF_MAP) {
 				xmin++;
 
-				while (rc.senseTerrainTile(new MapLocation(xmin, ymin)) != TerrainTile.OFF_MAP ||
-						Math.max(friendlyHQ.y, enemyHQ.y) - ymin < GameConstants.MAP_MAX_HEIGHT) {
+				while (rc.senseTerrainTile(new MapLocation(xmin, ymin)) != TerrainTile.OFF_MAP
+						|| Math.max(friendlyHQ.y, enemyHQ.y) - ymin < GameConstants.MAP_MAX_HEIGHT) {
 					ymin--;
 
 					if (Clock.getBytecodesLeft() < 100) {
@@ -1598,21 +1589,22 @@ public class RobotPlayer {
 				}
 				ymin++;
 			}
-			
+
 			rc.broadcast(XMIN_VALUE_CHANNEL, xmin);
 			rc.broadcast(YMIN_VALUE_CHANNEL, ymin);
-			rc.broadcast(DIMENSIONS_FOUND_CHANNEL, 1); // '1' --> xmin and ymin have been found
-			
+			rc.broadcast(DIMENSIONS_FOUND_CHANNEL, 1); // '1' --> xmin and ymin
+														// have been found
+
 			rc.broadcast(CURRENT_XPOS_CHANNEL, xmin);
 			rc.broadcast(CURRENT_YPOS_CHANNEL, ymin);
-			
+
 		} else if (rc.readBroadcast(DIMENSIONS_FOUND_CHANNEL) == 1) {
 			int xmax = rc.readBroadcast(XMAX_VALUE_CHANNEL);
 			int ymax = rc.readBroadcast(YMAX_VALUE_CHANNEL);
-			
-			while (rc.senseTerrainTile(new MapLocation(xmax, ymax)) != TerrainTile.OFF_MAP ||
-					xmax - Math.min(friendlyHQ.x, enemyHQ.x) < GameConstants.MAP_MAX_WIDTH ||
-					ymax - Math.min(friendlyHQ.y, enemyHQ.y) < GameConstants.MAP_MAX_HEIGHT) {
+
+			while (rc.senseTerrainTile(new MapLocation(xmax, ymax)) != TerrainTile.OFF_MAP
+					|| xmax - Math.min(friendlyHQ.x, enemyHQ.x) < GameConstants.MAP_MAX_WIDTH
+					|| ymax - Math.min(friendlyHQ.y, enemyHQ.y) < GameConstants.MAP_MAX_HEIGHT) {
 				xmax++;
 				ymax++;
 
@@ -1622,12 +1614,12 @@ public class RobotPlayer {
 					return;
 				}
 			}
-			
+
 			if (rc.senseTerrainTile(new MapLocation(xmax - 1, ymax)) == TerrainTile.OFF_MAP) {
 				ymax--;
 
-				while (rc.senseTerrainTile(new MapLocation(xmax, ymax)) != TerrainTile.OFF_MAP ||
-						xmax - Math.min(friendlyHQ.x, enemyHQ.x) < GameConstants.MAP_MAX_WIDTH) {
+				while (rc.senseTerrainTile(new MapLocation(xmax, ymax)) != TerrainTile.OFF_MAP
+						|| xmax - Math.min(friendlyHQ.x, enemyHQ.x) < GameConstants.MAP_MAX_WIDTH) {
 					xmax++;
 
 					if (Clock.getBytecodesLeft() < 100) {
@@ -1637,29 +1629,36 @@ public class RobotPlayer {
 					}
 				}
 				xmax--;
-			
+
 			} else if (rc.senseTerrainTile(new MapLocation(xmax, ymax - 1)) == TerrainTile.OFF_MAP) {
 				xmax--;
 
-				while (rc.senseTerrainTile(new MapLocation(xmax, ymax)) != TerrainTile.OFF_MAP ||
-						ymax - Math.min(friendlyHQ.y, enemyHQ.y) < GameConstants.MAP_MAX_WIDTH) {
+				while (rc.senseTerrainTile(new MapLocation(xmax, ymax)) != TerrainTile.OFF_MAP
+						|| ymax - Math.min(friendlyHQ.y, enemyHQ.y) < GameConstants.MAP_MAX_WIDTH) {
 					ymax++;
-					
+
 					if (Clock.getBytecodesLeft() < 100) {
 						return;
 					}
 				}
 				ymax--;
-				
+
 				rc.broadcast(XMAX_VALUE_CHANNEL, xmax);
 				rc.broadcast(YMAX_VALUE_CHANNEL, ymax);
-				rc.broadcast(DIMENSIONS_FOUND_CHANNEL, 2); // '2' --> xmin, xmax, ymin, and ymax have been found
-				
-				System.out.println("Board Width: " + (rc.readBroadcast(XMAX_VALUE_CHANNEL) - rc.readBroadcast(XMIN_VALUE_CHANNEL)));
-				System.out.println("Board Height: " + (rc.readBroadcast(YMAX_VALUE_CHANNEL) - rc.readBroadcast(YMIN_VALUE_CHANNEL)));
+				rc.broadcast(DIMENSIONS_FOUND_CHANNEL, 2); // '2' --> xmin,
+															// xmax, ymin, and
+															// ymax have been
+															// found
+
+				System.out.println("Board Width: "
+						+ (rc.readBroadcast(XMAX_VALUE_CHANNEL) - rc
+								.readBroadcast(XMIN_VALUE_CHANNEL)));
+				System.out.println("Board Height: "
+						+ (rc.readBroadcast(YMAX_VALUE_CHANNEL) - rc
+								.readBroadcast(YMIN_VALUE_CHANNEL)));
 			}
 		}
-		
+
 		if (Clock.getBytecodesLeft() < 100) {
 			System.out.println("Called!");
 			return;
@@ -1671,14 +1670,14 @@ public class RobotPlayer {
 		int xmax = rc.readBroadcast(XMAX_VALUE_CHANNEL);
 		int ymin = rc.readBroadcast(YMIN_VALUE_CHANNEL);
 		int ymax = rc.readBroadcast(YMAX_VALUE_CHANNEL);
-		
+
 		int normalSquareCount = rc.readBroadcast(NORMAL_TERRAIN_COUNT_CHANNEL);
 		int voidSquareCount = rc.readBroadcast(VOID_TERRAIN_COUNT_CHANNEL);
-		
+
 		while (xpos <= xmax) {
 			if (rc.senseTerrainTile(new MapLocation(xpos, ypos)) == TerrainTile.NORMAL) {
 				normalSquareCount++;
-				
+
 			} else if (rc.senseTerrainTile(new MapLocation(xpos, ypos)) == TerrainTile.VOID) {
 				voidSquareCount++;
 			}
@@ -1693,7 +1692,7 @@ public class RobotPlayer {
 			if (Clock.getBytecodesLeft() < 150) {
 				rc.broadcast(CURRENT_XPOS_CHANNEL, xpos);
 				rc.broadcast(CURRENT_YPOS_CHANNEL, ypos);
-				
+
 				rc.broadcast(NORMAL_TERRAIN_COUNT_CHANNEL, normalSquareCount);
 				rc.broadcast(VOID_TERRAIN_COUNT_CHANNEL, voidSquareCount);
 				return;
@@ -1702,13 +1701,14 @@ public class RobotPlayer {
 
 		rc.broadcast(NORMAL_TERRAIN_COUNT_CHANNEL, normalSquareCount);
 		rc.broadcast(VOID_TERRAIN_COUNT_CHANNEL, voidSquareCount);
-		rc.broadcast(TERRAIN_ANALYZED_CHANNEL, 1); // '1' --> entire map has been analyzed
-		
+		rc.broadcast(TERRAIN_ANALYZED_CHANNEL, 1); // '1' --> entire map has
+													// been analyzed
+
 		System.out.println("Normal Square Count: " + normalSquareCount);
-		System.out.println("Void Square Count: " + voidSquareCount);	
+		System.out.println("Void Square Count: " + voidSquareCount);
 		rc.resign();
 	}
-	
+
 	/**************************************************************************
 	 * BROADCAST CHANNELS
 	 * ========================================================================
