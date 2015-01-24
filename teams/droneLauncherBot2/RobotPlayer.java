@@ -35,10 +35,13 @@ public class RobotPlayer {
 	private static int enemyHQAttackRadiusSquared;
 	private static MapLocation[] enemyTowers;
 
+	private static int totalNumberTowers;
+
 	private static int halfwayDistance;
 	private static int wholeDistanceCoefficient;
 	private static MapLocation previousTowerLocation;
 	private static boolean swarming = false;
+	private static int swarmRound;
 
 	private static Direction facing;
 	private static Direction[] directions = { Direction.NORTH,
@@ -73,6 +76,10 @@ public class RobotPlayer {
 			enemyHQ = rc.senseEnemyHQLocation();
 			friendlyTowers = rc.senseTowerLocations();
 			enemyTowers = rc.senseEnemyTowerLocations();
+
+			totalNumberTowers = friendlyTowers.length + enemyTowers.length;
+			// It was this or int casting...
+			swarmRound = rc.getRoundLimit() * 9 / 10;
 
 			// Slightly less to avoid tower issues
 			halfwayDistance = (int) (0.45 * Math.sqrt(friendlyHQ
@@ -140,18 +147,18 @@ public class RobotPlayer {
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 2) {
 						createUnit(RobotType.AEROSPACELAB, true);
+					} else if (roundNum > swarmRound
+							&& rc.readBroadcast(SANITATION_CHANNEL) == 0
+							&& rc.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3) {
+						// If all towers are standing, some handwash stations
+						// might help.
+						createUnit(RobotType.HANDWASHSTATION, true);
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 10) {
 						createUnit(RobotType.SUPPLYDEPOT, true);
 					} else if (rc.getTeamOre() > 1000) {
-						if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
-							createUnit(RobotType.HELIPAD, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 5) {
+						if (rc.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 4) {
 							createUnit(RobotType.AEROSPACELAB, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 0) {
-							createUnit(RobotType.HANDWASHSTATION, true);
 							// Beyond this point means we have a LOT of ore! :D
 						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 7) {
@@ -168,7 +175,7 @@ public class RobotPlayer {
 					break;
 
 				case DRONE:
-					if (swarming || roundNum > 1800) {
+					if (swarming || roundNum > swarmRound) {
 						attackNearestTower();
 					} else if (rc.getSupplyLevel() < 80) {
 						moveTowardDestination(friendlyHQ, false, false, true);
@@ -193,6 +200,11 @@ public class RobotPlayer {
 					break;
 
 				case HQ:
+					// If all towers are still up sanitation might help.
+					if (rc.readBroadcast(SANITATION_CHANNEL) == 0
+							&& totalNumberTowers == (friendlyTowers.length + enemyTowers.length)) {
+						rc.broadcast(SANITATION_CHANNEL, 1);
+					}
 					attackEnemyZero();
 					updateUnitCounts();
 
@@ -259,7 +271,7 @@ public class RobotPlayer {
 					double miningFate = rand.nextDouble();
 					if (roundNum < 1500
 							&& miningFate <= Math.pow(Math.E,
-									-minerCount * 0.07)) {
+									-minerCount * 0.35)) {
 						createUnit(RobotType.MINER, false);
 					}
 					break;
@@ -427,7 +439,7 @@ public class RobotPlayer {
 				rc.attackLocation(enemyHQ);
 			} else if (currentLocation.distanceSquaredTo(enemyHQ) > thisRobotType.attackRadiusSquared) {
 				if (tankCount > 10 || droneCount > 20 || launcherCount > 6
-						|| roundNum > 1800) {
+						|| roundNum > swarmRound) {
 					moveTowardDestination(enemyHQ, true, false, false);
 				} else {
 					moveTowardDestination(enemyHQ, false, false, true);
@@ -470,11 +482,11 @@ public class RobotPlayer {
 				int multiplier = 1;
 				Math.max(3, minDistance / 700);
 				if (swarming
-						&& roundNum < 1800
+						&& roundNum < swarmRound
 						&& (tankCount < 5 * multiplier
 								&& droneCount < 10 * multiplier && launcherCount < 1 * multiplier)) {
 					swarming = false;
-				} else if (roundNum >= 1800
+				} else if (roundNum >= swarmRound
 						|| (tankCount > 10 * multiplier
 								|| droneCount > 20 * multiplier || launcherCount > 3 * multiplier)
 						|| swarming) {
@@ -1560,6 +1572,8 @@ public class RobotPlayer {
 	 * ------------------------------------------------------------------------
 	 * 30-39: Enemy Units
 	 * ------------------------------------------------------------------------
+	 * 70-99: Miscellaneous
+	 * ------------------------------------------------------------------------
 	 * 100-999: Coordinate Planning + Rallying Points
 	 * ------------------------------------------------------------------------
 	 * 1000-1999: Offense/Defense Signals (e.g. Swarm)
@@ -1611,6 +1625,8 @@ public class RobotPlayer {
 	private static final int NUM_ENEMY_COMMANDERS_CHANNEL = 37;
 	private static final int NUM_ENEMY_LAUNCHERS_CHANNEL = 38;
 	private static final int NUM_ENEMY_MISSILES_CHANNEL = 39;
+	// Miscellaneous Channels
+	private static final int SANITATION_CHANNEL = 70;
 	// Map Analysis
 	private static final int TOWER_STRENGTH_CHANNEL = 2000;
 }
