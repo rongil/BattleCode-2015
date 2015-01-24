@@ -743,9 +743,10 @@ public class RobotPlayer {
 				RobotInfo[] splashRangeEnemies = rc
 						.senseNearbyRobots(
 								thisRobotLocation,
-								attackRadiusSquared
-										+ GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED,
-								Enemy);
+								(int) Math.pow(
+										Math.sqrt(attackRadiusSquared)
+												+ Math.sqrt(GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED),
+										2), Enemy);
 
 				if (splashRangeEnemies.length > 0) {
 					MapLocation actualEnemyZeroLocation = splashRangeEnemies[0].location;
@@ -753,14 +754,17 @@ public class RobotPlayer {
 							.directionTo(actualEnemyZeroLocation);
 					MapLocation splashEnemyZeroLocation = friendlyHQ.add(
 							towardsEnemyZero,
-							(int) Math.ceil(Math.sqrt(attackRadiusSquared)));
+							(int) Math.sqrt(attackRadiusSquared));
 
-					while (!rc.canAttackLocation(splashEnemyZeroLocation)) {
+					// Subtract at most one square
+					if (!rc.canAttackLocation(splashEnemyZeroLocation)) {
 						splashEnemyZeroLocation.subtract(towardsEnemyZero);
 					}
-					rc.attackLocation(splashEnemyZeroLocation);
-					return true;
 
+					if (rc.canAttackLocation(splashEnemyZeroLocation)) {
+						rc.attackLocation(splashEnemyZeroLocation);
+						return true;
+					}
 				}
 			}
 		}
