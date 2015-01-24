@@ -290,14 +290,20 @@ public class RobotPlayer {
 					break;
 
 				case MISSILE:
-					RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(
-							thisRobotType.sensorRadiusSquared, Enemy);
-					if (nearbyEnemies.length == 0) {
-						missileMoveTowardDestination(rc.senseEnemyHQLocation());
+					if(friendEnemyRatio(null, RobotType.MISSILE.
+							attackRadiusSquared, Enemy) >= 1) {
+						rc.explode();
+
 					} else {
-						missileMoveTowardDestination(nearbyEnemies[0].location);
+						RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(
+								thisRobotType.sensorRadiusSquared, Enemy);
+						if (nearbyEnemies.length == 0) {
+							missileMoveTowardDestination(rc.senseEnemyHQLocation());
+						} else {
+							missileMoveTowardDestination(nearbyEnemies[0].location);
+						}
+						turnsRemaining--;
 					}
-					turnsRemaining--;
 					break;
 
 				case TANK:
