@@ -1548,8 +1548,8 @@ public class RobotPlayer {
 			int ymin = rc.readBroadcast(YMIN_VALUE_CHANNEL);
 
 			while (rc.senseTerrainTile(new MapLocation(xmin, ymin)) != TerrainTile.OFF_MAP
-					|| Math.max(friendlyHQ.x, enemyHQ.x) - xmin < GameConstants.MAP_MAX_WIDTH
-					|| Math.max(friendlyHQ.y, enemyHQ.y) - ymin < GameConstants.MAP_MAX_HEIGHT) {
+					&& Math.max(friendlyHQ.x, enemyHQ.x) - xmin < GameConstants.MAP_MAX_WIDTH
+					&& Math.max(friendlyHQ.y, enemyHQ.y) - ymin < GameConstants.MAP_MAX_HEIGHT) {
 				xmin--;
 				ymin--;
 
@@ -1564,7 +1564,7 @@ public class RobotPlayer {
 				ymin++;
 
 				while (rc.senseTerrainTile(new MapLocation(xmin, ymin)) != TerrainTile.OFF_MAP
-						|| Math.max(friendlyHQ.x, enemyHQ.x) - xmin < GameConstants.MAP_MAX_WIDTH) {
+						&& Math.max(friendlyHQ.x, enemyHQ.x) - xmin < GameConstants.MAP_MAX_WIDTH) {
 					xmin--;
 
 					if (Clock.getBytecodesLeft() < 100) {
@@ -1579,7 +1579,7 @@ public class RobotPlayer {
 				xmin++;
 
 				while (rc.senseTerrainTile(new MapLocation(xmin, ymin)) != TerrainTile.OFF_MAP
-						|| Math.max(friendlyHQ.y, enemyHQ.y) - ymin < GameConstants.MAP_MAX_HEIGHT) {
+						&& Math.max(friendlyHQ.y, enemyHQ.y) - ymin < GameConstants.MAP_MAX_HEIGHT) {
 					ymin--;
 
 					if (Clock.getBytecodesLeft() < 100) {
@@ -1604,8 +1604,8 @@ public class RobotPlayer {
 			int ymax = rc.readBroadcast(YMAX_VALUE_CHANNEL);
 
 			while (rc.senseTerrainTile(new MapLocation(xmax, ymax)) != TerrainTile.OFF_MAP
-					|| xmax - Math.min(friendlyHQ.x, enemyHQ.x) < GameConstants.MAP_MAX_WIDTH
-					|| ymax - Math.min(friendlyHQ.y, enemyHQ.y) < GameConstants.MAP_MAX_HEIGHT) {
+					&& xmax - Math.min(friendlyHQ.x, enemyHQ.x) < GameConstants.MAP_MAX_WIDTH
+					&& ymax - Math.min(friendlyHQ.y, enemyHQ.y) < GameConstants.MAP_MAX_HEIGHT) {
 				xmax++;
 				ymax++;
 
@@ -1620,7 +1620,7 @@ public class RobotPlayer {
 				ymax--;
 
 				while (rc.senseTerrainTile(new MapLocation(xmax, ymax)) != TerrainTile.OFF_MAP
-						|| xmax - Math.min(friendlyHQ.x, enemyHQ.x) < GameConstants.MAP_MAX_WIDTH) {
+						&& xmax - Math.min(friendlyHQ.x, enemyHQ.x) < GameConstants.MAP_MAX_WIDTH) {
 					xmax++;
 
 					if (Clock.getBytecodesLeft() < 100) {
@@ -1635,7 +1635,7 @@ public class RobotPlayer {
 				xmax--;
 
 				while (rc.senseTerrainTile(new MapLocation(xmax, ymax)) != TerrainTile.OFF_MAP
-						|| ymax - Math.min(friendlyHQ.y, enemyHQ.y) < GameConstants.MAP_MAX_WIDTH) {
+						&& ymax - Math.min(friendlyHQ.y, enemyHQ.y) < GameConstants.MAP_MAX_WIDTH) {
 					ymax++;
 
 					if (Clock.getBytecodesLeft() < 100) {
@@ -1650,13 +1650,6 @@ public class RobotPlayer {
 															// xmax, ymin, and
 															// ymax have been
 															// found
-
-				System.out.println("Board Width: "
-						+ (rc.readBroadcast(XMAX_VALUE_CHANNEL) - rc
-								.readBroadcast(XMIN_VALUE_CHANNEL)));
-				System.out.println("Board Height: "
-						+ (rc.readBroadcast(YMAX_VALUE_CHANNEL) - rc
-								.readBroadcast(YMIN_VALUE_CHANNEL)));
 			}
 		}
 
@@ -1705,6 +1698,13 @@ public class RobotPlayer {
 		rc.broadcast(TERRAIN_ANALYZED_CHANNEL, 1); // '1' --> entire map has
 													// been analyzed
 
+		System.out.println("Board Width: "
+				+ (rc.readBroadcast(XMAX_VALUE_CHANNEL) - rc
+						.readBroadcast(XMIN_VALUE_CHANNEL)));
+		System.out.println("Board Height: "
+				+ (rc.readBroadcast(YMAX_VALUE_CHANNEL) - rc
+						.readBroadcast(YMIN_VALUE_CHANNEL)));
+		
 		System.out.println("Normal Square Count: " + normalSquareCount);
 		System.out.println("Void Square Count: " + voidSquareCount);
 		rc.resign();
