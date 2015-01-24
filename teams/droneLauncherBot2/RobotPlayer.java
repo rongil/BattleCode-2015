@@ -1505,4 +1505,14 @@ public class RobotPlayer {
 	private static final int SWARM_LOCATION_Y_CHANNEL = 1002;
 	// Map Analysis
 	private static final int TOWER_STRENGTH_CHANNEL = 2000;
+	private static final int CURRENT_XPOS_CHANNEL = 2001;
+	private static final int CURRENT_YPOS_CHANNEL = 2002;
+	private static final int DIMENSIONS_FOUND_CHANNEL = 2003;
+	private static final int XMIN_VALUE_CHANNEL = 2004;
+	private static final int XMAX_VALUE_CHANNEL = 2005;
+	private static final int YMIN_VALUE_CHANNEL = 2006;
+	private static final int YMAX_VALUE_CHANNEL = 2007;
+	private static final int TERRAIN_ANALYZED_CHANNEL = 2008;
+	private static final int NORMAL_TERRAIN_COUNT_CHANNEL = 2009;
+	private static final int VOID_TERRAIN_COUNT_CHANNEL = 2010;
 }
