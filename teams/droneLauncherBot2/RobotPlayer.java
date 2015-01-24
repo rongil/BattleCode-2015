@@ -66,10 +66,9 @@ public class RobotPlayer {
 		// robot.
 		RobotPlayer.rc = rc;
 		thisRobotType = rc.getType();
-		Friend = rc.getTeam();
-		Enemy = Friend.opponent();
-		rand = new Random(rc.getID());
+		Enemy = rc.getTeam().opponent();
 		if (thisRobotType != RobotType.MISSILE) {
+			Friend = rc.getTeam();
 			friendlyHQ = rc.senseHQLocation();
 			enemyHQ = rc.senseEnemyHQLocation();
 			friendlyTowers = rc.senseTowerLocations();
@@ -80,6 +79,7 @@ public class RobotPlayer {
 					.distanceSquaredTo(enemyHQ)));
 			wholeDistanceCoefficient = friendlyHQ.distanceSquaredTo(enemyHQ) / 700;
 
+			rand = new Random(rc.getID());
 			facing = getRandomDirection(); // Randomize starting direction
 
 			// Drone only stuff
@@ -265,21 +265,53 @@ public class RobotPlayer {
 					break;
 
 				case MISSILE:
-					if(friendEnemyRatio(null, RobotType.MISSILE.
-							attackRadiusSquared, Enemy) >= 1) {
-						rc.explode();
-
+					RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(
+							thisRobotType.sensorRadiusSquared, Enemy);
+					if (nearbyEnemies.length == 0) {
+						Direction dir = rc.getLocation().directionTo(
+								rc.senseEnemyHQLocation());
+						missileMoveTowardDirection(dir);
 					} else {
-						RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(
-								thisRobotType.sensorRadiusSquared, Enemy);
-						if (nearbyEnemies.length == 0) {
-							missileMoveTowardDestination(rc.senseEnemyHQLocation());
-						} else {
-							missileMoveTowardDestination(nearbyEnemies[0].location);
+						Direction dir = rc.getLocation().directionTo(
+								nearbyEnemies[0].location);
+						currentLocation = rc.getLocation();
+						missileMoveTowardDirection(dir);
+						/******************************************************
+						 * The missile should be facing the direction of its
+						 * target. rc.senseRobotAtLocation costs 25 bytecode, so
+						 * can'tafford more checking more than 3 squares since a
+						 * lost turn is worse. Bytecode conservation gains
+						 * complete priority over code niceness here.
+						 *****************************************************/
+						RobotInfo frontSquare1 = rc
+								.senseRobotAtLocation(currentLocation.add(dir));
+						RobotInfo frontSquare2 = rc
+								.senseRobotAtLocation(currentLocation.add(dir
+										.rotateLeft()));
+						RobotInfo frontSquare3 = rc
+								.senseRobotAtLocation(currentLocation.add(dir
+										.rotateRight()));
+						if ((frontSquare1 != null && frontSquare1.team == Enemy)
+								|| (frontSquare2 != null && frontSquare2.team == Enemy)
+								|| (frontSquare3 != null && frontSquare3.team == Enemy)) {
+							// If this is triggered, no more bytecode worries...
+							rc.explode();
 						}
-						turnsRemaining--;
+						// friendEnemyRatio(currentLocation, dir);
+						/******************************************************
+						 * Bytecode use will be < 100 if the robot was forced to
+						 * yield before it was done.
+						 * -----------------------------------------------------
+						 * NOTE: This assumes bytecode use is not so high that
+						 * multiple turns don't get skipped or a large chunk of
+						 * the next turn's bytecode is used.
+						 *****************************************************/
+						// if (Clock.getBytecodeNum() < 100)
+						// System.out.println(Clock.getBytecodeNum());
 					}
-					break;
+					--turnsRemaining;
+					rc.yield();
+					continue; // Restart the loop from here to save bytecode!
 
 				case TANK:
 					attackNearestTower();
@@ -435,7 +467,8 @@ public class RobotPlayer {
 				rc.attackLocation(closestTowerLocation);
 				moveTowardDestination(closestTowerLocation, true, false, false);
 			} else if (currentLocation.distanceSquaredTo(closestTowerLocation) > thisRobotType.attackRadiusSquared) {
-				int multiplier = 1;Math.max(3, minDistance / 700);
+				int multiplier = 1;
+				Math.max(3, minDistance / 700);
 				if (swarming
 						&& roundNum < 1800
 						&& (tankCount < 5 * multiplier
@@ -636,51 +669,42 @@ public class RobotPlayer {
 
 		if (friendCount == 0) {
 			return 0;
-			
+
 		} else if (enemyCount == 0 && friendCount != 0) {
 			return Integer.MAX_VALUE;
-			
+
 		} else {
 			return friendCount / enemyCount;
 		}
 	}
 
-	private static double friendEnemyRatio(MapLocation loc, Direction forward,
-			int radiusSquared, Team friendTeam) throws GameActionException {
-		if (loc == null) {
-			loc = rc.getLocation();
-		}
-		
-		if (friendTeam == null) {
-			friendTeam = Friend;
-		}
-		
+	private static double friendEnemyRatio(MapLocation loc, Direction forward)
+			throws GameActionException {
+
 		RobotInfo forwardRobot;
 		double enemyCount = 0.0, friendCount = 0.0;
-		Direction[] forwardDirections = {forward.rotateLeft().rotateLeft(),
+		Direction[] forwardDirections = { forward.rotateLeft().rotateLeft(),
 				forward.rotateLeft(), forward, forward.rotateRight(),
-				forward.rotateRight().rotateRight()};
-		
-		
-		for(Direction forwardDirection : forwardDirections) {
+				forward.rotateRight().rotateRight() };
+
+		for (Direction forwardDirection : forwardDirections) {
 			MapLocation forwardLoc = loc.add(forwardDirection);
 			forwardRobot = rc.senseRobotAtLocation(forwardLoc);
-			
-			if(forwardRobot != null) {
-				if(forwardRobot.team == friendTeam) {
-					friendCount++;
+
+			if (forwardRobot != null) {
+				if (forwardRobot.team == Enemy) {
+					++enemyCount;
 				} else {
-					enemyCount++;
+					++friendCount;
 				}
 			}
 		}
-		
+
 		if (friendCount == 0) {
 			return 0;
-		
 		} else if (enemyCount == 0 && friendCount != 0) {
 			return Integer.MAX_VALUE;
-		
+
 		} else {
 			return friendCount / enemyCount;
 		}
@@ -938,9 +962,8 @@ public class RobotPlayer {
 	}
 
 	// FOR MISSILES ONLY
-	private static boolean missileMoveTowardDestination(MapLocation loc)
+	private static boolean missileMoveTowardDirection(Direction dir)
 			throws GameActionException {
-		Direction dir = rc.getLocation().directionTo(loc);
 		if (rc.isCoreReady() && rc.canMove(dir)) {
 			rc.move(dir);
 			return true;
