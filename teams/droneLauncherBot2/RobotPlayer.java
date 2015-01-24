@@ -106,7 +106,7 @@ public class RobotPlayer {
 			}
 
 		} else {
-			//turnsRemaining = GameConstants.MISSILE_LIFESPAN;
+			// turnsRemaining = GameConstants.MISSILE_LIFESPAN;
 		}
 
 		// Method can never end or the robot is destroyed.
@@ -339,7 +339,7 @@ public class RobotPlayer {
 						}
 						// friendEnemyRatio(currentLocation, dir);
 					}
-					//turnsRemaining -= 1;
+					// turnsRemaining -= 1;
 					/******************************************************
 					 * Bytecode use will be < 100 if the robot was forced to
 					 * yield before it was done.
@@ -1275,15 +1275,10 @@ public class RobotPlayer {
 			enemyRobots = rc.senseNearbyRobots(Integer.MAX_VALUE, Enemy);
 		}
 		int friendlyChunkSize = (int) Math.floor(friendlyRobots.length / 4);
-		int enemyChunkSize = (int) Math.floor(enemyRobots.length / 4);
 		int friendlyLoopStart = friendlyChunkSize * roundNumMod;
 		// Make sure to read the whole array
 		int friendlyLoopEnd = (roundNumMod == 3) ? friendlyRobots.length
 				: friendlyChunkSize * (roundNumMod + 1);
-		int enemyLoopStart = enemyChunkSize * roundNumMod;
-		// Make sure to read the whole array
-		int enemyLoopEnd = (roundNumMod == 3) ? enemyRobots.length
-				: enemyChunkSize * (roundNumMod + 1);
 
 		/**********************************************************************
 		 * WARNING: Exhibits intentional FALLTHROUGH since the same loop is used
@@ -1316,26 +1311,6 @@ public class RobotPlayer {
 			unitCountNumFriendlyTanks = 0;
 			unitCountNumFriendlyLaunchers = 0;
 			unitCountNumFriendlyMissiles = 0;
-			// Enemy Buildings
-			unitCountNumEnemySupplyDepot = 0;
-			unitCountNumEnemyMinerFactory = 0;
-			unitCountNumEnemyTechInstitute = 0;
-			unitCountNumEnemyBarracks = 0;
-			unitCountNumEnemyHelipad = 0;
-			unitCountNumEnemyTrainingField = 0;
-			unitCountNumEnemyTankFactory = 0;
-			unitCountNumEnemyAerospaceLab = 0;
-			unitCountNumEnemyHandwashStation = 0;
-			// Enemy other units
-			unitCountNumEnemyBeavers = 0;
-			unitCountNumEnemyMiners = 0;
-			unitCountNumEnemyComputers = 0;
-			unitCountNumEnemySoldiers = 0;
-			unitCountNumEnemyBashers = 0;
-			unitCountNumEnemyDrones = 0;
-			unitCountNumEnemyTanks = 0;
-			unitCountNumEnemyLaunchers = 0;
-			unitCountNumEnemyMissiles = 0;
 		case 1:
 		case 2:
 		case 3:
@@ -1405,75 +1380,6 @@ public class RobotPlayer {
 					break;
 				}
 			}
-
-			// Enemy Robot Loop
-			for (int j = enemyLoopStart; j < enemyLoopEnd; ++j) {
-				switch (enemyRobots[j].type) {
-				case AEROSPACELAB:
-					++unitCountNumEnemyAerospaceLab;
-					break;
-				case BARRACKS:
-					++unitCountNumEnemyBarracks;
-					break;
-				case BASHER:
-					++unitCountNumEnemyBashers;
-					break;
-				case BEAVER:
-					++unitCountNumEnemyBeavers;
-					break;
-				case COMMANDER:
-					++unitCountNumEnemyCommanders;
-					break;
-				case COMPUTER:
-					++unitCountNumEnemyComputers;
-					break;
-				case DRONE:
-					++unitCountNumEnemyDrones;
-					break;
-				case HANDWASHSTATION:
-					++unitCountNumEnemyHandwashStation;
-					break;
-				case HELIPAD:
-					++unitCountNumEnemyHelipad;
-					break;
-				case HQ: // No need to count HQ! break; case LAUNCHER:
-					++unitCountNumEnemyLaunchers;
-					break;
-				case MINER:
-					++unitCountNumEnemyMiners;
-					break;
-				case MINERFACTORY:
-					++unitCountNumEnemyMinerFactory;
-					break;
-				case MISSILE:
-					++unitCountNumEnemyMissiles;
-					break;
-				case SOLDIER:
-					++unitCountNumEnemySoldiers;
-					break;
-				case SUPPLYDEPOT:
-					++unitCountNumEnemySupplyDepot;
-					break;
-				case TANK:
-					++unitCountNumEnemyTanks;
-					break;
-				case TANKFACTORY:
-					++unitCountNumEnemyTankFactory;
-					break;
-				case TECHNOLOGYINSTITUTE:
-					++unitCountNumEnemyTechInstitute;
-					break;
-				case TOWER:
-					break;
-				case TRAININGFIELD:
-					++unitCountNumEnemyTrainingField;
-					break;
-				default:
-					break;
-
-				}
-
-			}
 			break;
 		case 4:
 			// Friendly Buildings Broadcasts
@@ -1513,37 +1419,6 @@ public class RobotPlayer {
 					unitCountNumFriendlyLaunchers);
 			rc.broadcast(NUM_FRIENDLY_MISSILES_CHANNEL,
 					unitCountNumFriendlyMissiles);
-			// Enemy Buildings Broadcasts
-			rc.broadcast(NUM_ENEMY_SUPPLYDEPOT_CHANNEL,
-					unitCountNumEnemySupplyDepot);
-			rc.broadcast(NUM_ENEMY_MINERFACTORY_CHANNEL,
-					unitCountNumEnemyMinerFactory);
-			rc.broadcast(NUM_ENEMY_TECHINSTITUTE_CHANNEL,
-					unitCountNumEnemyTechInstitute);
-			rc.broadcast(NUM_ENEMY_BARRACKS_CHANNEL, unitCountNumEnemyBarracks);
-			rc.broadcast(NUM_ENEMY_HELIPAD_CHANNEL, unitCountNumEnemyHelipad);
-			rc.broadcast(NUM_ENEMY_TRAININGFIELD_CHANNEL,
-					unitCountNumEnemyTrainingField);
-			rc.broadcast(NUM_ENEMY_TANKFACTORY_CHANNEL,
-					unitCountNumEnemyTankFactory);
-			rc.broadcast(NUM_ENEMY_AEROSPACELAB_CHANNEL,
-					unitCountNumEnemyAerospaceLab);
-			rc.broadcast(NUM_ENEMY_HANDWASHSTATION_CHANNEL,
-					unitCountNumEnemyHandwashStation);
-			// Enemy Units Broadcasts
-			rc.broadcast(NUM_ENEMY_BEAVERS_CHANNEL, unitCountNumEnemyBeavers);
-			rc.broadcast(NUM_ENEMY_MINERS_CHANNEL, unitCountNumEnemyMiners);
-			rc.broadcast(NUM_ENEMY_COMMANDERS_CHANNEL,
-					unitCountNumEnemyCommanders);
-			rc.broadcast(NUM_ENEMY_COMPUTERS_CHANNEL,
-					unitCountNumEnemyComputers);
-			rc.broadcast(NUM_ENEMY_SOLDIERS_CHANNEL, unitCountNumEnemySoldiers);
-			rc.broadcast(NUM_ENEMY_BASHERS_CHANNEL, unitCountNumEnemyBashers);
-			rc.broadcast(NUM_ENEMY_DRONES_CHANNEL, unitCountNumEnemyDrones);
-			rc.broadcast(NUM_ENEMY_TANKS_CHANNEL, unitCountNumEnemyTanks);
-			rc.broadcast(NUM_ENEMY_LAUNCHERS_CHANNEL,
-					unitCountNumEnemyLaunchers);
-			rc.broadcast(NUM_ENEMY_MISSILES_CHANNEL, unitCountNumEnemyMissiles);
 			break;
 		}
 
@@ -1590,10 +1465,6 @@ public class RobotPlayer {
 	 * ------------------------------------------------------------------------
 	 * 10-19: Friendly Units
 	 * ------------------------------------------------------------------------
-	 * 20-29: Enemy Buildings
-	 * ------------------------------------------------------------------------
-	 * 30-39: Enemy Units
-	 * ------------------------------------------------------------------------
 	 * 70-99: Miscellaneous
 	 * ------------------------------------------------------------------------
 	 * 100-999: Coordinate Planning + Rallying Points
@@ -1626,27 +1497,6 @@ public class RobotPlayer {
 	private static final int NUM_FRIENDLY_COMMANDERS_CHANNEL = 17;
 	private static final int NUM_FRIENDLY_LAUNCHERS_CHANNEL = 18;
 	private static final int NUM_FRIENDLY_MISSILES_CHANNEL = 19;
-	// Enemy Buildings Channels
-	private static final int NUM_ENEMY_SUPPLYDEPOT_CHANNEL = 21;
-	private static final int NUM_ENEMY_MINERFACTORY_CHANNEL = 22;
-	private static final int NUM_ENEMY_TECHINSTITUTE_CHANNEL = 23;
-	private static final int NUM_ENEMY_BARRACKS_CHANNEL = 24;
-	private static final int NUM_ENEMY_HELIPAD_CHANNEL = 25;
-	private static final int NUM_ENEMY_TRAININGFIELD_CHANNEL = 26;
-	private static final int NUM_ENEMY_TANKFACTORY_CHANNEL = 27;
-	private static final int NUM_ENEMY_AEROSPACELAB_CHANNEL = 28;
-	private static final int NUM_ENEMY_HANDWASHSTATION_CHANNEL = 29;
-	// Enemy Units Channels
-	private static final int NUM_ENEMY_BEAVERS_CHANNEL = 30;
-	private static final int NUM_ENEMY_MINERS_CHANNEL = 31;
-	private static final int NUM_ENEMY_COMPUTERS_CHANNEL = 32;
-	private static final int NUM_ENEMY_SOLDIERS_CHANNEL = 33;
-	private static final int NUM_ENEMY_BASHERS_CHANNEL = 34;
-	private static final int NUM_ENEMY_DRONES_CHANNEL = 35;
-	private static final int NUM_ENEMY_TANKS_CHANNEL = 36;
-	private static final int NUM_ENEMY_COMMANDERS_CHANNEL = 37;
-	private static final int NUM_ENEMY_LAUNCHERS_CHANNEL = 38;
-	private static final int NUM_ENEMY_MISSILES_CHANNEL = 39;
 	// Miscellaneous Channels
 	private static final int SANITATION_CHANNEL = 70;
 	// Swarm Signals
