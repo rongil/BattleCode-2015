@@ -423,11 +423,12 @@ public class RobotPlayer {
 				if (thisRobotType == RobotType.HQ
 						|| thisRobotType == RobotType.DRONE) {
 					transferSupplies();
+				}
 
-					if (!thisRobotType.needsSupply()
-							&& rc.readBroadcast(TERRAIN_ANALYZED_CHANNEL) != 1) {
-						analyzeMap();
-					}
+				// Calculations for structures only!
+				if ((!thisRobotType.needsSupply())
+						&& rc.readBroadcast(TERRAIN_ANALYZED_CHANNEL) != 1) {
+					analyzeMap();
 				}
 
 			} catch (GameActionException e) {
