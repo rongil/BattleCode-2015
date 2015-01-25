@@ -191,7 +191,7 @@ public class RobotPlayer {
 							&& roundNum > rc.getRoundLimit() * 4 / 5) {
 						createUnit(RobotType.HANDWASHSTATION, true);
 
-					} else if (rc.getTeamOre() > 600) {
+					} else if (rc.getTeamOre() > 1000) {
 						if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
 							createUnit(RobotType.BARRACKS, true);
 
@@ -273,26 +273,6 @@ public class RobotPlayer {
 
 				case LAUNCHER:
 					MapLocation currentLocation = rc.getLocation();
-
-					// double possEnemyFriendRatio;
-					// double bestEnemyFriendRatio = 0.0;
-					// MapLocation bestTarget = null;
-					//
-					// MapLocation radiusSquare;
-					// TerrainTile radiusTerrain;
-					//
-					// for (Direction possDir : directions) {
-					// radiusSquare = currentLocation.add(possDir, 5);
-					// radiusTerrain = rc.senseTerrainTile(radiusSquare);
-					// possEnemyFriendRatio = friendEnemyRatio(radiusSquare,
-					// RobotType.MISSILE.attackRadiusSquared, Enemy);
-					//
-					// if (radiusTerrain == TerrainTile.NORMAL
-					// && possEnemyFriendRatio > bestEnemyFriendRatio) {
-					// bestEnemyFriendRatio = possEnemyFriendRatio;
-					// bestTarget = radiusSquare;
-					// }
-					// }
 
 					// Launcher version of Attack Enemy Zero
 					MapLocation bestTarget = null;
