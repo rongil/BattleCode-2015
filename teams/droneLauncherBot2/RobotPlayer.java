@@ -228,7 +228,7 @@ public class RobotPlayer {
 					if (rc.getSupplyLevel() < 80) {
 						moveTowardDestination(friendlyHQ, false, false, true);
 					} else {
-						targetEnemyMiners();
+						targetEnemyMinersAndStructures();
 					}
 					attackEnemyZero();
 					break;
@@ -600,12 +600,15 @@ public class RobotPlayer {
 		}
 	}
 
-	private static boolean targetEnemyMiners() throws GameActionException {
+	private static boolean targetEnemyMinersAndStructures() throws GameActionException {
 		RobotInfo[] allEnemies = rc.senseNearbyRobots(enemyHQ,
 				Integer.MAX_VALUE, Enemy);
 		for (RobotInfo e : allEnemies) {
+			
+			// Target miners, beavers, and structures (they do not need
+			// to maintain a supply, and they mostly cannot attack)
 			if (e.type == RobotType.MINER || e.type == RobotType.BEAVER
-					|| !e.type.needsSupply()) {
+					|| e.type.supplyUpkeep == 0) {
 				moveTowardDestination(e.location, false, false, true, true);
 				return true;
 			}
