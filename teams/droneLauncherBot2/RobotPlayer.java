@@ -1115,12 +1115,12 @@ public class RobotPlayer {
 		if (rc.isCoreReady()) {
 			MapLocation currentLocation = rc.getLocation();
 
-			int radius = (int) Math.sqrt(rc.getType().sensorRadiusSquared);
+			int radius = (int) Math.sqrt(thisRobotType.sensorRadiusSquared);
 
 			double bestOreCount = 0.0;
 			MapLocation bestDestination = null;
 
-			for (Direction possDirection : Direction.values()) {
+			for (Direction possDirection : directions) {
 				MapLocation squareOne = currentLocation.add(possDirection,
 						(int) (0.25 * radius));
 				MapLocation squareTwo = currentLocation.add(possDirection,
@@ -1130,9 +1130,19 @@ public class RobotPlayer {
 				MapLocation squareFour = currentLocation.add(possDirection,
 						radius);
 
-				double totalOreCount = rc.senseOre(squareOne)
-						+ rc.senseOre(squareTwo) + rc.senseOre(squareThree)
-						+ rc.senseOre(squareFour);
+                double totalOreCount = 0.0;
+				if (squareOne != friendlyHQ) {
+					totalOreCount += rc.senseOre(squareOne);
+				}
+				if (squareTwo != friendlyHQ) {
+					totalOreCount += rc.senseOre(squareTwo);
+				}
+				if (squareThree != friendlyHQ) {
+					totalOreCount += rc.senseOre(squareThree);
+				}
+				if (squareFour != friendlyHQ) {
+					totalOreCount += rc.senseOre(squareFour);
+				}
 
 				if (totalOreCount > bestOreCount) {
 					bestOreCount = totalOreCount;
