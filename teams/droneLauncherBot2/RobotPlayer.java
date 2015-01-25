@@ -171,11 +171,14 @@ public class RobotPlayer {
 					// Building Order/Preferences
 					if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 						createUnit(RobotType.MINERFACTORY, true);
+						
 					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
 						createUnit(RobotType.HELIPAD, true);
+						
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 2) {
 						createUnit(RobotType.AEROSPACELAB, true);
+						
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 10) {
 						createUnit(RobotType.SUPPLYDEPOT, true);
