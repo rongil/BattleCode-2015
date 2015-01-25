@@ -158,16 +158,16 @@ public class RobotPlayer {
 						createUnit(RobotType.BASHER, false);
 					}
 					break;
-					
+
 				case BASHER:
 					locateBestOre();
 					break;
-					
+
 				case BEAVER:
 					attackEnemyZero();
 					int numFriendlyUnit = rc.senseNearbyRobots(
 							Integer.MAX_VALUE, Friend).length;
-					
+
 					// Building Order/Preferences
 					if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 						createUnit(RobotType.MINERFACTORY, true);
@@ -179,44 +179,40 @@ public class RobotPlayer {
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 10) {
 						createUnit(RobotType.SUPPLYDEPOT, true);
-
-					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 2) {
-						createUnit(RobotType.HELIPAD, true);
-						
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 3) {
 						createUnit(RobotType.AEROSPACELAB, true);
-						
 					} else if (rc
-							.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3 &&
-							rc.readBroadcast(SANITATION_CHANNEL) == 1) {
+							.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3
+							&& rc.readBroadcast(SANITATION_CHANNEL) == 0
+							&& roundNum > rc.getRoundLimit() * 4 / 5) {
 						createUnit(RobotType.HANDWASHSTATION, true);
 
 					} else if (rc.getTeamOre() > 600) {
 						if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
 							createUnit(RobotType.BARRACKS, true);
-						
-						} else if (rc.
-								readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
+
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
 							createUnit(RobotType.TANKFACTORY, true);
-						
-						} else if (rc.
-								readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
+
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
 							createUnit(RobotType.TECHNOLOGYINSTITUTE, true);
-							
-						} else if (rc.
-								readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
+
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
 							createUnit(RobotType.TRAININGFIELD, true);
-							
+
 						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 7) {
 							createUnit(RobotType.SUPPLYDEPOT, true);
-						
+
 						} else {
 							createUnit(RobotType.HELIPAD, true);
 						}
 					}
-					
+
 					mineAndMove();
 					break;
 
@@ -256,7 +252,7 @@ public class RobotPlayer {
 					} else {
 						rc.broadcast(SANITATION_CHANNEL, 0);
 					}
-					
+
 					attackEnemyZero();
 					updateUnitCounts();
 
@@ -403,7 +399,7 @@ public class RobotPlayer {
 					attackEnemyZero();
 					locateBestOre();
 					break;
-					
+
 				case TANK:
 					attackNearestTower();
 					attackEnemyZero();
@@ -414,38 +410,41 @@ public class RobotPlayer {
 					break;
 
 				case TECHNOLOGYINSTITUTE:
-					int trainingFieldCount = rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL);
-					
+					int trainingFieldCount = rc
+							.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL);
+
 					if (trainingFieldCount == 0) {
 						if (createUnit(RobotType.TRAININGFIELD, false)) {
 							rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
 							break;
 						}
 					}
-					
-					int computerCount = rc.readBroadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL);
-					
-					if(computerCount == 0) {
+
+					int computerCount = rc
+							.readBroadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL);
+
+					if (computerCount == 0) {
 						if (createUnit(RobotType.COMPUTER, false)) {
 							rc.broadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL, 1);
 							break;
 						}
 					}
 					break;
-					
+
 				case TOWER:
 					attackEnemyZero();
 					break;
 
 				case TRAININGFIELD:
-					int commanderCount = rc.readBroadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL);
-					
+					int commanderCount = rc
+							.readBroadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL);
+
 					if (commanderCount == 0) {
 						if (createUnit(RobotType.COMMANDER, false)) {
 							rc.broadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL, 1);
 						}
 					}
-					
+
 				default:
 					break;
 
