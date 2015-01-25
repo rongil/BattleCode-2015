@@ -87,14 +87,23 @@ public class RobotPlayer {
 			// HQ only stuff
 			if (thisRobotType == RobotType.HQ) {
 				lastSwarmTarget = friendlyHQ;
+				rc.broadcast(XMIN_VALUE_CHANNEL,
+						Math.min(friendlyHQ.x, enemyHQ.x));
+				rc.broadcast(XMAX_VALUE_CHANNEL,
+						Math.max(friendlyHQ.x, enemyHQ.x));
+				rc.broadcast(YMIN_VALUE_CHANNEL,
+						Math.min(friendlyHQ.y, enemyHQ.y));
+				rc.broadcast(YMAX_VALUE_CHANNEL,
+						Math.max(friendlyHQ.y, enemyHQ.y));
 			}
+
+			rand = new Random(rc.getID());
+			facing = getRandomDirection(); // Randomize starting direction
 
 			// Slightly less to avoid tower issues
 			halfwayDistance = (int) (0.45 * Math.sqrt(friendlyHQ
 					.distanceSquaredTo(enemyHQ)));
 			wholeDistanceCoefficient = friendlyHQ.distanceSquaredTo(enemyHQ) / 700;
-
-			rand = new Random(rc.getID());
 
 			// Drone only stuff
 			if (thisRobotType == RobotType.DRONE) {
@@ -106,15 +115,6 @@ public class RobotPlayer {
 
 		} else {
 			// turnsRemaining = GameConstants.MISSILE_LIFESPAN;
-		}
-		
-		facing = getRandomDirection(); // Randomize starting direction
-
-		if (thisRobotType == RobotType.HQ) {
-			rc.broadcast(XMIN_VALUE_CHANNEL, Math.min(friendlyHQ.x, enemyHQ.x));
-			rc.broadcast(XMAX_VALUE_CHANNEL, Math.max(friendlyHQ.x, enemyHQ.x));
-			rc.broadcast(YMIN_VALUE_CHANNEL, Math.min(friendlyHQ.y, enemyHQ.y));
-			rc.broadcast(YMAX_VALUE_CHANNEL, Math.max(friendlyHQ.y, enemyHQ.y));
 		}
 
 		// Method can never end or the robot is destroyed.
@@ -939,7 +939,7 @@ public class RobotPlayer {
 	 * @return the generated direction
 	 */
 	private static Direction getRandomDirection() {
-		return Direction.values()[(int) rand.nextDouble() * 8];
+		return directions[rand.nextInt(8)];
 	}
 
 	/**
@@ -1063,7 +1063,6 @@ public class RobotPlayer {
 			throws GameActionException {
 		if (rc.isCoreReady() && rc.canMove(dir)) {
 			rc.move(dir);
-			facing = dir;
 			return true;
 		}
 
@@ -1132,7 +1131,7 @@ public class RobotPlayer {
 				MapLocation squareFour = currentLocation.add(possDirection,
 						radius);
 
-                double totalOreCount = 0.0;
+				double totalOreCount = 0.0;
 				if (squareOne != friendlyHQ) {
 					totalOreCount += rc.senseOre(squareOne);
 				}
