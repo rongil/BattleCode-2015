@@ -191,7 +191,7 @@ public class RobotPlayer {
 							&& roundNum > rc.getRoundLimit() * 4 / 5) {
 						createUnit(RobotType.HANDWASHSTATION, true);
 
-					} else if (rc.getTeamOre() > 600) {
+					} else if (rc.getTeamOre() > 1000) {
 						if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
 							createUnit(RobotType.BARRACKS, true);
 
@@ -228,7 +228,7 @@ public class RobotPlayer {
 					if (rc.getSupplyLevel() < 80) {
 						moveTowardDestination(friendlyHQ, false, false, true);
 					} else {
-						targetEnemyMiners();
+						targetEnemyMinersAndStructures();
 					}
 					attackEnemyZero();
 					break;
@@ -273,26 +273,6 @@ public class RobotPlayer {
 
 				case LAUNCHER:
 					MapLocation currentLocation = rc.getLocation();
-
-					// double possEnemyFriendRatio;
-					// double bestEnemyFriendRatio = 0.0;
-					// MapLocation bestTarget = null;
-					//
-					// MapLocation radiusSquare;
-					// TerrainTile radiusTerrain;
-					//
-					// for (Direction possDir : directions) {
-					// radiusSquare = currentLocation.add(possDir, 5);
-					// radiusTerrain = rc.senseTerrainTile(radiusSquare);
-					// possEnemyFriendRatio = friendEnemyRatio(radiusSquare,
-					// RobotType.MISSILE.attackRadiusSquared, Enemy);
-					//
-					// if (radiusTerrain == TerrainTile.NORMAL
-					// && possEnemyFriendRatio > bestEnemyFriendRatio) {
-					// bestEnemyFriendRatio = possEnemyFriendRatio;
-					// bestTarget = radiusSquare;
-					// }
-					// }
 
 					// Launcher version of Attack Enemy Zero
 					MapLocation bestTarget = null;
@@ -620,12 +600,15 @@ public class RobotPlayer {
 		}
 	}
 
-	private static boolean targetEnemyMiners() throws GameActionException {
+	private static boolean targetEnemyMinersAndStructures() throws GameActionException {
 		RobotInfo[] allEnemies = rc.senseNearbyRobots(enemyHQ,
 				Integer.MAX_VALUE, Enemy);
 		for (RobotInfo e : allEnemies) {
+			
+			// Target miners, beavers, and structures (they do not need
+			// to maintain a supply, and they mostly cannot attack)
 			if (e.type == RobotType.MINER || e.type == RobotType.BEAVER
-					|| !e.type.needsSupply()) {
+					|| e.type.supplyUpkeep == 0) {
 				moveTowardDestination(e.location, false, false, true, true);
 				return true;
 			}
