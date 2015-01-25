@@ -95,7 +95,6 @@ public class RobotPlayer {
 			wholeDistanceCoefficient = friendlyHQ.distanceSquaredTo(enemyHQ) / 700;
 
 			rand = new Random(rc.getID());
-			facing = getRandomDirection(); // Randomize starting direction
 
 			// Drone only stuff
 			if (thisRobotType == RobotType.DRONE) {
@@ -108,6 +107,8 @@ public class RobotPlayer {
 		} else {
 			// turnsRemaining = GameConstants.MISSILE_LIFESPAN;
 		}
+		
+		facing = getRandomDirection(); // Randomize starting direction
 
 		if (thisRobotType == RobotType.HQ) {
 			rc.broadcast(XMIN_VALUE_CHANNEL, Math.min(friendlyHQ.x, enemyHQ.x));
@@ -1062,6 +1063,7 @@ public class RobotPlayer {
 			throws GameActionException {
 		if (rc.isCoreReady() && rc.canMove(dir)) {
 			rc.move(dir);
+			facing = dir;
 			return true;
 		}
 
