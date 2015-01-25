@@ -943,19 +943,26 @@ public class RobotPlayer {
 			return true;
 		}
 
-		Team roboTeam = Enemy;
 		/*
 		 * Check if any enemies are in range or if any friendly drones are
 		 * within explosion range
 		 */
 		RobotInfo[] nearbyRobots = rc.senseNearbyRobots(
-				thisRobotType.sensorRadiusSquared, roboTeam);
+				thisRobotType.sensorRadiusSquared, Enemy);
 
 		for (RobotInfo r : nearbyRobots) {
 			if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
-					&& (r.team == Enemy || (checkFriendlyMissiles && r.type == RobotType.MISSILE))
 					&& !(ignoreMinersBeavers && (r.type == RobotType.BEAVER || r.type == RobotType.MINER))) {
 				return false;
+			}
+		}
+		
+		if (checkFriendlyMissiles) {
+			RobotInfo[] closeEnemies = rc.senseNearbyRobots(loc, 2, Friend);
+			for (RobotInfo r : closeEnemies) {
+				if (r.type == RobotType.MISSILE) {
+					return false;
+				}
 			}
 		}
 
