@@ -281,28 +281,28 @@ public class RobotPlayer {
 				case LAUNCHER:
 					MapLocation currentLocation = rc.getLocation();
 
-					double possEnemyFriendRatio;
-					double bestEnemyFriendRatio = 0.0;
-					MapLocation bestTarget = null;
-
-					MapLocation radiusSquare;
-					TerrainTile radiusTerrain;
-
-					for (Direction possDir : directions) {
-						radiusSquare = currentLocation.add(possDir, 5);
-						radiusTerrain = rc.senseTerrainTile(radiusSquare);
-						possEnemyFriendRatio = friendEnemyRatio(radiusSquare,
-								RobotType.MISSILE.attackRadiusSquared, Enemy);
-
-						if (radiusTerrain == TerrainTile.NORMAL
-								&& possEnemyFriendRatio > bestEnemyFriendRatio) {
-							bestEnemyFriendRatio = possEnemyFriendRatio;
-							bestTarget = radiusSquare;
-						}
-					}
+//					double possEnemyFriendRatio;
+//					double bestEnemyFriendRatio = 0.0;
+//					MapLocation bestTarget = null;
+//
+//					MapLocation radiusSquare;
+//					TerrainTile radiusTerrain;
+//
+//					for (Direction possDir : directions) {
+//						radiusSquare = currentLocation.add(possDir, 5);
+//						radiusTerrain = rc.senseTerrainTile(radiusSquare);
+//						possEnemyFriendRatio = friendEnemyRatio(radiusSquare,
+//								RobotType.MISSILE.attackRadiusSquared, Enemy);
+//
+//						if (radiusTerrain == TerrainTile.NORMAL
+//								&& possEnemyFriendRatio > bestEnemyFriendRatio) {
+//							bestEnemyFriendRatio = possEnemyFriendRatio;
+//							bestTarget = radiusSquare;
+//						}
+//					}
 
 					// Launcher version of Attack Enemy Zero
-					// MapLocation bestTarget = null;
+					MapLocation bestTarget = null;
 					RobotInfo[] targets = rc.senseNearbyRobots(
 							GameConstants.MISSILE_LIFESPAN
 									* GameConstants.MISSILE_LIFESPAN, Enemy);
@@ -1044,6 +1044,7 @@ public class RobotPlayer {
 							|| isSafe(possSquare, onlyHQAndTowers,
 									checkFriendlyMissiles, ignoreMinersBeavers)) {
 						rc.move(possDirection);
+						facing = possDirection;
 						return true;
 					}
 				}
