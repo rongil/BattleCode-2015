@@ -151,49 +151,23 @@ public class RobotPlayer {
 					createUnit(RobotType.LAUNCHER, false);
 					break;
 
+				case BARRACKS:
+					if (rand.nextDouble() > 0.2) {
+						createUnit(RobotType.SOLDIER, false);
+					} else {
+						createUnit(RobotType.BASHER, false);
+					}
+					break;
+					
+				case BASHER:
+					locateBestOre();
+					break;
+					
 				case BEAVER:
 					attackEnemyZero();
-					// int numFriendlyUnit = rc.senseNearbyRobots(
-					// Integer.MAX_VALUE, Friend).length;
-					// // Building Order/Preferences
-					// if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) <
-					// 1) {
-					// createUnit(RobotType.MINERFACTORY, true);
-					// } else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL)
-					// < 1) {
-					// createUnit(RobotType.HELIPAD, true);
-					// } else if (rc
-					// .readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 2) {
-					// createUnit(RobotType.AEROSPACELAB, true);
-					// } else if (roundNum > swarmRound
-					// && rc.readBroadcast(SANITATION_CHANNEL) == 0
-					// && rc.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL)
-					// < 3) {
-					// // If all towers are standing, some handwash stations
-					// // might help.
-					// createUnit(RobotType.HANDWASHSTATION, true);
-					// } else if (rc
-					// .readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) <
-					// numFriendlyUnit / 10) {
-					// createUnit(RobotType.SUPPLYDEPOT, true);
-					// } else if (rc.getTeamOre() > 1000) {
-					// if (rc.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) <
-					// 4) {
-					// createUnit(RobotType.AEROSPACELAB, true);
-					// // Beyond this point means we have a LOT of ore! :D
-					// } else if (rc
-					// .readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) <
-					// numFriendlyUnit / 7) {
-					// createUnit(RobotType.SUPPLYDEPOT, true);
-					// } else if (rc
-					// .readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 5) {
-					// createUnit(RobotType.AEROSPACELAB, true);
-					// } else {
-					// createUnit(RobotType.HELIPAD, true);
-					// }
-					// }
 					int numFriendlyUnit = rc.senseNearbyRobots(
 							Integer.MAX_VALUE, Friend).length;
+					
 					// Building Order/Preferences
 					if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 						createUnit(RobotType.MINERFACTORY, true);
@@ -205,27 +179,44 @@ public class RobotPlayer {
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 10) {
 						createUnit(RobotType.SUPPLYDEPOT, true);
-					} else if (rc.getTeamOre() > 1000) {
-						if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
-							createUnit(RobotType.HELIPAD, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 5) {
-							createUnit(RobotType.AEROSPACELAB, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 0) {
-							createUnit(RobotType.HANDWASHSTATION, true);
-							// Beyond this point means we have a LOT of ore! :D
+
+					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 2) {
+						createUnit(RobotType.HELIPAD, true);
+						
+					} else if (rc
+							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 3) {
+						createUnit(RobotType.AEROSPACELAB, true);
+						
+					} else if (rc
+							.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3 &&
+							rc.readBroadcast(SANITATION_CHANNEL) == 1) {
+						createUnit(RobotType.HANDWASHSTATION, true);
+
+					} else if (rc.getTeamOre() > 600) {
+						if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
+							createUnit(RobotType.BARRACKS, true);
+						
+						} else if (rc.
+								readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
+							createUnit(RobotType.TANKFACTORY, true);
+						
+						} else if (rc.
+								readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
+							createUnit(RobotType.TECHNOLOGYINSTITUTE, true);
+							
+						} else if (rc.
+								readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
+							createUnit(RobotType.TRAININGFIELD, true);
+							
 						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 7) {
 							createUnit(RobotType.SUPPLYDEPOT, true);
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 5) {
-							createUnit(RobotType.AEROSPACELAB, true);
+						
 						} else {
 							createUnit(RobotType.HELIPAD, true);
 						}
 					}
-
+					
 					mineAndMove();
 					break;
 
@@ -259,11 +250,13 @@ public class RobotPlayer {
 					break;
 
 				case HQ:
-					// If all towers are still up sanitation might help.
-					if (rc.readBroadcast(SANITATION_CHANNEL) == 0
-							&& totalNumberTowers == (friendlyTowers.length + enemyTowers.length)) {
+					// If towers are about equal, sanitation might help.
+					if (friendlyTowers.length == enemyTowers.length) {
 						rc.broadcast(SANITATION_CHANNEL, 1);
+					} else {
+						rc.broadcast(SANITATION_CHANNEL, 0);
 					}
+					
 					attackEnemyZero();
 					updateUnitCounts();
 
@@ -406,6 +399,11 @@ public class RobotPlayer {
 					rc.yield();
 					continue; // Restart the loop from here to save bytecode!
 
+				case SOLDIER:
+					attackEnemyZero();
+					locateBestOre();
+					break;
+					
 				case TANK:
 					attackNearestTower();
 					attackEnemyZero();
@@ -415,10 +413,39 @@ public class RobotPlayer {
 					createUnit(RobotType.TANK, false);
 					break;
 
+				case TECHNOLOGYINSTITUTE:
+					int trainingFieldCount = rc.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL);
+					
+					if (trainingFieldCount == 0) {
+						if (createUnit(RobotType.TRAININGFIELD, false)) {
+							rc.broadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL, 1);
+							break;
+						}
+					}
+					
+					int computerCount = rc.readBroadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL);
+					
+					if(computerCount == 0) {
+						if (createUnit(RobotType.COMPUTER, false)) {
+							rc.broadcast(NUM_FRIENDLY_COMPUTERS_CHANNEL, 1);
+							break;
+						}
+					}
+					break;
+					
 				case TOWER:
 					attackEnemyZero();
 					break;
 
+				case TRAININGFIELD:
+					int commanderCount = rc.readBroadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL);
+					
+					if (commanderCount == 0) {
+						if (createUnit(RobotType.COMMANDER, false)) {
+							rc.broadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL, 1);
+						}
+					}
+					
 				default:
 					break;
 
