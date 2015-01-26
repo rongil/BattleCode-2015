@@ -180,7 +180,7 @@ public class RobotPlayer {
 						createUnit(RobotType.AEROSPACELAB, true);
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3
-							&& rc.readBroadcast(SANITATION_CHANNEL) == 0
+							&& rc.readBroadcast(SANITATION_CHANNEL) == 1
 							&& roundNum > rc.getRoundLimit() * 4 / 5) {
 						createUnit(RobotType.HANDWASHSTATION, true);
 
@@ -423,7 +423,7 @@ public class RobotPlayer {
 							rc.broadcast(NUM_FRIENDLY_COMMANDERS_CHANNEL, 1);
 						}
 					}
-
+					break;
 				default:
 					break;
 
