@@ -1189,8 +1189,8 @@ public class RobotPlayer {
 		if (rc.isCoreReady()) {
 			MapLocation currentLocation = rc.getLocation();
 
-			int straightRadius = (int) Math.sqrt(thisRobotType.sensorRadiusSquared); // value = 4
-			int diagonalRadius = (int) Math.sqrt(thisRobotType.sensorRadiusSquared / 2.0); // value = 3
+//			int straightRadius = (int) Math.sqrt(thisRobotType.sensorRadiusSquared); // value = 4
+//			int diagonalRadius = (int) Math.sqrt(thisRobotType.sensorRadiusSquared / 2.0); // value = 3
 			
 			double bestOreCount = 0.0;
 			MapLocation bestDestination = null;
@@ -1205,7 +1205,7 @@ public class RobotPlayer {
 					squareOne = currentLocation.add(possDirection, 1);
 					squareTwo = currentLocation.add(possDirection, 2);
 					squareThree = currentLocation.add(possDirection, 3);
-					squareFour = friendlyHQ;
+					squareFour = null;
 					
 				} else { // This is a cardinal direction
 					squareOne = currentLocation.add(possDirection, 1);
@@ -1216,21 +1216,25 @@ public class RobotPlayer {
 
 				double totalOreCount = 0.0;
 				
-				if (squareOne != friendlyHQ) {
+				// You can't mine ore at a square that is occupied
+				// by a structure
+
+				if (!isOccupiedByStructure(squareOne)) {
 					totalOreCount += rc.senseOre(squareOne);
 				}
 				
-				if (squareTwo != friendlyHQ) {
+				if (!isOccupiedByStructure(squareTwo)) {
 					totalOreCount += rc.senseOre(squareTwo);
 				}
-				if (squareThree != friendlyHQ) {
+				
+				if (!isOccupiedByStructure(squareThree)) {
 					totalOreCount += rc.senseOre(squareThree);
 				}
-				
-				if (squareFour != friendlyHQ) {
+			
+				if (!isOccupiedByStructure(squareFour)) {
 					totalOreCount += rc.senseOre(squareFour);
 				}
-
+				
 				if (totalOreCount > bestOreCount) {
 					bestOreCount = totalOreCount;
 					bestDestination = squareThree;
@@ -1246,6 +1250,25 @@ public class RobotPlayer {
 		}
 	}
 
+	private static boolean isOccupiedByStructure (MapLocation loc)
+			throws GameActionException {
+		
+		if (loc == null) {
+			return true; // vacuously true
+		}
+		
+		// This method is only called by locateBestOre, so the result
+		// of calling canSenseLocation(loc) should return true
+		
+		RobotInfo squareInfo = rc.senseRobotAtLocation(loc);
+		
+		if(squareInfo == null) {
+			return false;
+		}
+		
+		return squareInfo.type.supplyUpkeep == 0;
+	}
+	
 	/**************************************************************************
 	 * Mines at current location and then tries to look for more ore.
 	 *
