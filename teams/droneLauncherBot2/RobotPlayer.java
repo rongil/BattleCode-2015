@@ -238,6 +238,7 @@ public class RobotPlayer {
 										currentLocation.subtract(currentLocation
 												.directionTo(r.location)),
 										false, false, true);
+								break;
 							}
 						}
 					}
