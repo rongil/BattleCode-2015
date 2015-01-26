@@ -220,8 +220,10 @@ public class RobotPlayer {
 					// TODO: Make variable depending on map size.
 					if (rc.getSupplyLevel() < 80) {
 						moveTowardDestination(friendlyHQ, false, false, true);
-					} else {
+					} else if (!targetEnemyInvaders()){
 						targetEnemyMinersAndStructures();
+//					} else {
+//						targetEnemyMinersAndStructures();
 					}
 					attackEnemyZero();
 					break;
@@ -283,6 +285,7 @@ public class RobotPlayer {
 								currentLocation.subtract(currentLocation
 										.directionTo(bestTarget)), true, false,
 								false);
+						
 					} else {
 						attackNearestTower();
 					}
@@ -619,11 +622,35 @@ public class RobotPlayer {
 		}
 	}
 
+	private static boolean targetEnemyInvaders() throws GameActionException {
+		RobotInfo[] incomingEnemies = rc.senseNearbyRobots(friendlyHQ,
+				(int) Math.pow(halfwayDistance, 2), Enemy);
+
+		if (incomingEnemies.length > 0) {
+			if (thisRobotType != RobotType.LAUNCHER) {
+				return moveTowardDestination(incomingEnemies[0].location, true, false, false);
+
+			} else {
+				return moveTowardDestination(incomingEnemies[0].location, false, false, true);
+			}
+			
+		} else {
+			return false;
+		}
+	}
+		
+	/**
+	 * Directs drones to attack enemy miners, beavers, and structure, all of which
+	 * serve as the foundation for any enemy operations
+	 * 
+	 * @return true if an enemy miner/beaver/structure has been located, false otherwise 
+	 * @throws GameActionException
+	 */
 	private static boolean targetEnemyMinersAndStructures() throws GameActionException {
 		RobotInfo[] allEnemies = rc.senseNearbyRobots(enemyHQ,
 				Integer.MAX_VALUE, Enemy);
+
 		for (RobotInfo e : allEnemies) {
-			
 			// Target miners, beavers, and structures (they do not need
 			// to maintain a supply, and they mostly cannot attack)
 			if (e.type == RobotType.MINER || e.type == RobotType.BEAVER
@@ -836,7 +863,7 @@ public class RobotPlayer {
 	/**************************************************************************
 	 * Attacks the first enemy in the list.
 	 *
-	 * @return True if an attack was successfully carried out
+	 * @return true if an attack was successfully carried out, false otherwise
 	 * @throws GameActionException
 	 *************************************************************************/
 	private static boolean attackEnemyZero() throws GameActionException {
@@ -1004,8 +1031,8 @@ public class RobotPlayer {
 	 *            - considers also being within friendly missile range to be
 	 *            unsafe
 	 *
-	 * @return True if there is a direction that the robot can move towards the
-	 *         given destination
+	 * @return true if there is a direction that the robot can move towards the
+	 *         given destination, false otherwise
 	 * @throws GameActionException
 	 */
 
@@ -1072,7 +1099,13 @@ public class RobotPlayer {
 		return false;
 	}
 
-	// FOR MISSILES ONLY
+	/**
+	 * 
+	 * @param dir
+	 * @return true if the missile was able to move in the given direction,
+	 * 		   false otherwise
+	 * @throws GameActionException
+	 */
 	private static boolean missileMoveTowardDirection(Direction dir)
 			throws GameActionException {
 		if (rc.isCoreReady() && rc.canMove(dir)) {
