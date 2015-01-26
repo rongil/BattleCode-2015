@@ -1,4 +1,4 @@
-package droneLauncherBot2;
+package droneBot2;
 
 import battlecode.common.*;
 
@@ -48,9 +48,6 @@ public class RobotPlayer {
 	// HQ only
 	private static MapLocation lastSwarmTarget;
 
-	// Missile only
-	private static int turnsRemaining;
-
 	// Drone only
 	private static Direction patrolDirection;
 
@@ -68,57 +65,48 @@ public class RobotPlayer {
 		// robot.
 		RobotPlayer.rc = rc;
 		thisRobotType = rc.getType();
-		Enemy = rc.getTeam().opponent();
-		if (thisRobotType != RobotType.MISSILE) {
-			Friend = Enemy.opponent();
-			friendlyHQ = rc.senseHQLocation();
-			enemyHQ = rc.senseEnemyHQLocation();
-			friendlyTowers = rc.senseTowerLocations();
-			enemyTowers = rc.senseEnemyTowerLocations();
+		Friend = rc.getTeam();
+		Enemy = Friend.opponent();
+		
+			
+		friendlyHQ = rc.senseHQLocation();
+		enemyHQ = rc.senseEnemyHQLocation();
+		friendlyTowers = rc.senseTowerLocations();
+		enemyTowers = rc.senseEnemyTowerLocations();
 
-			// It was this or int casting...
-			swarmRound = rc.getRoundLimit() * 9 / 10;
+		// It was this or int casting...
+		swarmRound = rc.getRoundLimit() * 9 / 10;
 
-			// HQ only stuff
-			if (thisRobotType == RobotType.HQ) {
-				lastSwarmTarget = friendlyHQ;
-				rc.broadcast(XMIN_VALUE_CHANNEL,
-						Math.min(friendlyHQ.x, enemyHQ.x));
-				rc.broadcast(XMAX_VALUE_CHANNEL,
-						Math.max(friendlyHQ.x, enemyHQ.x));
-				rc.broadcast(YMIN_VALUE_CHANNEL,
-						Math.min(friendlyHQ.y, enemyHQ.y));
-				rc.broadcast(YMAX_VALUE_CHANNEL,
-						Math.max(friendlyHQ.y, enemyHQ.y));
-			}
+		// HQ only stuff
+		if (thisRobotType == RobotType.HQ) {
+			lastSwarmTarget = friendlyHQ;
+			rc.broadcast(XMIN_VALUE_CHANNEL,
+					Math.min(friendlyHQ.x, enemyHQ.x));
+			rc.broadcast(XMAX_VALUE_CHANNEL,
+					Math.max(friendlyHQ.x, enemyHQ.x));
+			rc.broadcast(YMIN_VALUE_CHANNEL,
+					Math.min(friendlyHQ.y, enemyHQ.y));
+			rc.broadcast(YMAX_VALUE_CHANNEL,
+					Math.max(friendlyHQ.y, enemyHQ.y));
+		}
 
-			rand = new Random(rc.getID());
-			facing = getRandomDirection(); // Randomize starting direction
+		rand = new Random(rc.getID());
+		facing = getRandomDirection(); // Randomize starting direction
 
-			// Slightly less to avoid tower issues
-			halfwayDistance = (int) (0.45 * Math.sqrt(friendlyHQ
-					.distanceSquaredTo(enemyHQ)));
-			wholeDistanceCoefficient = friendlyHQ.distanceSquaredTo(enemyHQ) / 700;
+		// Slightly less to avoid tower issues
+		halfwayDistance = (int) (0.45 * Math.sqrt(friendlyHQ
+				.distanceSquaredTo(enemyHQ)));
+		wholeDistanceCoefficient = friendlyHQ.distanceSquaredTo(enemyHQ) / 700;
 
-			// Drone only stuff
-			if (thisRobotType == RobotType.DRONE) {
-				Direction HQdirection = friendlyHQ.directionTo(enemyHQ);
-				patrolDirection = (rand.nextDouble() > 0.5) ? HQdirection
-						.rotateLeft().rotateLeft() : HQdirection.rotateRight()
-						.rotateRight();
-			}
-
-		} else {
-			// turnsRemaining = GameConstants.MISSILE_LIFESPAN;
+		// Drone only stuff
+		if (thisRobotType == RobotType.DRONE) {
+			Direction HQdirection = friendlyHQ.directionTo(enemyHQ);
+			patrolDirection = (rand.nextDouble() > 0.5) ? HQdirection
+					.rotateLeft().rotateLeft() : HQdirection.rotateRight().rotateRight();
 		}
 
 		// Method can never end or the robot is destroyed.
 		while (true) {
-			/*
-			 * TODO: use the map analysis methods to determine useful cutoffs
-			 * and probabilities for building or spawning certain robots
-			 */
-
 			try {
 				/**************************************************************
 				 * Initialize any per-round variables.
