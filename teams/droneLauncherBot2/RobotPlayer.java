@@ -229,8 +229,8 @@ public class RobotPlayer {
 							// If no action is required, make sure there are no
 							// nearby missiles.
 							
-							RobotInfo[] nearbyFriends = rc.senseNearbyRobots(2, Friend);
-							for (RobotInfo r : nearbyFriends) {
+							RobotInfo[] nearbyBots = rc.senseNearbyRobots(2);
+							for (RobotInfo r : nearbyBots) {
 								if (r.type == RobotType.MISSILE) {
 									MapLocation currentLocation = rc.getLocation();
 									moveTowardDestination(
