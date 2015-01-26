@@ -1,3 +1,5 @@
+// Run on trenches.xml
+
 package searchBot;
 
 import battlecode.common.*;
@@ -30,7 +32,7 @@ public class RobotPlayer {
 				currentLocation = new MapLocation(rc.readBroadcast(CURRENT_LOCATION_X_CHANNEL),
 						rc.readBroadcast(CURRENT_LOCATION_Y_CHANNEL));
 				
-				search(new MapLocation(-12903, 13138), true);
+				search(new MapLocation(-12903, 13138), false);
 
 			} catch (GameActionException e) {
 				e.printStackTrace();
@@ -95,6 +97,12 @@ public class RobotPlayer {
 				currentNode = agenda.removeFirst();
 			}
 
+			if (Clock.getBytecodesLeft() < 200) {
+				rc.broadcast(CURRENT_LOCATION_X_CHANNEL, currentNode.getLoc().x);
+				rc.broadcast(CURRENT_LOCATION_Y_CHANNEL, currentNode.getLoc().y);
+				return false;
+			}
+			
 			System.out.println("Expanding Location (" + currentNode.getLoc().x + ", " + currentNode.getLoc().y + ")...");
 			MapLocation currentLoc = currentNode.getLoc();
 			SearchNode parentNode = currentNode.getParent();
@@ -128,12 +136,6 @@ public class RobotPlayer {
 					}
 				}
 			}
-			
-			if (Clock.getBytecodesLeft() < 100) {
-				rc.broadcast(CURRENT_LOCATION_X_CHANNEL, currentLocation.x);
-				rc.broadcast(CURRENT_LOCATION_Y_CHANNEL, currentLocation.y);
-				return false;
-			}
 		}
 			
 		return false;
@@ -150,9 +152,11 @@ public class RobotPlayer {
 			MapLocation possSquare = loc.add(possDirection);
 			TerrainTile possSquareTerrain = rc.senseTerrainTile(possSquare);
 
-			if (possSquareTerrain == TerrainTile.NORMAL) {
-				possibleChildren.add(possSquare);
-			}
+			possibleChildren.add(possSquare);
+			
+//			if (possSquareTerrain == TerrainTile.NORMAL) {
+//				possibleChildren.add(possSquare);
+//			}
 		}
 
 		return possibleChildren;
