@@ -7,24 +7,32 @@ public class RobotPlayer {
 
 	private static RobotController rc;
 	private static RobotType thisRobotType;
-
+	private static MapLocation friendlyHQ;
+	private static MapLocation currentLocation;
+	
+	private static final int CURRENT_LOCATION_X_CHANNEL = 0;
+	private static final int CURRENT_LOCATION_Y_CHANNEL = 1;
+	
 	public static void run(RobotController rc) throws GameActionException {
 		RobotPlayer.rc = rc;
 		thisRobotType = rc.getType();
+		friendlyHQ = rc.senseHQLocation();
+		
+		if (thisRobotType == RobotType.HQ) {
+			currentLocation = friendlyHQ;
+			
+			rc.broadcast(CURRENT_LOCATION_X_CHANNEL, currentLocation.x);
+			rc.broadcast(CURRENT_LOCATION_Y_CHANNEL, currentLocation.y);
+		}
 		
 		while (true) {
 			try {
-				switch (thisRobotType) {
+				currentLocation = new MapLocation(rc.readBroadcast(CURRENT_LOCATION_X_CHANNEL),
+						rc.readBroadcast(CURRENT_LOCATION_Y_CHANNEL));
+				
+				search(new MapLocation(-12903, 13138), true);
 
-				case HQ:
-					break;
-					
-				default:
-					break;
-
-				}
-
-			} catch (Exception e) {
+			} catch (GameActionException e) {
 				e.printStackTrace();
 			}
 
@@ -67,55 +75,67 @@ public class RobotPlayer {
 
 	private static boolean search(MapLocation dest, boolean DFS)
 			throws GameActionException {
-		MapLocation currentLocation = rc.getLocation();
+		
+		if (reachedGoal(currentLocation, dest)) {
+			return true;
+		}
+		
+		LinkedList<SearchNode> agenda = new LinkedList<SearchNode>();
+		LinkedList<MapLocation> visited = new LinkedList<MapLocation>();
 
-		if (!reachedGoal(currentLocation, dest)) {
-			LinkedList<SearchNode> agenda = new LinkedList<SearchNode>();
-			LinkedList<MapLocation> visited = new LinkedList<MapLocation>();
+		agenda.add(new SearchNode(currentLocation, null));
+		visited.add(currentLocation);
 
-			agenda.add(new SearchNode(currentLocation, null));
-			visited.add(currentLocation);
+		SearchNode currentNode;
 
-			SearchNode currentNode;
+		while (agenda.size() != 0) {
+			if (DFS) {
+				currentNode = agenda.removeLast();
+			} else {
+				currentNode = agenda.removeFirst();
+			}
 
-			while (agenda.size() != 0) {
-				if (DFS) {
-					currentNode = agenda.removeLast();
-				} else {
-					currentNode = agenda.removeFirst();
-				}
-
-				MapLocation currentLoc = currentNode.getLoc();
-				MapLocation parentLoc = currentNode.getParent().getLoc();
+			System.out.println("Expanding Location (" + currentNode.getLoc().x + ", " + currentNode.getLoc().y + ")...");
+			MapLocation currentLoc = currentNode.getLoc();
+			SearchNode parentNode = currentNode.getParent();
+				
+			if(parentNode != null) {
+				MapLocation parentLoc = parentNode.getLoc();
 				Direction parentToCurrent = parentLoc.directionTo(currentLoc);
-
 				rc.broadcast(channelHashFunc(parentLoc),
 						directionToInt(parentToCurrent));
+			}
 
-				LinkedList<MapLocation> nodeLocations = getChildren(currentNode
-						.getLoc());
+			LinkedList<MapLocation> nodeLocations = getChildren(currentNode.getLoc());
 
-				for (MapLocation nodeLocation : nodeLocations) {
-					SearchNode childNode = new SearchNode(nodeLocation,
-							currentNode);
+			for (MapLocation nodeLocation : nodeLocations) {
+				SearchNode childNode = new SearchNode(nodeLocation, currentNode);
 
-					if (reachedGoal(nodeLocation, dest)) {
-						Direction currentToChild = currentLoc
-								.directionTo(nodeLocation);
-						rc.broadcast(channelHashFunc(currentLoc),
-								directionToInt(currentToChild));
-						return true;
+				if (reachedGoal(nodeLocation, dest)) {
+					Direction currentToChild = currentLoc.directionTo(nodeLocation);
+					rc.broadcast(channelHashFunc(currentLoc), directionToInt(currentToChild));
+					
+					System.out.println(childNode.getPath());
+					currentLocation = friendlyHQ;
+					
+					rc.resign();
+					return true;
 
-					} else {
-						if (!visited.contains(nodeLocation)) {
-							visited.add(nodeLocation);
-							agenda.add(childNode);
-						}
+				} else {
+					if (!visited.contains(nodeLocation)) {
+						visited.add(nodeLocation);
+						agenda.add(childNode);
 					}
 				}
 			}
+			
+			if (Clock.getBytecodesLeft() < 100) {
+				rc.broadcast(CURRENT_LOCATION_X_CHANNEL, currentLocation.x);
+				rc.broadcast(CURRENT_LOCATION_Y_CHANNEL, currentLocation.y);
+				return false;
+			}
 		}
-
+			
 		return false;
 	}
 
