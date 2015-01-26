@@ -164,22 +164,22 @@ public class RobotPlayer {
 					// Building Order/Preferences
 					if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 						createUnit(RobotType.MINERFACTORY, true);
-						
+
 					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
 						createUnit(RobotType.HELIPAD, true);
-						
+
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 2) {
 						createUnit(RobotType.AEROSPACELAB, true);
-						
+
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 10) {
 						createUnit(RobotType.SUPPLYDEPOT, true);
-						
+
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 3) {
 						createUnit(RobotType.AEROSPACELAB, true);
-						
+
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3
 							&& rc.readBroadcast(SANITATION_CHANNEL) == 1
@@ -222,12 +222,24 @@ public class RobotPlayer {
 					// TODO: Make variable depending on map size.
 					if (rc.getSupplyLevel() < 80) {
 						moveTowardDestination(friendlyHQ, false, false, true);
-					} else if (!targetEnemyInvaders()){
-						if (targetEnemyMinersAndStructures()) {
-							moveAround();
+					} else if (targetEnemyInvaders()) {
+						// Handled by function...
+					} else if (targetEnemyMinersAndStructures()) {
+						// Handled by function...
+					} else {
+						// If no action is required, make sure there are no
+						// nearby missiles.
+						RobotInfo[] nearbyFriends = rc.senseNearbyRobots(2,
+								Friend);
+						for (RobotInfo r : nearbyFriends) {
+							if (r.type == RobotType.MISSILE) {
+								MapLocation currentLocation = rc.getLocation();
+								moveTowardDestination(
+										currentLocation.subtract(currentLocation
+												.directionTo(r.location)),
+										false, false, true);
+							}
 						}
-//					} else {
-//						targetEnemyMinersAndStructures();
 					}
 					attackEnemyZero();
 					break;
@@ -289,7 +301,7 @@ public class RobotPlayer {
 								currentLocation.subtract(currentLocation
 										.directionTo(bestTarget)), true, false,
 								false);
-						
+
 					} else {
 						attackNearestTower();
 					}
@@ -457,29 +469,32 @@ public class RobotPlayer {
 	/**
 	 * Determines the true attacking range of HQ based on the number of towers
 	 * 
-	 * @param towerCount - number of towers the team still has standing
+	 * @param towerCount
+	 *            - number of towers the team still has standing
 	 * @return attack radius squared of HQ that accounts for number of towers
-	 * 		   and splash range (if applicable)
+	 *         and splash range (if applicable)
 	 */
 	private static int getActualHQAttackRadiusSquared(int towerCount) {
 		int attackRadiusSquared;
-		
+
 		if (towerCount >= 2) {
 			attackRadiusSquared = GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED;
-			
+
 			if (towerCount >= 5) {
-				attackRadiusSquared = (int) Math.pow(Math.
-						sqrt(GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED)
-						+ Math.sqrt(GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED), 2);
+				attackRadiusSquared = (int) Math
+						.pow(Math
+								.sqrt(GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED)
+								+ Math.sqrt(GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED),
+								2);
 			}
-			
+
 		} else {
 			attackRadiusSquared = RobotType.HQ.attackRadiusSquared;
 		}
-		
+
 		return attackRadiusSquared;
 	}
-	
+
 	/**
 	 * Missile launching towards location (overloaded for direction as well)
 	 *
@@ -632,25 +647,29 @@ public class RobotPlayer {
 
 		if (incomingEnemies.length > 0) {
 			if (thisRobotType != RobotType.LAUNCHER) {
-				return moveTowardDestination(incomingEnemies[0].location, true, false, false);
+				return moveTowardDestination(incomingEnemies[0].location, true,
+						false, false);
 
 			} else {
-				return moveTowardDestination(incomingEnemies[0].location, false, false, true);
+				return moveTowardDestination(incomingEnemies[0].location,
+						false, false, true);
 			}
-			
+
 		} else {
 			return false;
 		}
 	}
-		
+
 	/**
-	 * Directs drones to attack enemy miners, beavers, and structure, all of which
-	 * serve as the foundation for any enemy operations
+	 * Directs drones to attack enemy miners, beavers, and structure, all of
+	 * which serve as the foundation for any enemy operations
 	 * 
-	 * @return true if an enemy miner/beaver/structure has been located, false otherwise 
+	 * @return true if an enemy miner/beaver/structure has been located, false
+	 *         otherwise
 	 * @throws GameActionException
 	 */
-	private static boolean targetEnemyMinersAndStructures() throws GameActionException {
+	private static boolean targetEnemyMinersAndStructures()
+			throws GameActionException {
 		RobotInfo[] allEnemies = rc.senseNearbyRobots(enemyHQ,
 				Integer.MAX_VALUE, Enemy);
 
@@ -888,13 +907,16 @@ public class RobotPlayer {
 				if (rc.canAttackLocation(enemyZeroLocation)) {
 					rc.attackLocation(enemyZeroLocation);
 					return true;
-					
-				// Check if the attacker is HQ and the target is in splash range
-				} else if (thisRobotType == RobotType.HQ && friendlyTowers.length >= 5) {
-					Direction towardsEnemyZero = friendlyHQ.directionTo(enemyZeroLocation);
-					MapLocation splashEnemyZeroLocation = friendlyHQ.subtract(
-							towardsEnemyZero);
-					
+
+					// Check if the attacker is HQ and the target is in splash
+					// range
+				} else if (thisRobotType == RobotType.HQ
+						&& friendlyTowers.length >= 5) {
+					Direction towardsEnemyZero = friendlyHQ
+							.directionTo(enemyZeroLocation);
+					MapLocation splashEnemyZeroLocation = friendlyHQ
+							.subtract(towardsEnemyZero);
+
 					if (rc.canAttackLocation(splashEnemyZeroLocation)) {
 						rc.attackLocation(splashEnemyZeroLocation);
 						return true;
@@ -953,7 +975,7 @@ public class RobotPlayer {
 		if (!onlyHQAndTowers) {
 			RobotInfo[] nearbyRobots = rc.senseNearbyRobots(
 					thisRobotType.sensorRadiusSquared, Enemy);
-	
+
 			for (RobotInfo r : nearbyRobots) {
 				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
 						&& !(ignoreMinersBeavers && (r.type == RobotType.BEAVER || r.type == RobotType.MINER))) {
@@ -961,11 +983,11 @@ public class RobotPlayer {
 				}
 			}
 		}
-		
+
 		/*
 		 * Check if robot is within explosion range of any friendly missiles
 		 */
-		
+
 		if (checkFriendlyMissiles) {
 			RobotInfo[] closeEnemies = rc.senseNearbyRobots(loc, 2, Friend);
 			for (RobotInfo r : closeEnemies) {
@@ -1107,7 +1129,7 @@ public class RobotPlayer {
 	 * 
 	 * @param dir
 	 * @return true if the missile was able to move in the given direction,
-	 * 		   false otherwise
+	 *         false otherwise
 	 * @throws GameActionException
 	 */
 	private static boolean missileMoveTowardDirection(Direction dir)
