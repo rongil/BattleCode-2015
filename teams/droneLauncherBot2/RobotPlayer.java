@@ -54,14 +54,14 @@ public class RobotPlayer {
 	// Drone only
 	private static Direction patrolDirection;
 
-	/**************************************************************************
+	/**
 	 * Main method called when it is a robot's turn. Needs to be looped
 	 * indefinitely, otherwise the robot will die.
 	 *
 	 * @param rc
 	 *            - The robot controller class for this robot instance.
 	 * @throws GameActionException
-	 *************************************************************************/
+	 */
 	public static void run(RobotController rc) throws GameActionException {
 
 		// Initialize all variables that need to be initialized only once per
@@ -516,11 +516,11 @@ public class RobotPlayer {
 		return false;
 	}
 
-	/**************************************************************************
+	/**
 	 * directs drones to patrol the borderline between the two HQ's
 	 *
 	 * @throws GameActionException
-	 *************************************************************************/
+	 */
 	private static void patrolBorder() throws GameActionException {
 		// TODO: should other robots help patrol as well?
 		MapLocation currentLocation = rc.getLocation();
@@ -551,13 +551,13 @@ public class RobotPlayer {
 		}
 	}
 
-	/*******************************************************************
+	/**
 	 * Directs drones and launchers to attack the nearest tower when it
 	 * determines that there are sufficient resources to attack or when the time
 	 * is appropriate for attacking
 	 * 
 	 * @throws GameActionException
-	 *******************************************************************/
+	 */
 	private static void broadcastSwarmConditions() throws GameActionException {
 		int tankCount = rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL);
 		int droneCount = rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL);
@@ -617,11 +617,11 @@ public class RobotPlayer {
 		}
 	}
 
-	/***************************************************************************
+	/**
 	 * Directs a bot towards the swarm location.
 	 * 
 	 * @throws GameActionException
-	 **************************************************************************/
+	 */
 	private static void attackNearestTower() throws GameActionException {
 		// TODO: Make number counts a function of towerStrength
 		MapLocation currentLocation = rc.getLocation();
@@ -804,7 +804,7 @@ public class RobotPlayer {
 	 * ==========================================================================
 	 */
 
-	/**************************************************************************
+	/**
 	 * Gives the ratio of friend to enemy robots around a given location that
 	 * are at most a given distance away.
 	 *
@@ -815,7 +815,7 @@ public class RobotPlayer {
 	 * @param friendTeam
 	 *            - the team considered friendly
 	 * @return ratio of friend to enemy robots
-	 *************************************************************************/
+	 */
 	private static double friendEnemyRatio(MapLocation loc, int radiusSquared,
 			Team friendTeam) {
 		RobotInfo[] surroundingRobots;
@@ -883,12 +883,12 @@ public class RobotPlayer {
 		}
 	}
 
-	/**************************************************************************
+	/**
 	 * Attacks the first enemy in the list.
 	 *
 	 * @return true if an attack was successfully carried out, false otherwise
 	 * @throws GameActionException
-	 *************************************************************************/
+	 */
 	private static boolean attackEnemyZero() throws GameActionException {
 		// TODO: find the best (not the first) enemy to attack
 		if (rc.isWeaponReady()) {
@@ -928,7 +928,7 @@ public class RobotPlayer {
 		return false;
 	}
 
-	/***************************************************************************
+	/**
 	 * Returns whether a location is considered safe.
 	 *
 	 * @param loc
@@ -939,7 +939,7 @@ public class RobotPlayer {
 	 *            - considers also being within friendly missile range to be
 	 *            unsafe
 	 * @return - True if the location is safe, false if it is not.
-	 **************************************************************************/
+	 */
 	private static boolean isSafe(MapLocation loc, boolean onlyHQAndTowers,
 			boolean checkFriendlyMissiles) throws GameActionException {
 		return isSafe(loc, onlyHQAndTowers, checkFriendlyMissiles, false);
@@ -1142,12 +1142,12 @@ public class RobotPlayer {
 		return false;
 	}
 
-	/**************************************************************************
+	/**
 	 * Searches for enemies that have crossed the halfway point between the two
 	 * HQ's and tries to attack them; otherwise, moves around randomly.
 	 *
 	 * @throws GameActionException
-	 *************************************************************************/
+	 */
 	private static void defendAndMove() throws GameActionException {
 
 		// TODO: create ordered list that allows "stronger" robots to attack
@@ -1179,12 +1179,12 @@ public class RobotPlayer {
 		}
 	}
 
-	/**************************************************************************
+	/**
 	 * Determines a direction in which a miner robot (either a BEAVER or MINER)
 	 * can mine the most amount of ore.
 	 *
 	 * @throws GameActionException
-	 *************************************************************************/
+	 */
 	private static void locateBestOre() throws GameActionException {
 		if (rc.isCoreReady()) {
 			MapLocation currentLocation = rc.getLocation();
@@ -1250,6 +1250,14 @@ public class RobotPlayer {
 		}
 	}
 
+	/**
+	 * Checks whether a square is occupied by a structure or not; this function
+	 * ASSUMES that the location passed in can be sensed by the robot
+	 * 
+	 * @param loc
+	 * @return true if the square is occupied by a structure
+	 * @throws GameActionException
+	 */
 	private static boolean isOccupiedByStructure (MapLocation loc)
 			throws GameActionException {
 		
@@ -1266,14 +1274,15 @@ public class RobotPlayer {
 			return false;
 		}
 		
+		// Structures do not have any supply upkeep
 		return squareInfo.type.supplyUpkeep == 0;
 	}
 	
-	/**************************************************************************
+	/**
 	 * Mines at current location and then tries to look for more ore.
 	 *
 	 * @throws GameActionException
-	 *************************************************************************/
+	 */
 	private static void mineAndMove() throws GameActionException {
 		if (rc.senseOre(rc.getLocation()) > 1) { // if there is ore, try to mine
 			if (rc.isCoreReady() && rc.canMine()) {
@@ -1284,13 +1293,13 @@ public class RobotPlayer {
 		}
 	}
 
-	/**************************************************************************
+	/**
 	 * Gets the corresponding index for each valid Direction
 	 *
 	 * @param d
 	 *            - the direction being indexed
 	 * @return integer corresponding to a valid Direction
-	 *************************************************************************/
+	 */
 	private static int directionToInt(Direction d) {
 		switch (d) {
 		case NORTH:
@@ -1314,7 +1323,7 @@ public class RobotPlayer {
 		}
 	}
 
-	/**************************************************************************
+	/**
 	 * Spawns or builds a robot.
 	 *
 	 * @param roboType
@@ -1323,7 +1332,7 @@ public class RobotPlayer {
 	 *            - True if building, false if spawning
 	 * @return - True if building/spawning succeeded
 	 * @throws GameActionException
-	 *************************************************************************/
+	 */
 	private static boolean createUnit(RobotType roboType, boolean build)
 			throws GameActionException {
 		if (rc.isCoreReady() && rc.getTeamOre() > roboType.oreCost) {
@@ -1355,11 +1364,11 @@ public class RobotPlayer {
 		return false;
 	}
 
-	/**************************************************************************
+	/**
 	 * Transfer supplies between units.
 	 *
 	 * @throws GameActionException
-	 *************************************************************************/
+	 */
 	private static void transferSupplies() throws GameActionException {
 		// TODO: Do we want to have a global ordering on robots? So that
 		// robots may decide to "sacrifice" themselves for the sake of a
@@ -1436,11 +1445,11 @@ public class RobotPlayer {
 	private static int unitCountNumEnemyLaunchers;
 	private static int unitCountNumEnemyMissiles;
 
-	/***************************************************************************
+	/***
 	 * Collects and broadcasts the number of all unit types.
 	 *
 	 * @throws GameActionException
-	 **************************************************************************/
+	 */
 	@SuppressWarnings("fallthrough")
 	private static void updateUnitCounts() throws GameActionException {
 
@@ -1604,7 +1613,12 @@ public class RobotPlayer {
 
 	// ************************** START OF MAP ANALYSIS ***********************
 	/**
-	 *
+	 * Analyzes the strength of the enemy towers
+	 * 
+	 * @param towerLoc (optional) - location of a particular enemy tower to be
+	 *								analyzed; assumes that there is an enemy
+	 *								tower at that location
+	 * @return - integer measuring the strength of the enemy tower(s)
 	 * @throws GameActionException
 	 */
 	private static void analyzeTowerStrength() throws GameActionException {
@@ -1660,12 +1674,12 @@ public class RobotPlayer {
 		return towerStrength;
 	}
 
-	/**************************************************************************
+	/**
 	 * Counts the number of void and normal squares as well as determines the
 	 * overall dimensions of the board.
 	 * 
 	 * @throws GameActionException
-	 *************************************************************************/
+	 */
 	private static void analyzeMap() throws GameActionException {
 		if (rc.readBroadcast(DIMENSIONS_FOUND_CHANNEL) == 0) {
 			int xmin = rc.readBroadcast(XMIN_VALUE_CHANNEL);
