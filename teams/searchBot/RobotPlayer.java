@@ -44,7 +44,7 @@ public class RobotPlayer {
 				currentLocation = new MapLocation(rc.readBroadcast(CURRENT_LOCATION_X_CHANNEL),
 						rc.readBroadcast(CURRENT_LOCATION_Y_CHANNEL));
 				
-				search(new MapLocation(-12903, 13138), false);
+				search(new MapLocation(-12902, 13138), false);
 
 			} catch (GameActionException e) {
 				e.printStackTrace();
@@ -109,6 +109,10 @@ public class RobotPlayer {
 				currentNode = agenda.removeFirst();
 			}
 			
+//			if (Clock.getRoundNum() == 0 && thisRobotType == RobotType.HQ) {
+//				System.out.println("Bytecode Remaining: " + Clock.getBytecodesLeft());
+//			}
+			
 			if (Clock.getBytecodesLeft() < 200) {
 				rc.broadcast(CURRENT_LOCATION_X_CHANNEL, currentNode.getLoc().x);
 				rc.broadcast(CURRENT_LOCATION_Y_CHANNEL, currentNode.getLoc().y);
@@ -164,10 +168,10 @@ public class RobotPlayer {
 			MapLocation possSquare = loc.add(possDirection);
 			TerrainTile possSquareTerrain = rc.senseTerrainTile(possSquare);
 
-			if ((possSquare.x < min_HQ_x && max_HQ_x - possSquare.x > GameConstants.MAP_MAX_WIDTH) ||
-					(possSquare.x > max_HQ_x && possSquare.x - min_HQ_x > GameConstants.MAP_MAX_WIDTH) ||
-					(possSquare.y < min_HQ_y && max_HQ_y - possSquare.y > GameConstants.MAP_MAX_HEIGHT) ||
-					(possSquare.y > max_HQ_y && possSquare.y - min_HQ_y > GameConstants.MAP_MAX_HEIGHT)) {
+			if ((possSquare.x < min_HQ_x && max_HQ_x - possSquare.x > 30) ||
+					(possSquare.x > max_HQ_x && possSquare.x - min_HQ_x > 30) ||
+					(possSquare.y < min_HQ_y && max_HQ_y - possSquare.y > 30) ||
+					(possSquare.y > max_HQ_y && possSquare.y - min_HQ_y > 30)) {
 				continue;
 				
 			} else {
