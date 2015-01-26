@@ -12,6 +12,7 @@ public class RobotPlayer {
 	private static MapLocation friendlyHQ;
 	private static MapLocation enemyHQ;
 	private static MapLocation currentLocation;
+	private static LinkedList<SearchNode> agenda;
 	
 	private static int min_HQ_x;
 	private static int max_HQ_x;
@@ -34,6 +35,7 @@ public class RobotPlayer {
 		
 		if (thisRobotType == RobotType.HQ) {
 			currentLocation = friendlyHQ;
+			agenda = new LinkedList<SearchNode>();
 			
 			rc.broadcast(CURRENT_LOCATION_X_CHANNEL, currentLocation.x);
 			rc.broadcast(CURRENT_LOCATION_Y_CHANNEL, currentLocation.y);
@@ -41,11 +43,13 @@ public class RobotPlayer {
 		
 		while (true) {
 			try {
-				currentLocation = new MapLocation(rc.readBroadcast(CURRENT_LOCATION_X_CHANNEL),
-						rc.readBroadcast(CURRENT_LOCATION_Y_CHANNEL));
+				if(thisRobotType == RobotType.HQ) {
+					currentLocation = new MapLocation(rc.readBroadcast(CURRENT_LOCATION_X_CHANNEL),
+							rc.readBroadcast(CURRENT_LOCATION_Y_CHANNEL));
+					
+					search(new MapLocation(-12919, 13146), true);
+				}
 				
-				search(new MapLocation(-12902, 13138), false);
-
 			} catch (GameActionException e) {
 				e.printStackTrace();
 			}
@@ -94,12 +98,9 @@ public class RobotPlayer {
 			return true;
 		}
 		
-		LinkedList<SearchNode> agenda = new LinkedList<SearchNode>();
-		LinkedList<MapLocation> visited = new LinkedList<MapLocation>();
-
 		agenda.add(new SearchNode(currentLocation, null));
-		visited.add(currentLocation);
-
+		rc.broadcast(channelHashFunc(currentLocation, 10000), 1);
+		
 		SearchNode currentNode;
 
 		while (agenda.size() != 0) {
@@ -109,11 +110,9 @@ public class RobotPlayer {
 				currentNode = agenda.removeFirst();
 			}
 			
-//			if (Clock.getRoundNum() == 0 && thisRobotType == RobotType.HQ) {
-//				System.out.println("Bytecode Remaining: " + Clock.getBytecodesLeft());
-//			}
-			
-			if (Clock.getBytecodesLeft() < 200) {
+			System.out.println("Bytecode Remaining: " + Clock.getBytecodesLeft());
+
+			if (Clock.getBytecodesLeft() < 700) {
 				rc.broadcast(CURRENT_LOCATION_X_CHANNEL, currentNode.getLoc().x);
 				rc.broadcast(CURRENT_LOCATION_Y_CHANNEL, currentNode.getLoc().y);
 				return false;
@@ -126,7 +125,7 @@ public class RobotPlayer {
 			if(parentNode != null) {
 				MapLocation parentLoc = parentNode.getLoc();
 				Direction parentToCurrent = parentLoc.directionTo(currentLoc);
-				rc.broadcast(channelHashFunc(parentLoc),
+				rc.broadcast(channelHashFunc(parentLoc, 30000),
 						directionToInt(parentToCurrent));
 			}
 
@@ -137,7 +136,7 @@ public class RobotPlayer {
 
 				if (reachedGoal(nodeLocation, dest)) {
 					Direction currentToChild = currentLoc.directionTo(nodeLocation);
-					rc.broadcast(channelHashFunc(currentLoc), directionToInt(currentToChild));
+					rc.broadcast(channelHashFunc(currentLoc, 30000), directionToInt(currentToChild));
 					
 					System.out.println(childNode.getPath());
 					currentLocation = friendlyHQ;
@@ -146,8 +145,11 @@ public class RobotPlayer {
 					return true;
 
 				} else {
-					if (!visited.contains(nodeLocation)) {
-						visited.add(nodeLocation);
+					int nodeChannel = channelHashFunc(nodeLocation, 10000);
+					int visited = rc.readBroadcast(nodeChannel);
+					
+					if (visited == 0) {
+						rc.broadcast(nodeChannel, 1);
 						agenda.add(childNode);
 					}
 				}
@@ -171,25 +173,22 @@ public class RobotPlayer {
 			if ((possSquare.x < min_HQ_x && max_HQ_x - possSquare.x > 30) ||
 					(possSquare.x > max_HQ_x && possSquare.x - min_HQ_x > 30) ||
 					(possSquare.y < min_HQ_y && max_HQ_y - possSquare.y > 30) ||
-					(possSquare.y > max_HQ_y && possSquare.y - min_HQ_y > 30)) {
+					(possSquare.y > max_HQ_y && possSquare.y - min_HQ_y > 30) ||
+					(possSquareTerrain != TerrainTile.NORMAL)){
 				continue;
 				
 			} else {
 				possibleChildren.add(possSquare);
 			}
-			
-//			if (possSquareTerrain == TerrainTile.NORMAL) {
-//				possibleChildren.add(possSquare);
-//			}
 		}
 
 		return possibleChildren;
 	}
 
-	private static int channelHashFunc(MapLocation loc) {
+	private static int channelHashFunc(MapLocation loc, int offset) {
 		int maxWidth = GameConstants.MAP_MAX_WIDTH;
 		int maxHeight = GameConstants.MAP_MAX_HEIGHT;
-		return 10000 + loc.x % maxWidth + maxWidth * loc.y % maxHeight;
+		return offset + loc.x % maxWidth + maxWidth * loc.y % maxHeight;
 	}
 	
 	private static int directionToInt(Direction d) {
