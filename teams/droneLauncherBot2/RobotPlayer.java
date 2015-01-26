@@ -220,19 +220,20 @@ public class RobotPlayer {
 					// can be obtained.
 
 					attackEnemyZero();
-					
+
 					if (rc.getSupplyLevel() < 80) {
 						moveTowardDestination(friendlyHQ, false, false, true);
-					
+
 					} else if (!targetEnemyInvaders()) {
 						if (!targetEnemyMinersAndStructures()) {
 							// If no action is required, make sure there are no
 							// nearby missiles.
-							
+
 							RobotInfo[] nearbyBots = rc.senseNearbyRobots(2);
 							for (RobotInfo r : nearbyBots) {
 								if (r.type == RobotType.MISSILE) {
-									MapLocation currentLocation = rc.getLocation();
+									MapLocation currentLocation = rc
+											.getLocation();
 									moveTowardDestination(
 											currentLocation.subtract(currentLocation
 													.directionTo(r.location)),
@@ -318,7 +319,7 @@ public class RobotPlayer {
 							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
 					// Exponential Decay for miner production
 					double miningFate = rand.nextDouble();
-					if (roundNum < 1500
+					if (roundNum < rc.getRoundLimit() * 3 / 4
 							&& miningFate <= Math.pow(Math.E,
 									-minerCount * 0.35)) {
 						createUnit(RobotType.MINER, false);
@@ -1189,9 +1190,11 @@ public class RobotPlayer {
 		if (rc.isCoreReady()) {
 			MapLocation currentLocation = rc.getLocation();
 
-//			int straightRadius = (int) Math.sqrt(thisRobotType.sensorRadiusSquared); // value = 4
-//			int diagonalRadius = (int) Math.sqrt(thisRobotType.sensorRadiusSquared / 2.0); // value = 3
-			
+			// int straightRadius = (int)
+			// Math.sqrt(thisRobotType.sensorRadiusSquared); // value = 4
+			// int diagonalRadius = (int)
+			// Math.sqrt(thisRobotType.sensorRadiusSquared / 2.0); // value = 3
+
 			double bestOreCount = 0.0;
 			MapLocation bestDestination = null;
 
@@ -1199,14 +1202,16 @@ public class RobotPlayer {
 			MapLocation squareTwo;
 			MapLocation squareThree;
 			MapLocation squareFour;
-			
+
 			for (Direction possDirection : directions) {
-				if (directionToInt(possDirection)%2 == 1) { // This is a diagonal direction
+				if (directionToInt(possDirection) % 2 == 1) { // This is a
+																// diagonal
+																// direction
 					squareOne = currentLocation.add(possDirection, 1);
 					squareTwo = currentLocation.add(possDirection, 2);
 					squareThree = currentLocation.add(possDirection, 3);
 					squareFour = null;
-					
+
 				} else { // This is a cardinal direction
 					squareOne = currentLocation.add(possDirection, 1);
 					squareTwo = currentLocation.add(possDirection, 2);
@@ -1215,26 +1220,26 @@ public class RobotPlayer {
 				}
 
 				double totalOreCount = 0.0;
-				
+
 				// You can't mine ore at a square that is occupied
 				// by a structure
 
 				if (!isOccupiedByStructure(squareOne)) {
 					totalOreCount += rc.senseOre(squareOne);
 				}
-				
+
 				if (!isOccupiedByStructure(squareTwo)) {
 					totalOreCount += rc.senseOre(squareTwo);
 				}
-				
+
 				if (!isOccupiedByStructure(squareThree)) {
 					totalOreCount += rc.senseOre(squareThree);
 				}
-			
+
 				if (!isOccupiedByStructure(squareFour)) {
 					totalOreCount += rc.senseOre(squareFour);
 				}
-				
+
 				if (totalOreCount > bestOreCount) {
 					bestOreCount = totalOreCount;
 					bestDestination = squareThree;
@@ -1258,26 +1263,26 @@ public class RobotPlayer {
 	 * @return true if the square is occupied by a structure
 	 * @throws GameActionException
 	 */
-	private static boolean isOccupiedByStructure (MapLocation loc)
+	private static boolean isOccupiedByStructure(MapLocation loc)
 			throws GameActionException {
-		
+
 		if (loc == null) {
 			return true; // vacuously true
 		}
-		
+
 		// This method is only called by locateBestOre, so the result
 		// of calling canSenseLocation(loc) should return true
-		
+
 		RobotInfo squareInfo = rc.senseRobotAtLocation(loc);
-		
-		if(squareInfo == null) {
+
+		if (squareInfo == null) {
 			return false;
 		}
-		
+
 		// Structures do not have any supply upkeep
 		return squareInfo.type.supplyUpkeep == 0;
 	}
-	
+
 	/**
 	 * Mines at current location and then tries to look for more ore.
 	 *
@@ -1615,9 +1620,10 @@ public class RobotPlayer {
 	/**
 	 * Analyzes the strength of the enemy towers
 	 * 
-	 * @param towerLoc (optional) - location of a particular enemy tower to be
-	 *								analyzed; assumes that there is an enemy
-	 *								tower at that location
+	 * @param towerLoc
+	 *            (optional) - location of a particular enemy tower to be
+	 *            analyzed; assumes that there is an enemy tower at that
+	 *            location
 	 * @return - integer measuring the strength of the enemy tower(s)
 	 * @throws GameActionException
 	 */
