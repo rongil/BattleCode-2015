@@ -175,9 +175,11 @@ public class RobotPlayer {
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 10) {
 						createUnit(RobotType.SUPPLYDEPOT, true);
+						
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 3) {
 						createUnit(RobotType.AEROSPACELAB, true);
+						
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3
 							&& rc.readBroadcast(SANITATION_CHANNEL) == 1
@@ -221,7 +223,9 @@ public class RobotPlayer {
 					if (rc.getSupplyLevel() < 80) {
 						moveTowardDestination(friendlyHQ, false, false, true);
 					} else if (!targetEnemyInvaders()){
-						targetEnemyMinersAndStructures();
+						if (targetEnemyMinersAndStructures()) {
+							moveAround();
+						}
 //					} else {
 //						targetEnemyMinersAndStructures();
 					}
