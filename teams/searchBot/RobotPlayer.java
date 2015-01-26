@@ -10,7 +10,13 @@ public class RobotPlayer {
 	private static RobotController rc;
 	private static RobotType thisRobotType;
 	private static MapLocation friendlyHQ;
+	private static MapLocation enemyHQ;
 	private static MapLocation currentLocation;
+	
+	private static int min_HQ_x;
+	private static int max_HQ_x;
+	private static int min_HQ_y;
+	private static int max_HQ_y;
 	
 	private static final int CURRENT_LOCATION_X_CHANNEL = 0;
 	private static final int CURRENT_LOCATION_Y_CHANNEL = 1;
@@ -19,6 +25,12 @@ public class RobotPlayer {
 		RobotPlayer.rc = rc;
 		thisRobotType = rc.getType();
 		friendlyHQ = rc.senseHQLocation();
+		enemyHQ = rc.senseEnemyHQLocation();
+	
+		min_HQ_x = Math.min(friendlyHQ.x, enemyHQ.x);
+		max_HQ_x = Math.max(friendlyHQ.x, enemyHQ.x);
+		min_HQ_y = Math.min(friendlyHQ.y, enemyHQ.y);
+		max_HQ_y = Math.max(friendlyHQ.y, enemyHQ.y);
 		
 		if (thisRobotType == RobotType.HQ) {
 			currentLocation = friendlyHQ;
@@ -96,7 +108,7 @@ public class RobotPlayer {
 			} else {
 				currentNode = agenda.removeFirst();
 			}
-
+			
 			if (Clock.getBytecodesLeft() < 200) {
 				rc.broadcast(CURRENT_LOCATION_X_CHANNEL, currentNode.getLoc().x);
 				rc.broadcast(CURRENT_LOCATION_Y_CHANNEL, currentNode.getLoc().y);
@@ -152,7 +164,15 @@ public class RobotPlayer {
 			MapLocation possSquare = loc.add(possDirection);
 			TerrainTile possSquareTerrain = rc.senseTerrainTile(possSquare);
 
-			possibleChildren.add(possSquare);
+			if ((possSquare.x < min_HQ_x && max_HQ_x - possSquare.x > GameConstants.MAP_MAX_WIDTH) ||
+					(possSquare.x > max_HQ_x && possSquare.x - min_HQ_x > GameConstants.MAP_MAX_WIDTH) ||
+					(possSquare.y < min_HQ_y && max_HQ_y - possSquare.y > GameConstants.MAP_MAX_HEIGHT) ||
+					(possSquare.y > max_HQ_y && possSquare.y - min_HQ_y > GameConstants.MAP_MAX_HEIGHT)) {
+				continue;
+				
+			} else {
+				possibleChildren.add(possSquare);
+			}
 			
 //			if (possSquareTerrain == TerrainTile.NORMAL) {
 //				possibleChildren.add(possSquare);

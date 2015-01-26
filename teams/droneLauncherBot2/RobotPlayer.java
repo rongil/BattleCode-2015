@@ -1189,38 +1189,51 @@ public class RobotPlayer {
 		if (rc.isCoreReady()) {
 			MapLocation currentLocation = rc.getLocation();
 
-			int radius = (int) Math.sqrt(thisRobotType.sensorRadiusSquared);
-
+			int straightRadius = (int) Math.sqrt(thisRobotType.sensorRadiusSquared); // value = 4
+			int diagonalRadius = (int) Math.sqrt(thisRobotType.sensorRadiusSquared / 2.0); // value = 3
+			
 			double bestOreCount = 0.0;
 			MapLocation bestDestination = null;
 
+			MapLocation squareOne;
+			MapLocation squareTwo;
+			MapLocation squareThree;
+			MapLocation squareFour;
+			
 			for (Direction possDirection : directions) {
-				MapLocation squareOne = currentLocation.add(possDirection,
-						(int) (0.25 * radius));
-				MapLocation squareTwo = currentLocation.add(possDirection,
-						(int) (0.5 * radius));
-				MapLocation squareThree = currentLocation.add(possDirection,
-						(int) (0.75 * radius));
-				MapLocation squareFour = currentLocation.add(possDirection,
-						radius);
+				if (directionToInt(possDirection)%2 == 1) { // This is a diagonal direction
+					squareOne = currentLocation.add(possDirection, 1);
+					squareTwo = currentLocation.add(possDirection, 2);
+					squareThree = currentLocation.add(possDirection, 3);
+					squareFour = friendlyHQ;
+					
+				} else { // This is a cardinal direction
+					squareOne = currentLocation.add(possDirection, 1);
+					squareTwo = currentLocation.add(possDirection, 2);
+					squareThree = currentLocation.add(possDirection, 3);
+					squareFour = currentLocation.add(possDirection, 4);
+				}
 
 				double totalOreCount = 0.0;
+				
 				if (squareOne != friendlyHQ) {
 					totalOreCount += rc.senseOre(squareOne);
 				}
+				
 				if (squareTwo != friendlyHQ) {
 					totalOreCount += rc.senseOre(squareTwo);
 				}
 				if (squareThree != friendlyHQ) {
 					totalOreCount += rc.senseOre(squareThree);
 				}
+				
 				if (squareFour != friendlyHQ) {
 					totalOreCount += rc.senseOre(squareFour);
 				}
 
 				if (totalOreCount > bestOreCount) {
 					bestOreCount = totalOreCount;
-					bestDestination = squareFour;
+					bestDestination = squareThree;
 				}
 			}
 
