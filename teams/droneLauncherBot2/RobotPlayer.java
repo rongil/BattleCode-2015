@@ -219,30 +219,29 @@ public class RobotPlayer {
 					// don't swarm. Might change if a more detailed map analysis
 					// can be obtained.
 
-					// TODO: Make variable depending on map size.
+					attackEnemyZero();
+					
 					if (rc.getSupplyLevel() < 80) {
 						moveTowardDestination(friendlyHQ, false, false, true);
-					} else if (targetEnemyInvaders()) {
-						// Handled by function...
-					} else if (targetEnemyMinersAndStructures()) {
-						// Handled by function...
-					} else {
-						// If no action is required, make sure there are no
-						// nearby missiles.
-						RobotInfo[] nearbyFriends = rc.senseNearbyRobots(2,
-								Friend);
-						for (RobotInfo r : nearbyFriends) {
-							if (r.type == RobotType.MISSILE) {
-								MapLocation currentLocation = rc.getLocation();
-								moveTowardDestination(
-										currentLocation.subtract(currentLocation
-												.directionTo(r.location)),
-										false, false, true);
-								break;
+					
+					} else if (!targetEnemyInvaders()) {
+						if (!targetEnemyMinersAndStructures()) {
+							// If no action is required, make sure there are no
+							// nearby missiles.
+							
+							RobotInfo[] nearbyFriends = rc.senseNearbyRobots(2, Friend);
+							for (RobotInfo r : nearbyFriends) {
+								if (r.type == RobotType.MISSILE) {
+									MapLocation currentLocation = rc.getLocation();
+									moveTowardDestination(
+											currentLocation.subtract(currentLocation
+													.directionTo(r.location)),
+											false, false, true);
+									break;
+								}
 							}
 						}
 					}
-					attackEnemyZero();
 					break;
 
 				case HELIPAD:
