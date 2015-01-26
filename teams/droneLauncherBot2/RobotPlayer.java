@@ -35,12 +35,8 @@ public class RobotPlayer {
 	private static int enemyHQAttackRadiusSquared;
 	private static MapLocation[] enemyTowers;
 
-	private static int totalNumberTowers;
-
 	private static int halfwayDistance;
 	private static int wholeDistanceCoefficient;
-	private static MapLocation previousTowerLocation;
-	private static boolean swarming = false;
 	private static int swarmRound;
 
 	private static Direction facing;
@@ -80,7 +76,6 @@ public class RobotPlayer {
 			friendlyTowers = rc.senseTowerLocations();
 			enemyTowers = rc.senseEnemyTowerLocations();
 
-			totalNumberTowers = friendlyTowers.length + enemyTowers.length;
 			// It was this or int casting...
 			swarmRound = rc.getRoundLimit() * 9 / 10;
 
@@ -138,10 +133,8 @@ public class RobotPlayer {
 					roundNum = Clock.getRoundNum();
 					friendlyTowers = rc.senseTowerLocations();
 					enemyTowers = rc.senseEnemyTowerLocations();
-					friendlyHQAttackRadiusSquared = friendlyTowers.length >= 5 ? GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
-							: RobotType.HQ.attackRadiusSquared;
-					enemyHQAttackRadiusSquared = enemyTowers.length >= 5 ? GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED
-							: RobotType.HQ.attackRadiusSquared;
+					friendlyHQAttackRadiusSquared = getActualHQAttackRadiusSquared(friendlyTowers.length);
+					enemyHQAttackRadiusSquared = getActualHQAttackRadiusSquared(enemyTowers.length);
 				}
 
 				// Choose an action based on the type of robot.
@@ -454,6 +447,32 @@ public class RobotPlayer {
 
 	}
 
+	/**
+	 * Determines the true attacking range of HQ based on the number of towers
+	 * 
+	 * @param towerCount - number of towers the team still has standing
+	 * @return attack radius squared of HQ that accounts for number of towers
+	 * 		   and splash range (if applicable)
+	 */
+	private static int getActualHQAttackRadiusSquared(int towerCount) {
+		int attackRadiusSquared;
+		
+		if (towerCount >= 2) {
+			attackRadiusSquared = GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED;
+			
+			if (towerCount >= 5) {
+				attackRadiusSquared = (int) Math.pow(Math.
+						sqrt(GameConstants.HQ_BUFFED_ATTACK_RADIUS_SQUARED)
+						+ Math.sqrt(GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED), 2);
+			}
+			
+		} else {
+			attackRadiusSquared = RobotType.HQ.attackRadiusSquared;
+		}
+		
+		return attackRadiusSquared;
+	}
+	
 	/**
 	 * Missile launching towards location (overloaded for direction as well)
 	 *
@@ -832,39 +851,19 @@ public class RobotPlayer {
 			RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(thisRobotLocation,
 					attackRadiusSquared, Enemy);
 
-			// Go for direct targets first.
 			if (nearbyEnemies.length > 0) {
 				MapLocation enemyZeroLocation = nearbyEnemies[0].location;
 
 				if (rc.canAttackLocation(enemyZeroLocation)) {
 					rc.attackLocation(enemyZeroLocation);
 					return true;
-				}
-				// If there are none and the HQ has splash, then check if there
-				// are targets in splash range.
-			} else if (thisRobotType == RobotType.HQ
-					&& friendlyTowers.length >= 5) {
-				RobotInfo[] splashRangeEnemies = rc
-						.senseNearbyRobots(
-								thisRobotLocation,
-								(int) Math.pow(
-										Math.sqrt(attackRadiusSquared)
-												+ Math.sqrt(GameConstants.HQ_BUFFED_SPLASH_RADIUS_SQUARED),
-										2), Enemy);
-
-				if (splashRangeEnemies.length > 0) {
-					MapLocation actualEnemyZeroLocation = splashRangeEnemies[0].location;
-					Direction towardsEnemyZero = friendlyHQ
-							.directionTo(actualEnemyZeroLocation);
-					MapLocation splashEnemyZeroLocation = friendlyHQ.add(
-							towardsEnemyZero,
-							(int) Math.sqrt(attackRadiusSquared));
-
-					// Subtract at most one square
-					if (!rc.canAttackLocation(splashEnemyZeroLocation)) {
-						splashEnemyZeroLocation.subtract(towardsEnemyZero);
-					}
-
+					
+				// Check if the attacker is HQ and the target is in splash range
+				} else if (thisRobotType == RobotType.HQ && friendlyTowers.length >= 5) {
+					Direction towardsEnemyZero = friendlyHQ.directionTo(enemyZeroLocation);
+					MapLocation splashEnemyZeroLocation = friendlyHQ.subtract(
+							towardsEnemyZero);
+					
 					if (rc.canAttackLocation(splashEnemyZeroLocation)) {
 						rc.attackLocation(splashEnemyZeroLocation);
 						return true;
@@ -903,42 +902,38 @@ public class RobotPlayer {
 			return false;
 		}
 
-		// Check if HQ is in range
+		// Check if robot is in attacking range of any enemy towers
 		if (enemyHQ.distanceSquaredTo(loc) <= enemyHQAttackRadiusSquared) {
 			return false;
 		}
 
-		// Check if towers are in range
+		// Check if robot is in attacking range of any enemy towers
 		for (MapLocation enemyTower : enemyTowers) {
 			if (enemyTower.distanceSquaredTo(loc) <= RobotType.TOWER.attackRadiusSquared) {
 				return false;
 			}
 		}
 
-		// if (onlyHQAndTowers && !checkFriendlyMissiles) {
-		// return true;
-		// }
-		//
-		// Team roboTeam = checkFriendlyMissiles ? null : Enemy;
-		// roboTeam = onlyHQAndTowers ? Friend : roboTeam;
-
-		if (onlyHQAndTowers) {
+		if (onlyHQAndTowers && !checkFriendlyMissiles) {
 			return true;
 		}
 
-		/*
-		 * Check if any enemies are in range or if any friendly drones are
-		 * within explosion range
-		 */
-		RobotInfo[] nearbyRobots = rc.senseNearbyRobots(
-				thisRobotType.sensorRadiusSquared, Enemy);
-
-		for (RobotInfo r : nearbyRobots) {
-			if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
-					&& !(ignoreMinersBeavers && (r.type == RobotType.BEAVER || r.type == RobotType.MINER))) {
-				return false;
+		// Check if robot is in attacking range of any enemy robots
+		if (!onlyHQAndTowers) {
+			RobotInfo[] nearbyRobots = rc.senseNearbyRobots(
+					thisRobotType.sensorRadiusSquared, Enemy);
+	
+			for (RobotInfo r : nearbyRobots) {
+				if (r.location.distanceSquaredTo(loc) <= r.type.attackRadiusSquared
+						&& !(ignoreMinersBeavers && (r.type == RobotType.BEAVER || r.type == RobotType.MINER))) {
+					return false;
+				}
 			}
 		}
+		
+		/*
+		 * Check if robot is within explosion range of any friendly missiles
+		 */
 		
 		if (checkFriendlyMissiles) {
 			RobotInfo[] closeEnemies = rc.senseNearbyRobots(loc, 2, Friend);
