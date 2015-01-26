@@ -332,12 +332,18 @@ public class RobotPlayer {
 					if (nearbyEnemies.length == 0) {
 						Direction dir = rc.getLocation().directionTo(
 								rc.senseEnemyHQLocation());
-						missileMoveTowardDirection(dir);
+						if (rc.isCoreReady() && rc.canMove(dir)) {
+							rc.move(dir);
+						}
+						// missileMoveTowardDirection(dir);
 					} else {
 						Direction dir = rc.getLocation().directionTo(
 								nearbyEnemies[0].location);
 						currentLocation = rc.getLocation();
-						missileMoveTowardDirection(dir);
+						if (rc.isCoreReady() && rc.canMove(dir)) {
+							rc.move(dir);
+						}
+						// missileMoveTowardDirection(dir);
 						/******************************************************
 						 * The missile should be facing the direction of its
 						 * target. rc.senseRobotAtLocation costs 25 bytecode, so
@@ -354,20 +360,32 @@ public class RobotPlayer {
 								.senseRobotAtLocation(currentLocation.add(dir
 										.rotateRight()));
 						int enemySquares = 0;
-						if (frontSquare1 != null && frontSquare1.team == Enemy) {
-							enemySquares += 1;
-						} else {
-							enemySquares -= 1;
+						if (frontSquare1 != null) {
+							if (frontSquare1.team == Enemy) {
+								if (frontSquare1.type != RobotType.MISSILE) {
+									enemySquares += 1;
+								}
+							} else {
+								enemySquares -= 1;
+							}
 						}
-						if (frontSquare2 != null && frontSquare2.team == Enemy) {
-							enemySquares += 1;
-						} else {
-							enemySquares -= 1;
+						if (frontSquare2 != null) {
+							if (frontSquare2.team == Enemy) {
+								if (frontSquare2.type != RobotType.MISSILE) {
+									enemySquares += 1;
+								}
+							} else {
+								enemySquares -= 1;
+							}
 						}
-						if (frontSquare3 != null && frontSquare3.team == Enemy) {
-							enemySquares += 1;
-						} else {
-							enemySquares -= 1;
+						if (frontSquare3 != null) {
+							if (frontSquare3.team == Enemy) {
+								if (frontSquare3.type != RobotType.MISSILE) {
+									enemySquares += 1;
+								}
+							} else {
+								enemySquares -= 1;
+							}
 						}
 
 						if (enemySquares > 0) {
