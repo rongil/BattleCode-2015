@@ -1,8 +1,6 @@
-package tankBot3;
+package launcherBot;
 
 import battlecode.common.*;
-
-import java.util.LinkedList;
 import java.util.Random;
 
 /**
@@ -47,6 +45,12 @@ public class RobotPlayer {
 	// HQ only
 	private static MapLocation lastSwarmTarget;
 
+	// Missile only
+	private static int turnsRemaining;
+
+	// Drone only
+	private static Direction patrolDirection;
+
 	/**
 	 * Main method called when it is a robot's turn. Needs to be looped
 	 * indefinitely, otherwise the robot will die.
@@ -62,36 +66,48 @@ public class RobotPlayer {
 		RobotPlayer.rc = rc;
 		thisRobotType = rc.getType();
 		Enemy = rc.getTeam().opponent();
+		if (thisRobotType != RobotType.MISSILE) {
+			Friend = Enemy.opponent();
+			friendlyHQ = rc.senseHQLocation();
+			enemyHQ = rc.senseEnemyHQLocation();
+			friendlyTowers = rc.senseTowerLocations();
+			enemyTowers = rc.senseEnemyTowerLocations();
 
-		Friend = Enemy.opponent();
-		friendlyHQ = rc.senseHQLocation();
-		enemyHQ = rc.senseEnemyHQLocation();
-		friendlyTowers = rc.senseTowerLocations();
-		enemyTowers = rc.senseEnemyTowerLocations();
+			// It was this or int casting...
+			swarmRound = rc.getRoundLimit() * 9 / 10;
 
-		// It was this or int casting...
-		swarmRound = rc.getRoundLimit() * 9 / 10;
+			// HQ only stuff
+			if (thisRobotType == RobotType.HQ) {
+				lastSwarmTarget = friendlyHQ;
+				rc.broadcast(XMIN_VALUE_CHANNEL,
+						Math.min(friendlyHQ.x, enemyHQ.x));
+				rc.broadcast(XMAX_VALUE_CHANNEL,
+						Math.max(friendlyHQ.x, enemyHQ.x));
+				rc.broadcast(YMIN_VALUE_CHANNEL,
+						Math.min(friendlyHQ.y, enemyHQ.y));
+				rc.broadcast(YMAX_VALUE_CHANNEL,
+						Math.max(friendlyHQ.y, enemyHQ.y));
+			}
 
-		// HQ only stuff
-		if (thisRobotType == RobotType.HQ) {
-			lastSwarmTarget = friendlyHQ;
-			rc.broadcast(XMIN_VALUE_CHANNEL,
-					Math.min(friendlyHQ.x, enemyHQ.x));
-			rc.broadcast(XMAX_VALUE_CHANNEL,
-					Math.max(friendlyHQ.x, enemyHQ.x));
-			rc.broadcast(YMIN_VALUE_CHANNEL,
-					Math.min(friendlyHQ.y, enemyHQ.y));
-			rc.broadcast(YMAX_VALUE_CHANNEL,
-					Math.max(friendlyHQ.y, enemyHQ.y));
+			rand = new Random(rc.getID());
+			facing = getRandomDirection(); // Randomize starting direction
+
+			// Slightly less to avoid tower issues
+			halfwayDistance = (int) (0.45 * Math.sqrt(friendlyHQ
+					.distanceSquaredTo(enemyHQ)));
+
+			// Drone only stuff
+			if (thisRobotType == RobotType.DRONE) {
+				Direction HQdirection = friendlyHQ.directionTo(enemyHQ);
+				patrolDirection = (rand.nextDouble() > 0.5) ? HQdirection
+						.rotateLeft().rotateLeft() : HQdirection.rotateRight()
+						.rotateRight();
+			}
+
+		} else {
+			// turnsRemaining = GameConstants.MISSILE_LIFESPAN;
 		}
-		
-		rand = new Random(rc.getID());
-		facing = getRandomDirection(); // Randomize starting direction
-		
-		// Slightly less to avoid tower issues
-		halfwayDistance = (int) (0.45 * Math.sqrt(friendlyHQ
-				.distanceSquaredTo(enemyHQ)));
-		
+
 		// Method can never end or the robot is destroyed.
 		while (true) {
 			/*
@@ -109,30 +125,33 @@ public class RobotPlayer {
 				 * ------------------------------------------------------------
 				 * 3) HQ Attack Range on both teams
 				 *************************************************************/
-				
-				roundNum = Clock.getRoundNum();
-				friendlyTowers = rc.senseTowerLocations();
-				enemyTowers = rc.senseEnemyTowerLocations();
-				friendlyHQAttackRadiusSquared = getActualHQAttackRadiusSquared(friendlyTowers.length);
-				enemyHQAttackRadiusSquared = getActualHQAttackRadiusSquared(enemyTowers.length);
+				if (thisRobotType != RobotType.MISSILE) {
+					roundNum = Clock.getRoundNum();
+					friendlyTowers = rc.senseTowerLocations();
+					enemyTowers = rc.senseEnemyTowerLocations();
+					friendlyHQAttackRadiusSquared = getActualHQAttackRadiusSquared(friendlyTowers.length);
+					enemyHQAttackRadiusSquared = getActualHQAttackRadiusSquared(enemyTowers.length);
+				}
 
 				// Choose an action based on the type of robot.
 				switch (thisRobotType) {
 
+				case AEROSPACELAB:
+					createUnit(RobotType.LAUNCHER, false);
+					break;
+
 				case BEAVER:
-					attackEnemyZero();
-					
 					// Building Order/Preferences
 					if (rc.readBroadcast(NUM_FRIENDLY_MINERFACTORY_CHANNEL) < 1) {
 						createUnit(RobotType.MINERFACTORY, true);
+
+					} else if (rc.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 1) {
+						createUnit(RobotType.HELIPAD, true);
 					
-					} else if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
-						createUnit(RobotType.BARRACKS, true);
-					
-					} else if (rc.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 3) {
-						createUnit(RobotType.TANKFACTORY, true);
+					} else if (rc.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 5) {
+						createUnit(RobotType.AEROSPACELAB, true);
 					}
-			
+
 					mineAndMove();
 					break;
 
@@ -153,13 +172,43 @@ public class RobotPlayer {
 						if (createUnit(RobotType.BEAVER, false)) {
 							rc.broadcast(NUM_FRIENDLY_BEAVERS_CHANNEL, beaverCount + 1);
 						}
-					} else if(beaverCount < 3 && rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL) > 3) {
+					} else if(beaverCount < 3 && rc.readBroadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL) > 3) {
 						if (createUnit(RobotType.BEAVER, false)) {
 							rc.broadcast(NUM_FRIENDLY_BEAVERS_CHANNEL, beaverCount + 1);
 						}
 					}
 					break;
-				
+
+				case LAUNCHER:
+					MapLocation currentLocation = rc.getLocation();
+
+					// Launcher version of Attack Enemy Zero
+					MapLocation bestTarget = null;
+					RobotInfo[] targets = rc
+							.senseNearbyRobots(
+									(int) Math.pow(
+											GameConstants.MISSILE_LIFESPAN
+													+ Math.sqrt(RobotType.MISSILE.attackRadiusSquared),
+											2), Enemy);
+					bestTarget = (targets.length == 0) ? null
+							: targets[0].location;
+					if (bestTarget != null) {
+						launchMissile(bestTarget);
+						moveTowardDestination(
+								currentLocation.subtract(currentLocation
+										.directionTo(bestTarget)), false,
+								false, true);
+
+					} else {
+						if (rc.readBroadcast(SWARM_SIGNAL_CHANNEL) == 1) {
+							attackNearestTower();
+						
+						} else if (friendlyTowers.length > 0) {
+							moveTowardDestination(friendlyTowers[rand.nextInt(friendlyTowers.length)], false, false, true);
+						}
+					}
+					break;
+
 				case MINER:
 					attackEnemyZero();
 					mineAndMove();
@@ -171,22 +220,88 @@ public class RobotPlayer {
 					}
 					break;
 
-				case TANK:
-					attackEnemyZero();
-					
-					if (rc.readBroadcast(SWARM_SIGNAL_CHANNEL) == 1) {
-						attackNearestTower();
-					} else {
-						if (friendlyTowers.length > 0) {
-							moveTowardDestination(friendlyTowers[rand.nextInt(friendlyTowers.length)], false, false, true);
+				case MISSILE:
+					RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(
+							thisRobotType.sensorRadiusSquared, Enemy);
+					if (nearbyEnemies.length == 0) {
+						Direction dir = rc.getLocation().directionTo(
+								rc.senseEnemyHQLocation());
+						if (rc.isCoreReady() && rc.canMove(dir)) {
+							rc.move(dir);
 						}
-					}
-					
-					break;
+						// missileMoveTowardDirection(dir);
+					} else {
+						Direction dir = rc.getLocation().directionTo(
+								nearbyEnemies[0].location);
+						currentLocation = rc.getLocation();
+						if (rc.isCoreReady() && rc.canMove(dir)) {
+							rc.move(dir);
+						}
+						// missileMoveTowardDirection(dir);
+						/******************************************************
+						 * The missile should be facing the direction of its
+						 * target. rc.senseRobotAtLocation costs 25 bytecode, so
+						 * can't afford more checking more than 3 squares since
+						 * a lost turn is worse. Bytecode conservation gains
+						 * complete priority over code niceness here.
+						 *****************************************************/
+						RobotInfo frontSquare1 = rc
+								.senseRobotAtLocation(currentLocation.add(dir));
+						RobotInfo frontSquare2 = rc
+								.senseRobotAtLocation(currentLocation.add(dir
+										.rotateLeft()));
+						RobotInfo frontSquare3 = rc
+								.senseRobotAtLocation(currentLocation.add(dir
+										.rotateRight()));
+						int enemySquares = 0;
+						if (frontSquare1 != null) {
+							if (frontSquare1.team == Enemy) {
+								if (frontSquare1.type != RobotType.MISSILE) {
+									enemySquares += 1;
+								}
+							} else {
+								enemySquares -= 1;
+							}
+						}
+						if (frontSquare2 != null) {
+							if (frontSquare2.team == Enemy) {
+								if (frontSquare2.type != RobotType.MISSILE) {
+									enemySquares += 1;
+								}
+							} else {
+								enemySquares -= 1;
+							}
+						}
+						if (frontSquare3 != null) {
+							if (frontSquare3.team == Enemy) {
+								if (frontSquare3.type != RobotType.MISSILE) {
+									enemySquares += 1;
+								}
+							} else {
+								enemySquares -= 1;
+							}
+						}
 
-				case TANKFACTORY:
-					createUnit(RobotType.TANK, false);
-					break;
+						if (enemySquares > 0) {
+							// If this is triggered, no more bytecode worries...
+							rc.explode();
+						}
+						// friendEnemyRatio(currentLocation, dir);
+					}
+					// turnsRemaining -= 1;
+					/******************************************************
+					 * Bytecode use will be < 100 if the robot was forced to
+					 * yield before it was done.
+					 * -----------------------------------------------------
+					 * NOTE: This assumes bytecode use is not so high that
+					 * multiple turns don't get skipped or a large chunk of the
+					 * next turn's bytecode is used.
+					 *****************************************************/
+					// int num = Clock.getBytecodeNum();
+					// if (num < 100)
+					// System.out.println(num);
+					rc.yield();
+					continue; // Restart the loop from here to save bytecode!
 
 				case TOWER:
 					attackEnemyZero();
@@ -247,6 +362,62 @@ public class RobotPlayer {
 	}
 
 	/**
+	 * Missile launching towards location (overloaded for direction as well)
+	 *
+	 * @param targetLoc
+	 *            - destination
+	 * @return missile launched or not
+	 * @throws GameActionException
+	 */
+	private static boolean launchMissile(MapLocation targetLoc)
+			throws GameActionException {
+		MapLocation currentLocation = rc.getLocation();
+		Direction directionToTarget = currentLocation.directionTo(targetLoc);
+
+		if (rc.getMissileCount() > 0 && rc.canLaunch(directionToTarget)) {
+			rc.launchMissile(directionToTarget);
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * directs drones to patrol the borderline between the two HQ's
+	 *
+	 * @throws GameActionException
+	 */
+	private static void patrolBorder() throws GameActionException {
+		// TODO: should other robots help patrol as well?
+		MapLocation currentLocation = rc.getLocation();
+
+		double distanceToFriendHQ = Math.pow(
+				currentLocation.distanceSquaredTo(friendlyHQ), 0.5);
+		double distanceToEnemyHQ = Math.pow(
+				currentLocation.distanceSquaredTo(enemyHQ), 0.5);
+
+		if (distanceToFriendHQ < 0.85 * distanceToEnemyHQ
+				|| distanceToEnemyHQ < 0.95) {
+
+			Direction HQdirection = friendlyHQ.directionTo(enemyHQ);
+			MapLocation checkpoint = friendlyHQ.add(HQdirection,
+					halfwayDistance);
+
+			moveTowardDestination(checkpoint, false, false, true);
+
+		} else {
+			MapLocation newLocation = currentLocation.add(patrolDirection);
+
+			if (rc.senseTerrainTile(newLocation) == TerrainTile.OFF_MAP) {
+				patrolDirection = patrolDirection.opposite();
+				newLocation = currentLocation.add(patrolDirection);
+			}
+
+			moveTowardDestination(newLocation, false, false, true);
+		}
+	}
+
+	/**
 	 * Directs drones and launchers to attack the nearest tower when it
 	 * determines that there are sufficient resources to attack or when the time
 	 * is appropriate for attacking
@@ -254,13 +425,13 @@ public class RobotPlayer {
 	 * @throws GameActionException
 	 */
 	private static void broadcastSwarmConditions() throws GameActionException {
-		int tankCount = rc.readBroadcast(NUM_FRIENDLY_TANKS_CHANNEL);
+		int launcherCount = rc.readBroadcast(NUM_FRIENDLY_LAUNCHERS_CHANNEL);
 
 		MapLocation targetLocation;
 		int possDistance;
 		int minDistance;
 
-		if (enemyTowers.length == 0) { // Avoid splash!
+		if (enemyTowers.length < 5) { // Avoid splash!
 			targetLocation = enemyHQ;
 
 		} else {
@@ -278,7 +449,7 @@ public class RobotPlayer {
 			}
 		}
 
-		if (roundNum > swarmRound || tankCount > 6) {
+		if (roundNum > swarmRound || launcherCount > 5) {
 
 			lastSwarmTarget = targetLocation;
 			rc.broadcast(SWARM_SIGNAL_CHANNEL, 1);
@@ -291,7 +462,7 @@ public class RobotPlayer {
 			rc.broadcast(SWARM_LOCATION_Y_CHANNEL, targetLocation.y);
 		}
 	}
-	
+
 	/**
 	 * Directs a bot towards the swarm location.
 	 * 
@@ -311,7 +482,7 @@ public class RobotPlayer {
 		} else {
 			moveTowardDestination(targetLocation, true, false, false);
 		}
-	}
+	}	
 
 	/**
 	 * Attacks the first enemy in the list.
@@ -604,6 +775,8 @@ public class RobotPlayer {
 		if (targetLocation != null) {
 			moveTowardDestination(targetLocation, false, true, true);
 
+		} else {
+			patrolBorder();
 		}
 	}
 
@@ -1338,8 +1511,6 @@ public class RobotPlayer {
 	private static final int NUM_FRIENDLY_COMMANDERS_CHANNEL = 17;
 	private static final int NUM_FRIENDLY_LAUNCHERS_CHANNEL = 18;
 	private static final int NUM_FRIENDLY_MISSILES_CHANNEL = 19;
-	// Miscellaneous Channels
-	private static final int SANITATION_CHANNEL = 70;
 	// Swarm Signals
 	private static final int SWARM_SIGNAL_CHANNEL = 1000;
 	private static final int SWARM_LOCATION_X_CHANNEL = 1001;
