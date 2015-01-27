@@ -1368,7 +1368,7 @@ public class RobotPlayer {
 	 */
 	private static boolean createUnit(RobotType roboType, boolean build)
 			throws GameActionException {
-		if (rc.isCoreReady() && rc.getTeamOre() >= roboType.oreCost) {
+		if (rc.isCoreReady() && rc.getTeamOre() > roboType.oreCost) {
 			MapLocation currentLocation = rc.getLocation();
 			Direction testDir = getRandomDirection();
 			boolean goLeft = rand.nextDouble() > 0.5;
