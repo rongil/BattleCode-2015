@@ -1,4 +1,4 @@
-package droneLauncherBot3;
+package droneLauncherBotMiner;
 
 import battlecode.common.*;
 
@@ -1208,7 +1208,7 @@ public class RobotPlayer {
 		if (targetLocation != null) {
 			moveTowardDestination(targetLocation, false, true, true);
 
-		} else if (thisRobotType == RobotType.DRONE){
+		} else {
 			patrolBorder();
 		}
 	}
