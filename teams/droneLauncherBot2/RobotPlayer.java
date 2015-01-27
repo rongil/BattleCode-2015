@@ -1377,7 +1377,8 @@ public class RobotPlayer {
 
 				if (build) {
 					if (rc.canBuild(testDir, roboType)
-							&& isSafe(testLoc, false, true)) {
+							&& isSafe(testLoc, false, true)
+							&& !isCrowded(testLoc)) {
 						rc.build(testDir, roboType);
 						return true;
 					}
@@ -1390,6 +1391,29 @@ public class RobotPlayer {
 				}
 
 				testDir = goLeft ? testDir.rotateLeft() : testDir.rotateRight();
+			}
+		}
+
+		return false;
+	}
+
+	private static boolean isCrowded(MapLocation loc)
+			throws GameActionException {
+		MapLocation neighborLoc;
+
+		for (int index = 0; index < directions.length; index += 2) {
+			neighborLoc = loc.add(directions[index]);
+			RobotInfo neighborInfo = rc.senseRobotAtLocation(neighborLoc); // we
+																			// assume
+																			// the
+																			// square
+																			// can
+																			// be
+																			// sensed
+
+			if (neighborInfo != null && neighborInfo.type != RobotType.MISSILE
+					&& neighborInfo.type.supplyUpkeep == 0) {
+				return true;
 			}
 		}
 
