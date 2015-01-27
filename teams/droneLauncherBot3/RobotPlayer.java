@@ -312,6 +312,10 @@ public class RobotPlayer {
 				case MINER:
 					attackEnemyZero();
 					mineAndMove();
+					int num = Clock.getBytecodeNum();
+					if (num > 1000) {
+						System.out.println(num);
+					}
 					break;
 
 				case MINERFACTORY:
@@ -1229,11 +1233,14 @@ public class RobotPlayer {
 
 			MapLocation squareOne;
 			MapLocation squareTwo;
-
-			for (Direction possDirection : directions) {
+			MapLocation squareThree;
+			Direction[] dirs = { facing, facing.rotateLeft(),
+					facing.rotateRight() };
+			for (Direction possDirection : dirs) {
 				squareOne = currentLocation.add(possDirection, 1);
 				squareTwo = currentLocation.add(possDirection, 2);
-				
+				squareThree = currentLocation.add(possDirection, 3);
+
 				double totalOreCount = 0.0;
 
 				// You can't mine ore at a square that is occupied
@@ -1244,12 +1251,16 @@ public class RobotPlayer {
 				}
 
 				if (!isOccupiedByStructure(squareTwo)) {
-					totalOreCount += rc.senseOre(squareTwo);
+					totalOreCount += rc.senseOre(squareThree);
+				}
+
+				if (!isOccupiedByStructure(squareThree)) {
+					totalOreCount += rc.senseOre(squareThree);
 				}
 
 				if (totalOreCount > bestOreCount) {
 					bestOreCount = totalOreCount;
-					bestDestination = squareTwo;
+					bestDestination = squareThree;
 				}
 			}
 
@@ -1296,7 +1307,9 @@ public class RobotPlayer {
 	 * @throws GameActionException
 	 */
 	private static void mineAndMove() throws GameActionException {
-		if (rc.senseOre(rc.getLocation()) > 1) { // if there is ore, try to mine
+		if (rc.senseOre(rc.getLocation()) > (rc.getType() == RobotType.MINER ? GameConstants.MINER_MINE_MAX
+				: GameConstants.BEAVER_MINE_MAX)) { // if there is ore, try to
+													// mine
 			if (rc.isCoreReady() && rc.canMine()) {
 				rc.mine();
 			}
