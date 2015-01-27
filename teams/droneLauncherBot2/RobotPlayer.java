@@ -187,26 +187,35 @@ public class RobotPlayer {
 						createUnit(RobotType.HANDWASHSTATION, true);
 
 					} else if (rc.getTeamOre() > 1000) {
-						if (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL) < 1) {
-							createUnit(RobotType.BARRACKS, true);
+						if (rc.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 6) {
+							createUnit(RobotType.AEROSPACELAB, true);
 
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL) < 1) {
-							createUnit(RobotType.TANKFACTORY, true);
-
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL) < 1) {
-							createUnit(RobotType.TECHNOLOGYINSTITUTE, true);
-
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL) < 1) {
-							createUnit(RobotType.TRAININGFIELD, true);
+							// if
+							// (rc.readBroadcast(NUM_FRIENDLY_BARRACKS_CHANNEL)
+							// < 1) {
+							// createUnit(RobotType.BARRACKS, true);
+							//
+							// } else if (rc
+							// .readBroadcast(NUM_FRIENDLY_TANKFACTORY_CHANNEL)
+							// < 1) {
+							// createUnit(RobotType.TANKFACTORY, true);
+							//
+							// } else if (rc
+							// .readBroadcast(NUM_FRIENDLY_TECHINSTITUTE_CHANNEL)
+							// < 1) {
+							// createUnit(RobotType.TECHNOLOGYINSTITUTE, true);
+							//
+							// } else if (rc
+							// .readBroadcast(NUM_FRIENDLY_TRAININGFIELD_CHANNEL)
+							// < 1) {
+							// createUnit(RobotType.TRAININGFIELD, true);
 
 						} else if (rc
 								.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 7) {
 							createUnit(RobotType.SUPPLYDEPOT, true);
 
-						} else {
+						} else if (rc
+								.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 2) {
 							createUnit(RobotType.HELIPAD, true);
 						}
 					}
