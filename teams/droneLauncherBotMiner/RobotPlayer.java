@@ -1,4 +1,4 @@
-package droneLauncherBot2;
+package droneLauncherBotMiner;
 
 import battlecode.common.*;
 
