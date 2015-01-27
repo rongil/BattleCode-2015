@@ -13,43 +13,55 @@ public class RobotPlayer {
 	private static MapLocation enemyHQ;
 	private static MapLocation currentLocation;
 	private static LinkedList<SearchNode> agenda;
-	
+
 	private static int min_HQ_x;
 	private static int max_HQ_x;
 	private static int min_HQ_y;
 	private static int max_HQ_y;
-	
+
 	private static final int CURRENT_LOCATION_X_CHANNEL = 0;
 	private static final int CURRENT_LOCATION_Y_CHANNEL = 1;
-	
+
 	public static void run(RobotController rc) throws GameActionException {
 		RobotPlayer.rc = rc;
 		thisRobotType = rc.getType();
 		friendlyHQ = rc.senseHQLocation();
 		enemyHQ = rc.senseEnemyHQLocation();
-	
+
 		min_HQ_x = Math.min(friendlyHQ.x, enemyHQ.x);
 		max_HQ_x = Math.max(friendlyHQ.x, enemyHQ.x);
 		min_HQ_y = Math.min(friendlyHQ.y, enemyHQ.y);
 		max_HQ_y = Math.max(friendlyHQ.y, enemyHQ.y);
-		
+
 		if (thisRobotType == RobotType.HQ) {
 			currentLocation = friendlyHQ;
 			agenda = new LinkedList<SearchNode>();
-			
+
 			rc.broadcast(CURRENT_LOCATION_X_CHANNEL, currentLocation.x);
 			rc.broadcast(CURRENT_LOCATION_Y_CHANNEL, currentLocation.y);
 		}
-		
+
 		while (true) {
 			try {
-				if(thisRobotType == RobotType.HQ) {
-					currentLocation = new MapLocation(rc.readBroadcast(CURRENT_LOCATION_X_CHANNEL),
+				if (thisRobotType == RobotType.HQ) {
+					if (Clock.getRoundNum() == 0) {
+						rc.spawn(Direction.SOUTH, RobotType.BEAVER);
+					} else {
+						RobotInfo[] bots = rc.senseNearbyRobots(
+								GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED,
+								rc.getTeam());
+						if (bots.length > 1) {
+							rc.transferSupplies((int) rc.getSupplyLevel(),
+									bots[1].location);
+						}
+					}
+					currentLocation = new MapLocation(
+							rc.readBroadcast(CURRENT_LOCATION_X_CHANNEL),
 							rc.readBroadcast(CURRENT_LOCATION_Y_CHANNEL));
-					
+
 					search(new MapLocation(-12919, 13146), true);
 				}
-				
+
 			} catch (GameActionException e) {
 				e.printStackTrace();
 			}
@@ -58,7 +70,7 @@ public class RobotPlayer {
 		}
 
 	}
-	
+
 	public static class SearchNode {
 		private MapLocation nodeLoc;
 		private SearchNode nodeParent;
@@ -93,14 +105,14 @@ public class RobotPlayer {
 
 	private static boolean search(MapLocation dest, boolean DFS)
 			throws GameActionException {
-		
+
 		if (reachedGoal(currentLocation, dest)) {
 			return true;
 		}
-		
+
 		agenda.add(new SearchNode(currentLocation, null));
 		rc.broadcast(channelHashFunc(currentLocation, 10000), 1);
-		
+
 		SearchNode currentNode;
 
 		while (agenda.size() != 0) {
@@ -109,45 +121,50 @@ public class RobotPlayer {
 			} else {
 				currentNode = agenda.removeFirst();
 			}
-			
-			System.out.println("Bytecode Remaining: " + Clock.getBytecodesLeft());
+
+			System.out.println("Bytecode Remaining: "
+					+ Clock.getBytecodesLeft());
 
 			if (Clock.getBytecodesLeft() < 700) {
 				rc.broadcast(CURRENT_LOCATION_X_CHANNEL, currentNode.getLoc().x);
 				rc.broadcast(CURRENT_LOCATION_Y_CHANNEL, currentNode.getLoc().y);
 				return false;
 			}
-			
-			System.out.println("Expanding Location (" + currentNode.getLoc().x + ", " + currentNode.getLoc().y + ")...");
+
+			System.out.println("Expanding Location (" + currentNode.getLoc().x
+					+ ", " + currentNode.getLoc().y + ")...");
 			MapLocation currentLoc = currentNode.getLoc();
 			SearchNode parentNode = currentNode.getParent();
-				
-			if(parentNode != null) {
+
+			if (parentNode != null) {
 				MapLocation parentLoc = parentNode.getLoc();
 				Direction parentToCurrent = parentLoc.directionTo(currentLoc);
 				rc.broadcast(channelHashFunc(parentLoc, 30000),
 						directionToInt(parentToCurrent));
 			}
 
-			LinkedList<MapLocation> nodeLocations = getChildren(currentNode.getLoc());
+			LinkedList<MapLocation> nodeLocations = getChildren(currentNode
+					.getLoc());
 
 			for (MapLocation nodeLocation : nodeLocations) {
 				SearchNode childNode = new SearchNode(nodeLocation, currentNode);
 
 				if (reachedGoal(nodeLocation, dest)) {
-					Direction currentToChild = currentLoc.directionTo(nodeLocation);
-					rc.broadcast(channelHashFunc(currentLoc, 30000), directionToInt(currentToChild));
-					
+					Direction currentToChild = currentLoc
+							.directionTo(nodeLocation);
+					rc.broadcast(channelHashFunc(currentLoc, 30000),
+							directionToInt(currentToChild));
+
 					System.out.println(childNode.getPath());
 					currentLocation = friendlyHQ;
-					
+
 					rc.resign();
 					return true;
 
 				} else {
 					int nodeChannel = channelHashFunc(nodeLocation, 10000);
 					int visited = rc.readBroadcast(nodeChannel);
-					
+
 					if (visited == 0) {
 						rc.broadcast(nodeChannel, 1);
 						agenda.add(childNode);
@@ -155,7 +172,7 @@ public class RobotPlayer {
 				}
 			}
 		}
-			
+
 		return false;
 	}
 
@@ -170,13 +187,13 @@ public class RobotPlayer {
 			MapLocation possSquare = loc.add(possDirection);
 			TerrainTile possSquareTerrain = rc.senseTerrainTile(possSquare);
 
-			if ((possSquare.x < min_HQ_x && max_HQ_x - possSquare.x > 30) ||
-					(possSquare.x > max_HQ_x && possSquare.x - min_HQ_x > 30) ||
-					(possSquare.y < min_HQ_y && max_HQ_y - possSquare.y > 30) ||
-					(possSquare.y > max_HQ_y && possSquare.y - min_HQ_y > 30) ||
-					(possSquareTerrain != TerrainTile.NORMAL)){
+			if ((possSquare.x < min_HQ_x && max_HQ_x - possSquare.x > 30)
+					|| (possSquare.x > max_HQ_x && possSquare.x - min_HQ_x > 30)
+					|| (possSquare.y < min_HQ_y && max_HQ_y - possSquare.y > 30)
+					|| (possSquare.y > max_HQ_y && possSquare.y - min_HQ_y > 30)
+					|| (possSquareTerrain != TerrainTile.NORMAL)) {
 				continue;
-				
+
 			} else {
 				possibleChildren.add(possSquare);
 			}
@@ -190,7 +207,7 @@ public class RobotPlayer {
 		int maxHeight = GameConstants.MAP_MAX_HEIGHT;
 		return offset + loc.x % maxWidth + maxWidth * loc.y % maxHeight;
 	}
-	
+
 	private static int directionToInt(Direction d) {
 		switch (d) {
 		case NORTH:

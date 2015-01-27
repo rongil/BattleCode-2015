@@ -675,17 +675,26 @@ public class RobotPlayer {
 
 		if (incomingEnemies.length > 0) {
 			if (thisRobotType != RobotType.LAUNCHER) {
-				return moveTowardDestination(incomingEnemies[0].location, true,
-						false, false);
+				if (thisRobotType == RobotType.DRONE) {
+					// Collect enough drones to stop a commander
+					if (incomingEnemies[0].type == RobotType.COMMANDER
+							&& rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) > 5)
+						return moveTowardDestination(
+								incomingEnemies[0].location, true, false, false);
+				} else {
+					return moveTowardDestination(incomingEnemies[0].location,
+							true, false, false);
+				}
 
 			} else {
 				return moveTowardDestination(incomingEnemies[0].location,
 						false, false, true);
 			}
 
-		} else {
-			return false;
 		}
+
+		return false;
+
 	}
 
 	/**
