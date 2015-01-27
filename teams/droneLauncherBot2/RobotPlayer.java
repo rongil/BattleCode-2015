@@ -175,15 +175,10 @@ public class RobotPlayer {
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 10) {
 						createUnit(RobotType.SUPPLYDEPOT, true);
-
-					} else if (rc
-							.readBroadcast(NUM_FRIENDLY_AEROSPACELAB_CHANNEL) < 3) {
-						createUnit(RobotType.AEROSPACELAB, true);
-
 					} else if (rc
 							.readBroadcast(NUM_FRIENDLY_HANDWASHSTATION_CHANNEL) < 3
 							&& rc.readBroadcast(SANITATION_CHANNEL) == 1
-							&& roundNum > rc.getRoundLimit() * 4 / 5) {
+							&& roundNum > rc.getRoundLimit() * 7 / 8) {
 						createUnit(RobotType.HANDWASHSTATION, true);
 
 					} else if (rc.getTeamOre() > 1000) {
@@ -211,12 +206,9 @@ public class RobotPlayer {
 							// createUnit(RobotType.TRAININGFIELD, true);
 
 						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 7) {
+								.readBroadcast(NUM_FRIENDLY_SUPPLYDEPOT_CHANNEL) < numFriendlyUnit / 6) {
 							createUnit(RobotType.SUPPLYDEPOT, true);
 
-						} else if (rc
-								.readBroadcast(NUM_FRIENDLY_HELIPAD_CHANNEL) < 2) {
-							createUnit(RobotType.HELIPAD, true);
 						}
 					}
 
@@ -309,8 +301,8 @@ public class RobotPlayer {
 						launchMissile(bestTarget);
 						moveTowardDestination(
 								currentLocation.subtract(currentLocation
-										.directionTo(bestTarget)), true, false,
-								false);
+										.directionTo(bestTarget)), false, false,
+								true);
 
 					} else {
 						attackNearestTower();
@@ -330,7 +322,7 @@ public class RobotPlayer {
 					double miningFate = rand.nextDouble();
 					if (roundNum < rc.getRoundLimit() * 3 / 4
 							&& miningFate <= Math.pow(Math.E,
-									-minerCount * 0.35)) {
+									-minerCount * 0.15)) {
 						createUnit(RobotType.MINER, false);
 					}
 					break;
