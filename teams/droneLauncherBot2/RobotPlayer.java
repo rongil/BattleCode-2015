@@ -301,8 +301,8 @@ public class RobotPlayer {
 						launchMissile(bestTarget);
 						moveTowardDestination(
 								currentLocation.subtract(currentLocation
-										.directionTo(bestTarget)), false, false,
-								true);
+										.directionTo(bestTarget)), false,
+								false, true);
 
 					} else {
 						attackNearestTower();
@@ -669,10 +669,11 @@ public class RobotPlayer {
 			if (thisRobotType != RobotType.LAUNCHER) {
 				if (thisRobotType == RobotType.DRONE) {
 					// Collect enough drones to stop a commander
-					if (incomingEnemies[0].type == RobotType.COMMANDER
-							&& rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) > 5)
+					if (incomingEnemies[0].type != RobotType.COMMANDER
+							|| rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) > 5) {
 						return moveTowardDestination(
 								incomingEnemies[0].location, true, false, false);
+					}
 				} else {
 					return moveTowardDestination(incomingEnemies[0].location,
 							true, false, false);
