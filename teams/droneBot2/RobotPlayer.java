@@ -148,10 +148,19 @@ public class RobotPlayer {
 					attackEnemyZero();
 					updateUnitCounts();
 					
+					int beaverCount = rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL);
+					
 					// Maintain only a few beavers
-					if (rc.readBroadcast(NUM_FRIENDLY_BEAVERS_CHANNEL) < 3) {
-						createUnit(RobotType.BEAVER, false);
+					if (beaverCount < 1) {
+						if (createUnit(RobotType.BEAVER, false)) {
+							rc.broadcast(NUM_FRIENDLY_BEAVERS_CHANNEL, beaverCount + 1);
+						}
+					} else if(beaverCount < 3 && rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) < 10) {
+						if (createUnit(RobotType.BEAVER, false)) {
+							rc.broadcast(NUM_FRIENDLY_BEAVERS_CHANNEL, beaverCount + 1);
+						}
 					}
+					
 					break;
 				
 				case MINER:
@@ -160,9 +169,10 @@ public class RobotPlayer {
 					break;
 
 				case MINERFACTORY:
-					if (rc.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL) < 10) {
+					if (rc.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL) < 1) {
 						createUnit(RobotType.MINER, false);
-					}
+					} else if (rc.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL) < 10 &&
+							rc.readBroadcast(NUM_FRIENDLY_DRONES_CHANNEL) < 5)
 					break;
 
 				case TOWER:
