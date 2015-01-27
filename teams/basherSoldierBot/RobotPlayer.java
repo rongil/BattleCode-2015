@@ -186,14 +186,11 @@ public class RobotPlayer {
 					break;
 
 				case MINERFACTORY:
-					// Get miner count
-					int minerCount = rc
-							.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL);
-
-					if(minerCount < 40){
+					if(rc.readBroadcast(NUM_FRIENDLY_MINERS_CHANNEL) < 40){
 						createUnit(RobotType.MINER, false);
 					}
 					break;
+
 					
 				case TOWER:
 					attackEnemyZero();
@@ -371,86 +368,7 @@ public class RobotPlayer {
 		}
 		return false;
 	}
-
-	/**
-	 * Gives the ratio of friend to enemy robots around a given location that
-	 * are at most a given distance away.
-	 *
-	 * @param loc
-	 *            - the location being analyzed
-	 * @param radiusSquared
-	 *            - the radius being checked
-	 * @param friendTeam
-	 *            - the team considered friendly
-	 * @return ratio of friend to enemy robots
-	 */
-	private static double friendEnemyRatio(MapLocation loc, int radiusSquared,
-			Team friendTeam) {
-		RobotInfo[] surroundingRobots;
-
-		if (loc != null) {
-			surroundingRobots = rc.senseNearbyRobots(loc, radiusSquared, null);
-		} else {
-			surroundingRobots = rc.senseNearbyRobots(radiusSquared);
-		}
-
-		double enemyCount = 0.0, friendCount = 0.0;
-
-		if (friendTeam == null) {
-			friendTeam = Friend;
-		}
-
-		for (RobotInfo roboInfo : surroundingRobots) {
-			if (roboInfo.team == friendTeam) {
-				friendCount++;
-			} else {
-				enemyCount++;
-			}
-		}
-
-		if (friendCount == 0) {
-			return 0;
-
-		} else if (enemyCount == 0 && friendCount != 0) {
-			return Integer.MAX_VALUE;
-
-		} else {
-			return friendCount / enemyCount;
-		}
-	}
-
-	private static double friendEnemyRatio(MapLocation loc, Direction forward)
-			throws GameActionException {
-
-		RobotInfo forwardRobot;
-		double enemyCount = 0.0, friendCount = 0.0;
-		Direction[] forwardDirections = { forward.rotateLeft().rotateLeft(),
-				forward.rotateLeft(), forward, forward.rotateRight(),
-				forward.rotateRight().rotateRight() };
-
-		for (Direction forwardDirection : forwardDirections) {
-			MapLocation forwardLoc = loc.add(forwardDirection);
-			forwardRobot = rc.senseRobotAtLocation(forwardLoc);
-
-			if (forwardRobot != null) {
-				if (forwardRobot.team == Enemy) {
-					++enemyCount;
-				} else {
-					++friendCount;
-				}
-			}
-		}
-
-		if (friendCount == 0) {
-			return 0;
-		} else if (enemyCount == 0 && friendCount != 0) {
-			return Integer.MAX_VALUE;
-
-		} else {
-			return friendCount / enemyCount;
-		}
-	}
-
+	
 	/**
 	 * Attacks the first enemy in the list.
 	 *
