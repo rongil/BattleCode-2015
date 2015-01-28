@@ -1219,11 +1219,6 @@ public class RobotPlayer {
 		if (rc.isCoreReady()) {
 			MapLocation currentLocation = rc.getLocation();
 
-			// int straightRadius = (int)
-			// Math.sqrt(thisRobotType.sensorRadiusSquared); // value = 4
-			// int diagonalRadius = (int)
-			// Math.sqrt(thisRobotType.sensorRadiusSquared / 2.0); // value = 3
-
 			double bestOreCount = 0.0;
 			MapLocation bestDestination = null;
 
@@ -1389,7 +1384,7 @@ public class RobotPlayer {
 	private static boolean isCrowded(MapLocation loc)
 			throws GameActionException {
 		MapLocation neighborLoc;
-
+		
 		for (int index = 0; index < directions.length; index += 2) {
 			neighborLoc = loc.add(directions[index]);
 			RobotInfo neighborInfo = rc.senseRobotAtLocation(neighborLoc); // we
@@ -1403,6 +1398,12 @@ public class RobotPlayer {
 			if (neighborInfo != null && neighborInfo.type != RobotType.MISSILE
 					&& neighborInfo.type.supplyUpkeep == 0) {
 				return true;
+			}
+			
+			if (index < 4 && rc.senseTerrainTile(neighborLoc) == TerrainTile.VOID) {
+				if (rc.senseTerrainTile(loc.subtract(directions[index])) == TerrainTile.VOID) {
+					return true;
+				}
 			}
 		}
 
