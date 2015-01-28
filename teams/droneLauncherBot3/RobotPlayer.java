@@ -235,12 +235,18 @@ public class RobotPlayer {
 								if (r.type == RobotType.MISSILE) {
 									MapLocation currentLocation = rc
 											.getLocation();
-									moveTowardDestination(
-											currentLocation.subtract(currentLocation
-													.directionTo(r.location)),
-											false, false, true);
-									break;
+									if (moveTowardDestination(currentLocation.
+											subtract(currentLocation.directionTo(r.location)),
+											false, false, true)) {
+										break;
+									}
+									
 								}
+							}
+							
+							if(friendlyTowers.length > 0) {
+								moveTowardDestination(friendlyTowers
+										[rand.nextInt(friendlyTowers.length)], false, false, true);
 							}
 						}
 					}
