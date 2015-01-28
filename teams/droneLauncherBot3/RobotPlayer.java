@@ -312,10 +312,6 @@ public class RobotPlayer {
 				case MINER:
 					attackEnemyZero();
 					mineAndMove();
-					int num = Clock.getBytecodeNum();
-					if (num > 1000) {
-						System.out.println(num);
-					}
 					break;
 
 				case MINERFACTORY:
