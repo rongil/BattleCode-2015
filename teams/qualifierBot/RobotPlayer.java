@@ -1,4 +1,6 @@
-package droneLauncherBot3;
+// Official submission to the Qualifying Tournament
+
+package qualifierBot;
 
 import battlecode.common.*;
 import java.util.Random;
@@ -710,6 +712,85 @@ public class RobotPlayer {
 	}
 
 	/**
+	 * Gives the ratio of friend to enemy robots around a given location that
+	 * are at most a given distance away.
+	 *
+	 * @param loc
+	 *            - the location being analyzed
+	 * @param radiusSquared
+	 *            - the radius being checked
+	 * @param friendTeam
+	 *            - the team considered friendly
+	 * @return ratio of friend to enemy robots
+	 */
+	private static double friendEnemyRatio(MapLocation loc, int radiusSquared,
+			Team friendTeam) {
+		RobotInfo[] surroundingRobots;
+
+		if (loc != null) {
+			surroundingRobots = rc.senseNearbyRobots(loc, radiusSquared, null);
+		} else {
+			surroundingRobots = rc.senseNearbyRobots(radiusSquared);
+		}
+
+		double enemyCount = 0.0, friendCount = 0.0;
+
+		if (friendTeam == null) {
+			friendTeam = Friend;
+		}
+
+		for (RobotInfo roboInfo : surroundingRobots) {
+			if (roboInfo.team == friendTeam) {
+				friendCount++;
+			} else {
+				enemyCount++;
+			}
+		}
+
+		if (friendCount == 0) {
+			return 0;
+
+		} else if (enemyCount == 0 && friendCount != 0) {
+			return Integer.MAX_VALUE;
+
+		} else {
+			return friendCount / enemyCount;
+		}
+	}
+
+	private static double friendEnemyRatio(MapLocation loc, Direction forward)
+			throws GameActionException {
+
+		RobotInfo forwardRobot;
+		double enemyCount = 0.0, friendCount = 0.0;
+		Direction[] forwardDirections = { forward.rotateLeft().rotateLeft(),
+				forward.rotateLeft(), forward, forward.rotateRight(),
+				forward.rotateRight().rotateRight() };
+
+		for (Direction forwardDirection : forwardDirections) {
+			MapLocation forwardLoc = loc.add(forwardDirection);
+			forwardRobot = rc.senseRobotAtLocation(forwardLoc);
+
+			if (forwardRobot != null) {
+				if (forwardRobot.team == Enemy) {
+					++enemyCount;
+				} else {
+					++friendCount;
+				}
+			}
+		}
+
+		if (friendCount == 0) {
+			return 0;
+		} else if (enemyCount == 0 && friendCount != 0) {
+			return Integer.MAX_VALUE;
+
+		} else {
+			return friendCount / enemyCount;
+		}
+	}
+
+	/**
 	 * Attacks the first enemy in the list.
 	 *
 	 * @return true if an attack was successfully carried out, false otherwise
@@ -833,7 +914,38 @@ public class RobotPlayer {
 	 */
 	private static Direction getRandomDirection() {
 		return directions[rand.nextInt(8)];
-	}	
+	}
+
+	/**
+	 * Moves robot around randomly.
+	 *
+	 * @throws GameActionException
+	 */
+	private static void moveAround() throws GameActionException {
+		if (rand.nextDouble() < 0.1) {
+			if (rand.nextDouble() < 0.5) {
+				facing = facing.rotateLeft(); // 45 degree turn
+			} else {
+				facing = facing.rotateRight();
+			}
+		}
+		if (rc.isCoreReady() && rc.canMove(facing)) {
+			MapLocation tileInFrontLocation = rc.getLocation().add(facing);
+			boolean tileInFrontSafe = isSafe(tileInFrontLocation, false, true);
+			double probCutoff = tileInFrontSafe ? 0.75 : 0.0;
+
+			if (rand.nextDouble() >= probCutoff) {
+				if (rand.nextDouble() < 0.5) {
+					facing = facing.rotateLeft(); // 45 degree turn
+				} else {
+					facing = facing.rotateRight();
+				}
+			} else { // try to move in the facing direction since the tile in
+						// front is safe
+				rc.move(facing);
+			}
+		}
+	}
 
 	/**
 	 * Directs a robot toward a given destination.
@@ -1416,6 +1528,36 @@ public class RobotPlayer {
 		}
 
 		rc.broadcast(TOWER_STRENGTH_CHANNEL, towerStrength);
+	}
+
+	private static int analyzeTowerStrength(MapLocation towerLoc) {
+		int towerStrength = 0;
+
+		double distanceToHQ = Math.sqrt(towerLoc.distanceSquaredTo(enemyHQ));
+
+		// We don't want to count this distance if towerLoc is the
+		// location of enemyHQ
+		if (distanceToHQ > 0
+				&& distanceToHQ < Math
+						.sqrt(RobotType.TOWER.attackRadiusSquared)
+						+ Math.sqrt(RobotType.HQ.attackRadiusSquared)) {
+			towerStrength += 2;
+		}
+
+		for (int index = 0; index < enemyTowers.length; index++) {
+			double distanceToTower = Math.sqrt(towerLoc
+					.distanceSquaredTo(enemyTowers[index]));
+
+			// We don't want to count this distance if towerLoc is the
+			// location of the tower being looped through
+			if (distanceToTower > 0
+					&& distanceToTower < 2 * Math
+							.sqrt(RobotType.TOWER.attackRadiusSquared)) {
+				towerStrength += 1;
+			}
+		}
+
+		return towerStrength;
 	}
 
 	/**
